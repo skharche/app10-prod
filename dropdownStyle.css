@@ -1,0 +1,326 @@
+.fullscreen-innter-content {
+	/*display: inline-flex;*/
+	align-items: center;
+	justify-content: center;
+	height: 90%;
+	border: 1px solid #ccc;
+}
+
+/* Dropdown container */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown button */
+.dropdown-toggle {
+  /*
+  background-color: #007bff;
+  color: white;
+  padding: 4px 5px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  */
+  margin-right: 7px;
+}
+
+.dropdown-toggle:hover {
+  /*background-color: #0056b3;*/
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: -5px;
+  list-style: none;
+  padding: 0;
+  width: 200px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+/* Dropdown items */
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  /*background-color: #f8f9fa;*/
+}
+
+/* Tick mark */
+.tick {
+  visibility: hidden;
+  margin-right: 10px;
+  color: green;
+}
+
+/* Show the dropdown */
+.dropdown.show .dropdown-menu {
+  display: block;
+}
+
+/* Style the dropdown2 */
+.dropdown2 {
+  position: relative; /* Ensure positioning relative to the trigger */
+  display: inline-block;
+}
+
+.dropdown2-menu {
+  display: none; /* Initially hidden */
+  position: absolute;
+  bottom: 100%; /* Opens upward */
+  left: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 5px 0;
+  margin-bottom: 5px;
+  z-index: 1000;
+  width: 150px;
+}
+
+.dropdown2-item {
+  padding: 8px 16px;
+  text-decoration: none;
+  color: #333;
+  display: block;
+  cursor: pointer;
+}
+
+.dropdown2-item:hover {
+  background-color: #f1f1f1;
+}
+
+/* Show the menu when dropdown2 is active */
+.dropdown2.active .dropdown2-menu {
+  display: block;
+}
+
+/* Add a tick mark to selected items */
+.dropdown2-item.selected::before {
+  content: "✓"; /* Unicode tick mark */
+  position: absolute;
+  left: 5px; /* Adjust to fit your design */
+  color: green; /* Tick color */
+}
+
+/* Adjust padding for items to make space for the tick */
+.dropdown2-item {
+  position: relative; /* Required for the tick positioning */
+  padding-left: 25px; /* Add padding to shift text right of the tick */
+}
+
+
+/* Style the dropdownCam */
+.dropdownCam {
+  position: relative; /* Ensure positioning relative to the trigger */
+  display: inline-block;
+}
+
+.dropdownCam-menu {
+  display: none; /* Initially hidden */
+  position: absolute;
+  bottom: 100%; /* Opens upward */
+  left: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 5px 0;
+  margin-bottom: 5px;
+  z-index: 1000;
+  width: 150px;
+}
+
+.dropdownCam-item {
+  padding: 8px 16px;
+  text-decoration: none;
+  color: #333;
+  display: block;
+  cursor: pointer;
+}
+
+.dropdownCam-item:hover {
+  background-color: #f1f1f1;
+}
+
+/* Show the menu when dropdown2 is active */
+.dropdownCam.active .dropdownCam-menu {
+  display: block;
+}
+
+/* Add a tick mark to selected items */
+.dropdownCam-item.selected::before {
+  content: "✓"; /* Unicode tick mark */
+  position: absolute;
+  left: 5px; /* Adjust to fit your design */
+  color: green; /* Tick color */
+}
+
+/* Adjust padding for items to make space for the tick */
+.dropdownCam-item {
+  position: relative; /* Required for the tick positioning */
+  padding-left: 25px; /* Add padding to shift text right of the tick */
+}
+
+
+/*		For Skyline 	*/
+/* Style the dropdown3 */
+.dropdown3 {
+  position: relative; /* Ensure positioning relative to the trigger */
+  display: inline-block;
+}
+
+.dropdown3-menu {
+  display: none; /* Initially hidden */
+  position: absolute;
+  bottom: 100%; /* Opens upward */
+  left: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 5px 0;
+  margin-bottom: 5px;
+  z-index: 1000;
+  /*width: 200px;*/
+  white-space: nowrap;
+}
+
+.dropdown3-item {
+  padding: 8px 16px;
+  text-decoration: none;
+  color: #333;
+  display: block;
+  cursor: pointer;
+}
+
+.dropdown3-item:hover {
+  background-color: #f1f1f1;
+}
+
+/* Show the menu when dropdown3 is active */
+.dropdown3.active .dropdown3-menu {
+  display: block;
+}
+
+/* Add a tick mark to selected items */
+.dropdown3-item.selected::before {
+  content: "✓"; /* Unicode tick mark */
+  position: absolute;
+  left: 5px; /* Adjust to fit your design */
+  color: green; /* Tick color */
+}
+
+/* Adjust padding for items to make space for the tick */
+.dropdown3-item {
+  position: relative; /* Required for the tick positioning */
+  padding-left: 25px; /* Add padding to shift text right of the tick */
+}
+
+/**/
+.image-container {
+	position: relative;
+	display: inline-block;
+	/*margin: 20px;*/
+}
+
+.image-container img {
+	/*
+	width: 24px;
+	height: 24px;
+	border: 2px solid #ccc;
+	border-radius: 8px;
+	*/
+}
+
+.tooltip {
+	visibility: hidden;
+	/*width: 120px;*/
+	background-color: #333;
+	color: #fff;
+	text-align: center;
+	padding: 5px 8px;
+	border-radius: 4px;
+
+	position: absolute;
+	top: -40px; /* Adjusted to ensure tooltip is above image */
+	left: 50%;
+	transform: translateX(-50%) !important;
+	z-index: 1;
+
+	opacity: 0;
+	transition: opacity 0.3s ease-in-out !important;
+}
+
+.tooltip::after {
+	content: "";
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	border-width: 5px;
+	border-style: solid;
+	border-color: #333 transparent transparent transparent;
+}
+
+.image-container:hover .tooltip {
+	visibility: visible;
+	opacity: 1;
+}
+
+.center-container {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center;    /* Center items horizontally */
+    justify-content: center; /* Center items vertically */
+    position: fixed;        /* Fixed position relative to the viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;          /* Make sure it appears above other content */
+}
+
+/* Styling for text */
+.loading-text {
+    font-size: 18px;
+    color: #333; /* Text color */
+    margin-bottom: 10px; /* Spacing between text and loader */
+}
+
+/* Loader animation */
+.loader {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3; /* Light border */
+    border-top: 4px solid #3498db; /* Blue border */
+    border-radius: 50%; /* Circle shape */
+    animation: spin 1s linear infinite;
+}
+
+/* Keyframes for spinning animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+

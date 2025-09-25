@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>floorplan.city</title>
+	<!--
+    <link
+      rel="stylesheet"
+      href="./lib/bootstrap-5.1.1-dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="./lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="./lib/fontawesome/css/fontawesome.min.css" />
+    <link rel="stylesheet" href="./styles/viewer.css" />
+	-->
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+    <script src="../CesiumCDN/Cesium-1.130/Build/Cesium/Cesium.js"></script>
+	<link
+      rel="stylesheet"
+      href="../CesiumCDN/Cesium-1.130/Build/Cesium/Widgets/widgets.css"
+    />
+	
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+	<style>
+	.cesium-viewer-toolbar{
+		display:none;
+	}
+	#cesiumContainer{
+		width: 100%;
+		height: 100%;
+	}
+	#toolbar{
+		position: absolute;
+		left:10px;
+		top: 10px;
+	}
+	
+	body{
+	  width: 100%;
+	  height: 100%;
+	  overflow: hidden;
+	  box-sizing: border-box;
+	  padding: 0;
+	  margin: 0;
+	  font-family: Helvetica !important;
+	}
+
+	/* Disable text selection for the entire page */
+	body {
+	  -webkit-user-select: none; /* For Safari and iOS */
+	  -moz-user-select: none;    /* For Firefox */
+	  -ms-user-select: none;     /* For IE */
+	  user-select: none;         /* Standard property */
+	}
+	
+	#cesiumContainer {
+	  display: block;
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  border: none;
+	  width: 100%;
+	  height: 100%
+	}
+	</style>
+</head>
+<body>
+	<div id="cesiumContainer"></div>
+	<div id="toolbar">
+		<button class="btn btn-primary" onClick="createDarkOverlay(84);">Dark</button>
+		<br />
+		<br />
+		<button class="btn btn-primary" onClick="createARCGISLayer(84);">ARCGIS</button>
+	</div>
+	
+	<script>
+		Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkNDlhZmU0NC04YjRhLTRmNzgtYmM0Ni1kZWNmYjQ0Yzg2ODAiLCJpZCI6Mjg0NDcsImlhdCI6MTc1NzE4MDE3M30.-05s0WNJmPdopcjCTRaenVFGv5UqUV5KhaIsvTOYzFI';
+		
+		try {
+			
+			const blankProvider = new Cesium.SingleTileImageryProvider({
+			  url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAn8B9Qf8l1EAAAAASUVORK5CYII="
+			});
+			
+			viewer = new Cesium.Viewer('cesiumContainer', {
+				
+				vrButton:false,
+				infoBox:false,
+				imageryProvider: blankProvider,  // Disable the default base map
+				baseLayerPicker: false,   // Optional: Hide the base layer picker UI
+				fullscreenButton:false,
+				navigationHelpButton:false,
+				selectionIndicator: false,
+				geocoder:false,
+				homeButton:false,
+				timeline:false,
+				animation:false,
+				sceneModePicker: false,
+				requestRenderMode : false,//Enabling Request Render Mode
+				logarithmicDepthBuffer : false,
+				scene3DOnly:false,
+				orderIndependentTranslucency: false,
+			});
+			viewer.imageryLayers.removeAll();
+			window.camera = viewer.camera;
+			
+			viewer.scene.skyBox.show = false;
+			
+			var cityToFlyTo = 2;
+			window.cityCameraDetails = [];
+			cityCameraDetails[2] = {cameraAltitudeAdjustment: 1029, longitude: -114.06369595050006, latitude: 51.033489010743594, altitude: 512.2765280442925, heading:337.2365378854957, pitch: -19.816702683860452, roll: 0 };  
+			
+			cameraAltitudeAdjustment = 1029;
+			var coords = Cesium.Cartesian3.fromDegrees(cityCameraDetails[cityToFlyTo].longitude, cityCameraDetails[cityToFlyTo].latitude, (cityCameraDetails[cityToFlyTo].altitude + cameraAltitudeAdjustment), Cesium.Ellipsoid.WGS84);
+			var heading = Cesium.Math.toRadians(parseFloat(cityCameraDetails[cityToFlyTo].heading));
+			//Old Method
+			//var tilt = Cesium.Math.toRadians(parseFloat(cityCameraDetails[cityToFlyTo].pitch) - 90);
+			var pitch = Cesium.Math.toRadians(parseFloat(cityCameraDetails[cityToFlyTo].pitch));
+			camera_v = viewer.scene.camera;
+			
+			var options = { 
+				destination: coords,
+				duration: 0,
+				orientation: {
+					heading: heading,
+					pitch: pitch,
+					roll: 0.0
+				}
+			};
+			camera_v.flyTo(options);
+			
+			viewer.scene.debugShowFramesPerSecond = false;//for FPS Widget
+			
+			viewer.scene.globe.depthTestAgainstTerrain = false;//To fix issue with Isolate function showing unnecessary tileset portion
+			
+			globe = viewer.scene.globe;
+			globe.baseColor = Cesium.Color.TRANSPARENT;
+			viewer.scene.globe.depthTestAgainstTerrain = true;
+  			viewer.scene.highDynamicRange = false;
+  			viewer.scene.globe.enableLighting = false;
+  			viewer.scene.fog.enabled = false;
+			//const baseLayer = viewer.scene.imageryLayers.get(0);
+ 			//baseLayer.alpha = 0.0;
+  			globe.translucency.enabled = true;
+  			globe.undergroundColor = undefined;
+		  } catch (error) {
+			console.log(error);
+		  }
+		  
+		  var googleTileset = null;
+		  var clipTileset = null;
+		  async function ShowGoggleTileset() {
+			  //return "";
+			  googleTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207, {
+				/*maximumScreenSpaceError: 1,*/
+			  });
+			  viewer.scene.primitives.add(googleTileset);
+			  /*
+			  clipTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207, {
+				/*maximumScreenSpaceError: 1,* /
+			  });
+			  viewer.scene.primitives.add(clipTileset);
+			  clipTileset.show = false;
+			  */
+			  setTimeout(function (){showTerrain(), 3000});
+		  }
+		  
+		  async function showTerrain()
+		  {
+			viewer.scene.terrainProvider = await Cesium.createWorldTerrainAsync();
+		  }
+		  
+		  setTimeout(function(){
+			  ShowGoggleTileset();
+			  //InitiateClipping();
+		  }, 2000);
+		  
+		  window.TempBldgData = [];
+		  TempBldgData[84] = [];
+		  TempBldgData[84]["floor_height"] = 7;
+		  TempBldgData[84]["floors"] = 20;
+		  TempBldgData[84]["idtbuilding"] = 84;
+		  TempBldgData[84]["idtcamera"] = "64613";
+		  TempBldgData[84]["coords"] = "-114.07085702374371, 51.044721301913015, -114.07129730849691, 51.044733166751506, -114.0713190945154, 51.04445353479077, -114.0710800721611, 51.04427191092256, -114.07066600101778, 51.04425926190067, -114.07063321673705, 51.04424420826908, -114.07027585291267, 51.044234472711665, -114.07023306925944, 51.04424745620203, -114.06984722257822, 51.044237013791, -114.06841346502104, 51.044199105231726, -114.06839710065562, 51.04448178214591, -114.06892073259176, 51.04449797011424, -114.06916109018995, 51.04467025521573, -114.0699969413627, 51.04469460659409, -114.07024485242337, 51.044545386859966, -114.07061135980021, 51.04454920963369";
+		  
+			window.isolateEffectActive = false;
+			var buildingIdInEffect = null;
+			window.stadiaMapLoaded = false;
+		  function createDarkOverlay(idtbldg)
+		  {
+			if(typeof window.stadiaMapLoaded == "undefined" || !stadiaMapLoaded)
+			{
+				//Stdia map
+				const imageryViewModels = [];
+				imageryViewModels.push(new Cesium.ProviderViewModel({
+					name: "Stadia Alidade Smooth Dark",
+					iconUrl: Cesium.buildModuleUrl(
+					  "Widgets/Images/ImageryProviders/stadiaAlidadeSmoothDark.png"
+					),
+					tooltip: "Stadia Alidade Smooth Dark, like its lighter cousin, is also designed to stay out of the way. It just flips the dark mode switch on the color scheme. With the lights out, your data can now literally shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth-dark/",
+					category: "Other",
+					creationFunction: function() {
+					  return new Cesium.UrlTemplateImageryProvider({
+						url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png",
+						minimumLevel: 0,
+						maximumLevel: 20   // important to allow fine detail
+					  });
+					}
+				  }));
+
+				//Finally, create the baseLayerPicker widget using our view models.
+				
+				window.stadiaMapLoaded = true;
+			}
+			if(typeof window.isolateEffectActive == "undefined" || !window.isolateEffectActive)
+			{
+				viewer.scene.globe.depthTestAgainstTerrain = true;
+				buildingIdInEffect = idtbldg;
+				
+				googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
+				  polygons: [
+					new Cesium.ClippingPolygon({
+					  positions: new Cesium.Cartesian3.fromDegreesArray(
+						eval("["+TempBldgData[idtbldg].coords+"]")
+					  ),
+					}),
+				  ],
+				});
+				googleTileset.clippingPolygons.enabled = true;
+				googleTileset.clippingPolygons.inverse = true;
+			}
+			else
+			{
+				viewer.scene.globe.depthTestAgainstTerrain = false;
+				/*
+				if(clipTileset != null && typeof clipTileset.clippingPolygons != "undefined")
+				{
+					clipTileset.clippingPolygons.enabled = false;
+					clipTileset.clippingPolygons.inverse = false;
+					clipTileset.show = false;
+				}
+				*/
+				if(typeof googleTileset.clippingPolygons != "undefined" & googleTileset.clippingPolygons != null)
+				{
+					googleTileset.clippingPolygons.enabled = false;
+				}
+				
+				clearIsolateEffect();
+			}
+			window.isolateEffectActive = !window.isolateEffectActive;
+		  }
+		  
+		  function clearIsolateEffect()
+		  {
+			window.stadiaMapLoaded = false;
+			viewer.scene.globe.depthTestAgainstTerrain = false;
+			if(clipTileset != null && typeof clipTileset.clippingPolygons != "undefined")
+			{
+				clipTileset.clippingPolygons.enabled = false;
+				clipTileset.clippingPolygons.inverse = false;
+				clipTileset.show = false;
+			}
+			
+			if(typeof googleTileset.clippingPolygons != "undefined" & googleTileset.clippingPolygons != null)
+			{
+				googleTileset.clippingPolygons.enabled = false;
+			}
+		  }
+		  
+		  window.isolateSatelliteEffectActive = false;
+			window.sateliteMapLoaded = false;
+			window.arcgisLayer = null;
+		  
+		  async function createARCGISLayer(idtbldg)
+		  {
+			if(!window.isolateSatelliteEffectActive)
+			{
+				window.arcgisLayer = viewer.imageryLayers.addImageryProvider(
+				  await Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+					Cesium.ArcGisBaseMapType.SATELLITE
+				  )
+				);
+				
+				googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
+				  polygons: [
+					new Cesium.ClippingPolygon({
+					  positions: new Cesium.Cartesian3.fromDegreesArray(
+						eval("["+TempBldgData[idtbldg].coords+"]")
+					  ),
+					}),
+				  ],
+				});
+				googleTileset.clippingPolygons.enabled = true;
+				googleTileset.clippingPolygons.inverse = true;
+			}
+			else
+			{
+				clearARCGISLayer();
+				if(typeof googleTileset.clippingPolygons != "undefined" & googleTileset.clippingPolygons != null)
+				{
+					googleTileset.clippingPolygons.enabled = false;
+				}
+			}
+			window.isolateSatelliteEffectActive = !window.isolateSatelliteEffectActive;
+		  }
+		  
+		  
+		  function clearARCGISLayer()
+		  {
+			window.arcgisLayer.show = false;
+		  }
+		  
+	</script>
+</body>
+</html>

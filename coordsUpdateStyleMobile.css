@@ -1,0 +1,207 @@
+
+	
+	/* Styles for devices with max width of 768px (common for tablets and mobile) */
+	@media only screen and (device-width: 768px),
+       only screen and (max-width: 768px) {
+		body {
+			font-size: 12px !important;
+		}
+		
+		.loader2{
+			top: 50%;
+			position: absolute;
+		}
+		
+		.summaryInfoboxContainer{
+			width: 80% !important;
+		}
+		
+		.actionButtons{
+			margin-right: 2px !important;
+			
+		}
+		.infoboxSubmarketName{
+			font-size: 13px !important;
+		}
+		.infoboxBuildingAddress{
+			font-size: 13px !important;
+		}
+		.infoboxContainerData .minPaddingtable{
+			font-size: 16px;
+		}
+	
+		#mainCityDropdown{
+			width: 45% !important;
+			font-size: 14px !important;
+		}
+		
+		#marketDropdown{
+			width: 50% !important;
+			font-size: 14px !important;
+		}
+		
+		.btn{
+			padding: .275rem .55rem !important;
+		}
+		#spotlightButton, 
+		#newHighlightButton, 
+		#newSuiteButton, 
+		#newEffectsButton, 
+		#highlightButton, 
+		#floorsButton, 
+		#copyURLButton, 
+		#isolateButton,
+		#floorplanButton
+		{
+			font-size: 13px !important;
+			padding-left: 5px !important;
+			padding-right: 3px !important;
+		}
+		.summaryInfoboxHeaderData{
+			font-size: 18px !important;
+		}
+		
+		.buildingNameOnInfobox{
+			font-size: 15px !important;
+		}
+		
+		.dropdown3-menu{
+			width: 150px !important;
+		}
+		.dropdown3-menu-big-box{
+			width: 170px !important;
+		}
+		.dropdown-menu{
+			width: 160px !important;
+		}
+		
+		.dropdown2-menu{
+			/*width: 150px !important;*/
+		}
+		
+		
+		.dropdown3 ul{
+			list-style-type: none;
+			padding: 0;
+			margin: 0;
+		}
+		.dropdown2 ul{
+			list-style-type: none;
+			padding: 0;
+			margin: 0;
+		}
+		.dropdown ul{
+			list-style-type: none;
+			padding: 0;
+			margin: 0;
+			line-height: 40;
+			
+			/*padding: -68px 0px;*/
+		}
+		
+		.dropdown-menu li{
+			padding: 0px;
+			font-size: 12px;
+			line-height: 0.5;
+			margin-left: -10px;
+		}
+		
+		.dropdown2-menu li{
+			padding: 0px;
+			font-size: 12px;
+			line-height: 0.5;
+		}
+		
+		.dropdown3-menu li{
+			padding: 0px;
+			font-size: 12px;
+			line-height: 0.5;
+			margin-left: -10px;
+		}
+		
+		/*	Grid Updates	*/
+		.grid {
+		  display: grid;
+		  grid-template-columns: repeat(3, 1fr);
+		  gap: 10px;
+		}
+		.container{
+			position: absolute;
+			left: 2% !important;
+		}
+		.country-title{
+			font-size: 16px;
+		}
+		.city-box-name{
+			font-size: 14px !important;
+		}
+		.city-box-count{
+			font-size: 11px !important;
+		}
+		.city-box{
+			
+			max-height: 120px;
+			min-height: 120px;
+		}
+		.country-group
+		{
+			margin-bottom: 5px;
+		}
+		.featureSheetLI{
+			width: 80% !important;
+		}
+		.featureSheetImage{
+			width: 12% !important;
+		}
+		
+		.modalHeaderText{
+			font-size: 20px !important;
+		}
+		.modalCompanyLogo{
+			height: 50px !important;
+			float: right;
+		}
+		
+		#closeModal{
+			font-size: 55px !important;
+			right: 10px !important;
+		}
+		
+		.modal-left{
+			max-width: 50%;
+			padding-left: 10%;
+			font-size: 11px !important; 
+		}
+		
+		.modal-center{
+			max-width: 40%;
+		}
+		.modal-center-mobile{
+			max-width: 100% !important;
+		}
+		.modal-center-desktop{
+			display:none;
+		}
+		.modal-right img
+		{
+			padding-right: 0px !important;
+		}
+		
+		.full-screen-columns-mobile{
+			display: flex !important;
+			padding-top: 5px;
+		}
+		
+		.full-screen-arrow {
+			top: 70% !important;
+		}
+		
+		.minPaddingtable>tbody>tr>td, .minPaddingtable>tbody>tr>th, .minPaddingtable>tfoot>tr>td, .minPaddingtable>tfoot>tr>th, .minPaddingtable>thead>tr>td, .minPaddingtable>thead>tr>th
+		{
+			font-size: smaller !important;
+		}
+		
+		
+	}
+	
+	

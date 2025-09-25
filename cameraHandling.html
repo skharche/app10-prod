@@ -1,0 +1,170 @@
+<html>
+<head>
+<title>Camera Handling</title>
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+    <script src="../CesiumCDN/Cesium-1.119/Build/Cesium/Cesium.js"></script>
+	
+    <link
+      rel="stylesheet"
+      href="../CesiumCDN/Cesium-1.119/Build/Cesium/Widgets/widgets.css"
+    />
+</head>
+<body>
+	<div class="toolbar">
+		<select style="font-size:16px;" data-dropup-auto="false" id="mainCityDropdown" onchange="flyToCitySkyline(this.value)"><optgroup label="Australia"><option value="36">Sydney CBD</option><option value="49">Brisbane CBD</option><option value="62">Melbourne CBD</option></optgroup><optgroup label="Canada"><option selected="" value="1">Downtown Calgary</option><option value="26">Downtown Edmonton</option><option value="18">Downtown Vancouver</option><option value="3">Downtown Toronto</option><option value="70">Downtown Halifax</option></optgroup><optgroup label="China"><option value="48">Hong Kong Island</option></optgroup><optgroup label="Japan"><option value="50">Central Tokyo</option></optgroup><optgroup label="Singapore"><option value="31">Central Singapore</option></optgroup><optgroup label="South Africa"><option value="77">Cape Town CBD</option><option value="78">Johannesburg CBD</option></optgroup><optgroup label="United States"><option value="2">Chicago Loop</option><option value="12">Downtown Boston</option><option value="10">Downtown San Francisco</option><option value="14">Downtown Seattle</option><option value="7">Downtown Manhattan</option><option value="8">Midtown Manhattan</option><option value="9">Midtown Manhattan South</option><option value="19">Downtown Miami</option></optgroup><optgroup label="United Kingdom"><option value="38">Central London</option></optgroup></select>
+	</div>
+	<div id="cesiumContainer"></div>
+</body>
+<style>
+	#cesiumContainer
+	{
+		width: 100%;
+		height: 100%;
+	}
+	.toolbar
+	{
+		z-index: 10000;
+		position: absolute;
+		width: 100px;
+		left: 10px;
+		top: 10px;
+	}
+</style>
+	<script>
+		Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZDhlODY5YS0zNzU3LTQ2N2EtOTJkNS0wMDcyMDI3YTk4MjYiLCJpZCI6Mjg0NDcsImlhdCI6MTcyMDcyMjEwNH0.NfKnGvHnrJY8mTEr0X-DDZ8oE24md0FnA9SQVYBM3z0';
+		viewer = new Cesium.Viewer('cesiumContainer', {
+			vrButton:false,
+			infoBox:false,
+			imageryProvider: false,  // Disable the default base map
+			baseLayerPicker: false,   // Optional: Hide the base layer picker UI
+			
+			fullscreenButton:false,
+			navigationHelpButton:false,
+			selectionIndicator: false,
+			geocoder:false,
+			homeButton:false,
+			timeline:false,
+			animation:false,
+			sceneModePicker: false,
+			requestRenderMode : false,//Enabling Request Render Mode
+			logarithmicDepthBuffer : false,
+			scene3DOnly:false,
+		});
+		
+		var googleTileset = null;
+		  var clipTileset = null;
+		  async function ShowGoggleTileset() {
+			  //return "";
+			  googleTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207, {
+				/*maximumScreenSpaceError: 1,*/
+			  });
+			  viewer.scene.primitives.add(googleTileset);
+			  /*
+			  clipTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207, {
+				/*maximumScreenSpaceError: 1,* /
+			  });
+			  viewer.scene.primitives.add(clipTileset);
+			  clipTileset.show = false;
+			  */
+			  //setTimeout(function (){showTerrain(), 3000});
+		  }
+		  ShowGoggleTileset();
+		
+	function getApp10MarketDetails()
+	{
+		$.ajax({
+			method: "POST",
+			url: "controllers/buildingController.php",
+			data: { param : "getApp10MarketDetails", user_id: window.loggedInUserId}
+		})
+		.done(function( data ) {
+			//console.log(data);
+			data = $.parseJSON( data );
+			if(data.status == "success")
+			{
+				if(typeof data.data != "undefined")
+				{
+					marketDetails = data.data;
+					disabledMarkets = data.disabledMarkets;
+					window.citiesToShow = data.citiesAccessible;
+					window.allCitiesWithCountry = data.allCitiesWithCountry;
+					$.each(marketDetails, function (index, eachRow){
+						if(typeof window.cityLabels == "undefined")
+							window.cityLabels = [];
+						window.cityLabels[eachRow.idtcity] = eachRow.scityname;
+					});
+					marketCameraDetails = data.marketCamera;
+					marketCameraRotationDetails = data.cameraRotation;
+					cityAltitudeAdjustment = data.cityAltitudeAdjustment;
+				}
+			}
+			else
+			{
+				alert("Something went wrong");
+			}
+		});
+	}
+
+		
+	function flyToCitySkyline(id)
+	{
+		var mktDetail = [];
+		$.each(marketDetails, function (index, row){
+			console.log(row.idtcity+" == "+id);
+			if(row.idtcity == id)
+			{
+				mktDetail = row;
+			}
+		});
+		if(id == 4)
+		{
+			$.each(marketDetails, function (index, row){
+				if(row.idtcity == id && row.idtmarket == lastMarketLoaded)
+				{
+					mktDetail = row;
+				}
+			});
+			if(typeof marketCameraDetails[mktDetail.marketcamera] != "undefined")
+			{
+				cameraAltitudeAdjustment = parseInt(mktDetail.altitudeadjustment);
+				cam = marketCameraDetails[mktDetail.marketcamera];
+				setCameraViewV2(cam.latitude, cam.longitude, cam.altitude, cam.heading, cam.pitch, cam.roll);
+			}
+		}
+		else
+		{
+			if(typeof marketCameraDetails[mktDetail.skylineidtcamera] != "undefined")
+			{
+				cameraAltitudeAdjustment = parseInt(mktDetail.altitudeadjustment);
+				cam = marketCameraDetails[mktDetail.skylineidtcamera];
+				setCameraViewV2(cam.latitude, cam.longitude, cam.altitude, cam.heading, cam.pitch, cam.roll);
+				//setCameraView(marketCameraDetails[mktDetail.skylineidtcamera]);
+			}
+		}
+	}
+
+	function setCameraViewV2(lat, lon, alt, heading, pitch, roll) {
+	  console.log("setCameraViewV2: ", lat, lon, alt, heading, pitch, roll);
+
+	  viewer.camera.setView({
+		destination: Cesium.Cartesian3.fromDegrees(
+		  lon,
+		  lat,
+		  parseFloat(alt) + parseFloat(cameraAltitudeAdjustment)
+		),
+
+		orientation: {
+		  heading: Cesium.Math.toRadians(heading),
+
+		  pitch: Cesium.Math.toRadians(pitch),
+
+		  roll: Cesium.Math.toRadians(roll),
+		},
+	  });
+
+	}
+
+
+	</script>
+</html>

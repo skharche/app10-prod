@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Aerometrex Tileset</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.130/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.130/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%; height: 100%; margin: 0; padding: 0;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+
+  <script type="module">
+  
+	//window.googleRoadMapAPIKey = "AIzaSyBkHdA_RCSmoGnmgvi3a0Nj5IHsu3Wb7vk";
+	window.googleRoadMapAPIKey = "AIzaSyDGzyLnzNtd6F_OHim_OAkD3rob0rocz1c";
+	window.sessionId = null;
+	
+    window.viewer = new Cesium.Viewer('cesiumContainer', {
+				
+		vrButton:false,
+		infoBox:false,
+		imageryProvider: true,  // Disable the default base map
+		//baseLayerPicker: false,   // Optional: Hide the base layer picker UI
+		fullscreenButton:false,
+		navigationHelpButton:false,
+		selectionIndicator: false,
+		geocoder:false,
+		homeButton:false,
+		timeline:false,
+		animation:false,
+		sceneModePicker: false,
+		requestRenderMode : false,//Enabling Request Render Mode
+		logarithmicDepthBuffer : false,
+		scene3DOnly:false,
+		orderIndependentTranslucency: false,
+	});
+
+    window.viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(-74.0060, 40.7128, 2000)
+    });
+	
+	const layers = viewer.scene.imageryLayers;
+	
+	
+	var z = 15;//Zoom Level
+	var x = 1;
+	var y = 1;
+	
+	
+	async function getSessionId()
+	{
+		$.getJSON("getSession.php", function (data) {
+			sessionId = data.session;
+			console.log(data);
+			if(typeof data.session != "undefined")
+			{
+				sessionId = data.session;
+			}
+			else
+			{
+				console.log("Error with Session ID");
+			}
+		});
+	}
+	
+	function lonLatToTileXY(lon, lat, zoom) {
+	  x = Math.floor((lon + 180) / 360 * Math.pow(2, zoom));
+	  y = Math.floor(
+		(1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom)
+	  );
+	  return { x, y };
+	}
+
+	console.log(lonLatToTileXY(-74.0060, 40.7128, 15)); // For NYC
+
+	window.z = 20;//Zoom Level
+	window.x = 1;
+	window.y = 1;
+	window.mapId = "42535f685f47661343c0b515";
+	function createImagery()
+	{
+		imageryProvider3 = new Cesium.UrlTemplateImageryProvider({
+			url: 'https://tile.googleapis.com/v1/2dtiles/'+z+'/'+x+'/'+y+'?key='+googleRoadMapAPIKey+'&session='+sessionId+'&orientation=0&',
+			tilingScheme: new Cesium.WebMercatorTilingScheme(),
+			maximumLevel: 20,
+			credit: "© Google"
+		});
+		viewer.scene.imageryLayers.add(imageryProvider3);
+		/*
+		imageryLayer4 = new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
+		  url: 'https://tile.googleapis.com/v1/2dtiles/'+z+'/'+x+'/'+y+'?key='+googleRoadMapAPIKey+'&session='+sessionId+'&orientation=0&',
+		}));
+		
+		
+		tms = new Cesium.UrlTemplateImageryProvider({
+			url: 'https://tile.googleapis.com/v1/2dtiles/'+z+'/'+x+'/'+y+'?key='+googleRoadMapAPIKey+'&session='+sessionId+'&orientation=0&',
+			tilingScheme : new Cesium.GeographicTilingScheme(),
+			maximumLevel : 5
+		});
+
+
+		imageryLayerNew = new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
+		  url: 'https://tile.googleapis.com/v1/2dtiles/'+z+'/'+x+'/'+y+'?key='+googleRoadMapAPIKey+'&session='+sessionId+'&orientation=0&',
+		}));
+		
+		tileset.imageryLayers.add(imageryLayerNew);
+		
+		
+		// 3. Create Google Roadmap imagery provider
+		const googleImageryProvider = new Cesium.UrlTemplateImageryProvider({
+		  url: "https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?key="+googleRoadMapAPIKey+"&map_id=c6e5e4b8996deda8ca8e43e3&session="+sessionId+"&orientation=0&scale=2&format=png",
+		  maximumLevel: 20,
+		  tilingScheme: new Cesium.WebMercatorTilingScheme(),
+		  credit: "© Google",
+		});
+		
+		tileset.imageryLayers.removeAll();
+
+		// 4. Drape imagery directly on the tileset (this is the key part)
+		tileset.imageryLayers.addImageryProvider(googleImageryProvider);
+
+
+
+		const imageryLayer = viewer.imageryLayers.addImageryProvider(
+			new Cesium.UrlTemplateImageryProvider({
+			url: "https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?key="+googleRoadMapAPIKey+"&session="+sessionId+"&orientation=0&scale=2&format=png",
+			minimumLevel: 0,
+			maximumLevel: 21,
+			})
+			);
+
+			// make 2dLayer more brighter
+			imageryLayer.brightness = 5.0;
+
+		*/
+		//viewer.imageryLayers.add(imageryProvider3);
+	}
+	getSessionId();
+	
+	loadTilesetWithNewVersion(437161);
+	
+	async function loadTilesetWithNewVersion(assetId)
+	{
+		Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4OTIwM2E3Yi1lYTkwLTRiZTYtYmMxYS02NGRkMGYzYTIzMmIiLCJpZCI6MjY1LCJpYXQiOjE1MjE1NDUzNDR9.XIij-qDaBt2xTi-NrUs_PJkII6uo2v7MsAi9dC0fb30'
+		
+		try {
+		  window.tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
+		  viewer.scene.primitives.add(window.tileset);
+		} catch (error) {
+		  console.error(`Error creating tileset: ${error}`);
+		}
+	}
+
+
+  </script>
+</body>
+</html>

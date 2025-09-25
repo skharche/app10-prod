@@ -1,0 +1,77 @@
+/* Reset default list styles */
+.nav-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Individual tab items */
+.nav-item {
+    margin: 0;
+	flex: 1;
+	/*
+    padding: 5px;
+	*/
+	padding-left: 5px;
+    padding-right: 5px;
+    text-align: center;
+    color: black;
+    cursor: pointer;
+    font-size: 14px;
+    border: none;
+    outline: none;
+    /*background-color: #f2f2f2;*/
+    transition: background-color 0.3s ease;
+	
+}
+
+/* Tab links */
+.nav-link {
+	background-color: #f8f9fa;
+    display: block;
+    padding: 2px 4px;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    border: 2px solid transparent;
+    border-radius: 5px 5px 0 0;
+    transition: all 0.3s ease;
+}
+
+/* Active tab */
+.nav-link.active {
+	/*
+    background-color: #007bff;
+    color: white;
+	*/
+	background-color: #A6A09B;
+    color: white;
+    border-color: #A6A09B #A6A09B transparent;
+}
+
+/* Hover effect */
+.nav-link:hover {
+    /**/
+}
+
+/* Tab content container */
+.nav-tab-content {
+    border: 2px solid #ddd;
+    padding: 5px;
+    margin-top: -2px;
+    border-radius: 0 0 5px 5px;
+    background: white;
+}
+
+/* Hide tab content by default */
+.tab-pane {
+    display: none;
+}
+
+/* Show active tab */
+.tab-pane.active {
+    display: block;
+}

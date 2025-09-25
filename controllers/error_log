@@ -1,0 +1,7 @@
+[22-Sep-2025 04:49:43 America/New_York] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 3 in /home/qxf9blb2zufi/public_html/measure/app10/classes/building.php:1698
+Stack trace:
+#0 /home/qxf9blb2zufi/public_html/measure/app10/classes/building.php(1698): mysqli_query()
+#1 /home/qxf9blb2zufi/public_html/measure/app10/controllers/buildingController.php(114): building->getCameraDetails()
+#2 /home/qxf9blb2zufi/public_html/measure/app10/controllers/buildingController.php(267): buildingController->getCameraDetails()
+#3 {main}
+  thrown in /home/qxf9blb2zufi/public_html/measure/app10/classes/building.php on line 1698
