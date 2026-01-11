@@ -130,10 +130,10 @@
 			left: 2% !important;
 		}
 		.country-title{
-			font-size: 16px;
+			font-size: 18px;
 		}
 		.city-box-name{
-			font-size: 14px !important;
+			font-size: 16px !important;
 		}
 		.city-box-count{
 			font-size: 11px !important;
@@ -201,6 +201,16 @@
 			font-size: smaller !important;
 		}
 		
+		.smallCityName {
+		  font-size: 0.5rem;
+		}
+		.smallCountryName {
+		  font-size: 0.6rem;
+		}
+		
+		.loading-message{
+			margin-top: -200px !important;
+		}
 		
 	}
 	

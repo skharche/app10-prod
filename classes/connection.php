@@ -42,6 +42,30 @@ if(!defined("_DB_CONNECTION"))
 			}
 		}
 		
+		function ConnectPrepare()
+		{
+			// Get variables from config file
+			require(dirname(__FILE__).'/dbconfig.php');
+			
+			$dbserver   = $_DB_HOST_;
+			$dbport  	= $_DB_PORT_;
+			$dbname     = $_DB_NAME_;
+			$dbuser     = $_DB_USER_;
+			$dbpassword = $_DB_PWRD_;
+			
+			// Create connection
+			$conn = new mysqli($dbserver, $dbuser, $dbpassword, $dbname);
+
+			// Check connection
+			if ($conn->connect_error) {
+				die("Database connection failed: " . $conn->connect_error);
+			}
+
+			// Optional: set charset to UTF-8
+			$conn->set_charset("utf8mb4");
+			return $conn;
+		}
+		
 		function destroy()
 		{
 			/* if(isset($this->connection) && gettype($this->connection) == "resource")

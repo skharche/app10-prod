@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 									</div>
 									<form class="user" action="" method="POST">
 										<div class="form-group">
-											<input type="text" class="form-control form-control-user" id="inputUsername" name="inputUsername" aria-describedby="emailHelp" placeholder="Enter Email Address...">
+											<input type="text" class="form-control form-control-user" id="inputUsername" name="inputUsername" aria-describedby="emailHelp" placeholder="Username">
 										</div>
 										<div class="form-group">
 											<input type="password" class="form-control form-control-user" id="inputPassword" name="inputPassword" placeholder="Password">
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 									</form>
 									<hr>
 									<div class="text-center">
-										<a class="small" href="forgot-password.php">Forgot Password?</a>
+										<a class="small" href="javascript: $('#forgotPasswordModal').modal('show'); ">Reset Password</a>
 									</div>
 									<!--div class="text-center">
 										<a class="small" href="register.php">Create an Account!</a>
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 								</div>
 
 								<!-- Version Label -->
-								<div class="version-label">version 1.0</div>
+								<div class="version-label">version 1.1</div>
 							</div>
 
 							<style>
@@ -124,6 +124,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 								position: absolute;
 								bottom: 10px;
 								right: 20px;
+								font-size: 12px;
+								color: #6c757d;
+								opacity: 0.8;
+							}
+							.url-label {
+								position: absolute;
+								bottom: 10px;
+								left: 20px;
 								font-size: 12px;
 								color: #6c757d;
 								opacity: 0.8;
@@ -173,6 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
 
     </div>
+	
 	<style>
 	.error-message {
 	  color: red;
@@ -274,6 +283,7 @@ function updateLoginImageBasedOnLayout() {
   }
 }
 
+
 const updateDebounced = debounce(updateLoginImageBasedOnLayout, 20);
 window.addEventListener('load', updateDebounced);
 window.addEventListener('resize', updateDebounced);
@@ -310,6 +320,7 @@ window.addEventListener('resize', updateDebounced);
 		width: 100%; margin-top: 35px; margin-left: 20px;
 	}																 
 	</style>
+	<?php include_once("forgot-password-modal.php");?>
 </body>
 
 </html>

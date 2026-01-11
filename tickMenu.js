@@ -337,7 +337,28 @@ document.addEventListener('keydown', (event) => {
 	console.log(event.key);
 	if(!$("#searchBox").is(':focus'))
 	{
-		if (event.ctrlKey && event.key === 'f') {
+		if (event.key === 'f') {
+			event.preventDefault();
+			viewer.scene.debugShowFramesPerSecond = !viewer.scene.debugShowFramesPerSecond;
+			setResetSettingFlags("fps-li", viewer.scene.debugShowFramesPerSecond);
+		}
+		if (event.key === 'l') {
+			event.preventDefault();
+			
+			if(isMobile.any() == null)
+			{
+				window.desktop_logo_display = !window.desktop_logo_display;
+				setResetSettingFlags("showLogo-li", window.desktop_logo_display);
+				setResetSettingFlags("hideLogo-li", !window.desktop_logo_display);
+			}
+			else
+			{
+				window.mobile_logo_display = !window.mobile_logo_display;
+				setResetSettingFlags("showLogo-li", window.mobile_logo_display);
+				setResetSettingFlags("hideLogo-li", !window.mobile_logo_display);
+			}
+		}
+		else if (event.ctrlKey && event.key === 'f') {
 			event.preventDefault(); // Prevent the browser's default find action
 			//	alert('CTRL + F was pressed!');
 			
@@ -346,6 +367,16 @@ document.addEventListener('keydown', (event) => {
 			$("#searchBoxController").show();
 			$("#searchBox").focus();
 			setTimeout(function (){ $("#searchBox").focus(); }, 500);
+		}
+		else if (event.ctrlKey && event.key === 's') {
+			event.preventDefault(); // Prevent the browser's default find action
+			//	alert('CTRL + S1 was pressed!');
+			if(confirm("Save Camera for City Orbit?"))
+			{
+				//Toggle Search functionality
+				console.log("Save Camera Functionality");
+				saveCityCameraRotation();
+			}
 		}
 		else if($("#fullScreenModal").css("display") == 'block')
 		{
@@ -370,6 +401,10 @@ document.addEventListener('keydown', (event) => {
 				case 'Escape':
 					//Clear search and its effect.
 					console.log("Clear Search Functionality");
+					if(typeof FloorViewPauseSlowRotation != "undefined")
+					{
+						FloorViewPauseSlowRotation();
+					}
 					$("#searchBoxController").hide();
 					$("#searchBox").val();
 					if(typeof suggestions != "undefined")
@@ -554,8 +589,12 @@ document.addEventListener('keydown', (event) => {
 							}
 							
 							prepareAvailableOfficeSpaceInfobox(check[1], check[2], details, allSuitesOnFloor);
+							
+							var coordsTemp = window.availableOfficeSpaceFloorWise[check[1]][details.floor_number][0].coords;
+							addPolygonOutlineOnTileset(coordsTemp, window.suiteHeightValues[check[3]][0] - 0.5, window.suiteHeightValues[check[3]][1], Cesium.Color.WHITE);
+					
 							var temp = details.splitCoords.split(",");
-							prepareLogoAndSqftLabels(selectedPrimitiveId, parseFloat(temp[1]), parseFloat(temp[0]), (floorAltitude + parseInt(cityAltitudeAdjustment[lastCityLoaded])), adminBaseUrl + details.companyimage, details.suite_area);
+							prepareLogoAndSqftLabels(selectedPrimitiveId, parseFloat(temp[1]), parseFloat(temp[0]), (parseFloat(floorAltitude) + parseFloat(cityAltitudeAdjustment[lastCityLoaded])), adminBaseUrl + details.companyimage, details.suite_area);
 						}
 					}
 						if(typeof floorPrimitives[nextId] != "undefined")
@@ -778,8 +817,12 @@ document.addEventListener('keydown', (event) => {
 							allSuitesOnFloor = window.availableOfficeSpaceFloorWise[parseInt(details.idtbuilding)][parseInt(details.floor_number)];
 							
 							prepareAvailableOfficeSpaceInfobox(check[1], check[2], details, allSuitesOnFloor);
+							
+							var coordsTemp = window.availableOfficeSpaceFloorWise[check[1]][details.floor_number][0].coords;
+							addPolygonOutlineOnTileset(coordsTemp, window.suiteHeightValues[check[3]][0] - 0.5, window.suiteHeightValues[check[3]][1], Cesium.Color.WHITE);
+							
 							var temp = details.splitCoords.split(",");
-							prepareLogoAndSqftLabels(selectedPrimitiveId, parseFloat(temp[1]), parseFloat(temp[0]), (floorAltitude + parseInt(cityAltitudeAdjustment[lastCityLoaded])), adminBaseUrl + details.companyimage, details.suite_area);
+							prepareLogoAndSqftLabels(selectedPrimitiveId, parseFloat(temp[1]), parseFloat(temp[0]), (parseFloat(floorAltitude) + parseFloat(cityAltitudeAdjustment[lastCityLoaded])), adminBaseUrl + details.companyimage, details.suite_area);
 						}
 					}
 						if(typeof floorPrimitives[nextId] != "undefined")

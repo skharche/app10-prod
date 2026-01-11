@@ -14,8 +14,8 @@
 	flex: 1;
 	/*
     padding: 5px;
-	*/
 	padding-left: 5px;
+	*/
     padding-right: 5px;
     text-align: center;
     color: black;
@@ -24,7 +24,7 @@
     border: none;
     outline: none;
     /*background-color: #f2f2f2;*/
-    transition: background-color 0.3s ease;
+    /*transition: background-color 0.3s ease;*/
 	
 }
 
@@ -38,7 +38,7 @@
     font-weight: bold;
     border: 2px solid transparent;
     border-radius: 5px 5px 0 0;
-    transition: all 0.3s ease;
+    /*transition: all 0.3s ease;*/
 }
 
 /* Active tab */
@@ -47,9 +47,9 @@
     background-color: #007bff;
     color: white;
 	*/
-	background-color: #A6A09B;
+	background-color: #000000;
     color: white;
-    border-color: #A6A09B #A6A09B transparent;
+    border-color: #000000 #000000 transparent;
 }
 
 /* Hover effect */

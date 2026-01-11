@@ -1,4 +1,6 @@
 function getCameraValues() {
+	if(typeof viewer == "undefined")
+		return "";
   var camera = viewer.scene.camera;
 
   // Get the camera's position in Cartesian3
@@ -27,17 +29,17 @@ function getCameraValues() {
 
   /*
 
-		console.log('Longitude:', longitude);
+		//console.log('Longitude:', longitude);
 
-		console.log('Latitude:', latitude);
+		//console.log('Latitude:', latitude);
 
-		console.log('Height:', height);
+		//console.log('Height:', height);
 
-		console.log('Heading:', heading);
+		//console.log('Heading:', heading);
 
-		console.log('Pitch:', pitch);
+		//console.log('Pitch:', pitch);
 
-		console.log('Roll:', roll);
+		//console.log('Roll:', roll);
 
 		*/
 
@@ -59,7 +61,7 @@ function getCameraValues() {
 function setCameraView(cameraView) {
   cameraView.altitude = Number(cameraView.altitude) + cameraAltitudeAdjustment;
 
-  //console.log(cameraView.longitude+", "+cameraView.latitude+" @"+cameraView.altitude);
+  ////console.log(cameraView.longitude+", "+cameraView.latitude+" @"+cameraView.altitude);
 
   viewer.camera.setView({
     destination: Cesium.Cartesian3.fromDegrees(
@@ -77,7 +79,7 @@ function setCameraView(cameraView) {
     },
   });
 
-  console.log("Altitude Check after Camera set: ", getCameraValues().altitude);
+  //console.log("Altitude Check after Camera set: ", getCameraValues().altitude);
 
   /*
 
@@ -92,9 +94,14 @@ function setCameraView(cameraView) {
 		*/
 }
 
-function setCameraViewV2(lat, lon, alt, heading, pitch, roll) {
-  console.log("setCameraViewV2: ", lat, lon, alt, heading, pitch, roll);
+window.expectedAltitude = null;
 
+function setCameraViewV2(lat, lon, alt, heading, pitch, roll) {
+	//triedAfterRetry = 0;
+	//console.log("setCameraViewV2: #Altitude "+cameraAltitudeAdjustment+", ", lat, lon, alt, heading, pitch, roll);
+
+	window.expectedAltitude = parseFloat(alt) + parseFloat(cameraAltitudeAdjustment);
+	//console.log("expectedAltitude: "+expectedAltitude);
   viewer.camera.setView({
     destination: Cesium.Cartesian3.fromDegrees(
       lon,
@@ -111,8 +118,8 @@ function setCameraViewV2(lat, lon, alt, heading, pitch, roll) {
     },
   });
 
-  console.log("Altitude Check after Camera set: ", getCameraValues().altitude);
-  flyToCameraView(lat, lon, alt, heading, pitch, roll, 4);
+  //console.log("Altitude Check after Camera set: ", getCameraValues().altitude);
+  
   /*
 
 		setTimeout(function (){
@@ -130,6 +137,7 @@ window.lastCameraAltitude = null;
 
 function flyToCameraView(lat, lon, alt, heading, pitch, roll, duration) {
   window.lastCameraAltitude = alt;
+  window.expectedAltitude = parseFloat(alt) + parseFloat(cameraAltitudeAdjustment);
   var coords = Cesium.Cartesian3.fromDegrees(
     lon,
     lat,
@@ -150,7 +158,7 @@ function flyToCameraView(lat, lon, alt, heading, pitch, roll, duration) {
     },
   };
   camera_v.flyTo(options);
-  console.log("Altitude Check after Camera set: ", getCameraValues().altitude);
+  //console.log("Altitude Check after Camera set: ", getCameraValues().altitude);
 }
 async function flyToCameraViewV2(
   lat,
@@ -185,5 +193,80 @@ async function flyToCameraViewV2(
     offset: new Cesium.HeadingPitchRange(heading, pitch, 150),
   };
   viewer.flyTo(entity, options);
-  console.log("Altitude Check after Camera set: ", getCameraValues().altitude);
+  //console.log("Altitude Check after Camera set: ", getCameraValues().altitude);
 }
+
+window.triedAfterRetry = 0;
+function flyToDefaultCameraWithDelay()
+{
+	if(typeof defaultCamera != "undefined" && typeof defaultCamera[0] != "undefined")
+	{
+		viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+		console.log("enable Collision False");
+		setTimeout(() => {
+			console.log("enable Collision True");
+			viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
+		}, 5000);
+		
+		console.log("Flying to Default Camera", defaultCamera);
+		flyToCameraView(defaultCamera[0], defaultCamera[1], defaultCamera[2], defaultCamera[3], defaultCamera[4], defaultCamera[5], 0);
+		setTimeout(function (){
+			console.log("Delayed Default Camera: ", defaultCamera);
+			if(typeof defaultCamera != "undefined" && typeof defaultCamera[0] != "undefined")
+				flyToCameraView(defaultCamera[0], defaultCamera[1], defaultCamera[2], defaultCamera[3], defaultCamera[4], defaultCamera[5], 1);
+			setTimeout(function (){
+				console.log("Delayed Default Camera: ", defaultCamera);
+				if(typeof defaultCamera != "undefined" && typeof defaultCamera[0] != "undefined")
+					flyToCameraView(defaultCamera[0], defaultCamera[1], defaultCamera[2], defaultCamera[3], defaultCamera[4], defaultCamera[5], 1);
+				setTimeout(function (){
+					defaultCamera = [];
+				}, 1000);			
+			}, 1000);
+		}, 1000);
+	}
+	else
+	{
+		console.log("no default camera available");
+		//flyToCitySkyline(lastCityLoaded);
+	}
+	
+}
+function cameraAltitudeLog()
+{
+	return;
+	/*
+	if(typeof cameraAltitudeAdjustment != "undefined")
+		console.log("#"+cameraAltitudeAdjustment+", Altitude Log: ", getCameraValues().altitude);
+	*/
+	setTimeout(function (){ cameraAltitudeLog(); }, 300);
+	
+	if(window.expectedAltitude != null && parseInt(window.expectedAltitude) != parseInt(getCameraValues().altitude))
+	{
+		//console.log(triedAfterRetry+":> "+window.expectedAltitude+" != "+getCameraValues().altitude+" => Altitude Difference");
+		triedAfterRetry++;
+		if(triedAfterRetry <= 10)
+		{
+			//console.log(triedAfterRetry+" retries, Now Skyline Cam "+lastCityLoaded);
+			//Go to Default Camera
+			if(typeof defaultCamera != "undefined" && typeof defaultCamera[0] != "undefined")
+			{
+				flyToDefaultCameraWithDelay();
+				triedAfterRetry = 11;
+			}
+			else
+			{
+				flyToCitySkyline(lastCityLoaded, 10);
+			}
+		}
+	}
+	else if(parseInt(window.expectedAltitude) == parseInt(getCameraValues().altitude))
+	{
+		//console.log(triedAfterRetry+":> Altitude Matched: "+window.expectedAltitude+" === "+getCameraValues().altitude+" => Altitude Difference");
+		if(window.startCountingMatchedToo)
+			triedAfterRetry++;
+	}
+}
+
+cameraAltitudeLog();
+
+

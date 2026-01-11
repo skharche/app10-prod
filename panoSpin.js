@@ -96,7 +96,7 @@ window.isPanoSpinInProgress = false;
 function prepareForPanoViewForFloor(idtbldg, floor, skipGranularPoints = false, justOnce = false)
 {
 	index = 0;
-	if(typeof window.availableOfficeSpaceFloorWise[idtbldg] != "undefined")
+	if(typeof window.availableOfficeSpaceFloorWise[idtbldg] != "undefined" && typeof window.availableOfficeSpaceFloorWise[idtbldg][floor] != "undefined")
 	{
 		coords = availableOfficeSpaceFloorWise[idtbldg][floor][0].coords;
 		var coordsArray = createPointsArray(coords);
@@ -113,6 +113,42 @@ function prepareForPanoViewForFloor(idtbldg, floor, skipGranularPoints = false, 
 			$(".full-screen-arrow").show();
 		}
 		window.panoSpinHeight = parseInt(parseFloat(availableOfficeSpaceFloorWise[idtbldg][floor][0].floor_height) * parseInt(floor)) + parseInt(cameraAltitudeAdjustment);
+	}
+	else if(lastSelectedBuildingType == "AvailableOfficeSpace" )
+	{
+		var temp = selectedPrimitiveId.split("-");
+		var stData = improvedSuites[temp[2]][temp[3]];
+		var coordsArray = createPointsArray( stData.coords );
+		window.panoSpinCentroid = getCentroid(eval("["+coordsArray+"]"));
+		console.log(coordsArray);
+		get1MeterPoints(coordsArray, 5);
+		if(skipGranularPoints)
+		{
+			window.finalPoints = coordsArray;
+		}
+		if(justOnce)
+		{
+			//Enable < > arrows for Moving points
+			$(".full-screen-arrow").show();
+		}
+	}
+	else if(lastSelectedBuildingType == "OfficeRentalRates" )
+	{
+		var temp = selectedPrimitiveId.split("-");
+		var stData = improvedSuites[temp[2]][temp[3]];
+		var coordsArray = createPointsArray( stData.coords );
+		window.panoSpinCentroid = getCentroid(eval("["+coordsArray+"]"));
+		console.log(coordsArray);
+		get1MeterPoints(coordsArray, 5);
+		if(skipGranularPoints)
+		{
+			window.finalPoints = coordsArray;
+		}
+		if(justOnce)
+		{
+			//Enable < > arrows for Moving points
+			$(".full-screen-arrow").show();
+		}
 	}
 	else if(typeof window.floorPlanDetails[idtbldg] == "undefined")
 	{
@@ -212,6 +248,8 @@ function panoCameraMovement(step)
 
 function prepareHorizonCameraViewV2(pt1, pt2, ht)
 {
+	if(isNaN(ht))
+		return;
 	viewer.entities.removeById('cyl-clip');
 	var cyl = viewer.entities.add({
 		id : 'cyl-clip',
@@ -270,7 +308,7 @@ function prepareHorizonCameraViewV2(pt1, pt2, ht)
 			direction : direction,
 			up : up
 		},
-		duration: 10,
+		duration: 6,
 		easingFunction: function (t) {
 			// t goes from 0 → 1
 			// Example: smoothstep curve

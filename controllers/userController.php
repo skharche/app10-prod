@@ -42,6 +42,8 @@ if (isset($_REQUEST["param"])) {
 
 //data: { param : "getApp10CityBuildingCount", "idtuser" : loggedInUserId, "idtapp": appId, "api_accessed": "default", is_mobile: isMobile.any(), ip_address : IPAddress}
 		case "saveUserAccessData":
+			if(!isset($_POST["isMobile"]))
+				$_POST["isMobile"] = 0;
 			$data = $objController->saveUserAccessData($_POST["idtuser"], $_POST["idtapp"], $_POST["cesiumKey"], $_POST["apiAccessed"], $_POST["appModule"], $_POST["isMobile"], $_POST["ipAddress"] );
 			echo json_encode(array("status" => "success", "data" => $data));
 			break;

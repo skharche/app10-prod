@@ -181,7 +181,7 @@ if(!defined("suite"))
 				$totalOfficeArea = $eachRow["officeArea"];
 			}
 			//SUM(CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED)) AS grossofficearea
-			$q = " SELECT tsuite.*, tsuiteimages.image_name, tsuiteimages.image_path, tfloors.number, tfloors.floor_height, tf2.floor_height as floor_height2, tf2.extruded_height, (tbuilding.altitude / tbuilding.floors) as building_floor_height, YEAR(CURDATE()) - yearbuilt AS year_difference, tbuilding.basefloorheight, tbuilding.address, tbuilding.idtsubmarket, tsubmarket.ssubname, tbuilding.sbuildingname, tbuilding.class, tbuilding.latitude, tbuilding.longitude, CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) as grossofficearea, tcompany.companyname, tcompany.companyimage, tcoords.coords 
+			$q = " SELECT tsuite.*, DATE_FORMAT(tsuite.date_available, '%M %d %Y') as date_available2, tsuiteimages.image_name, tsuiteimages.image_path, tfloors.number, tfloors.floor_height, tf2.floor_height as floor_height2, tf2.extruded_height, (tbuilding.altitude / tbuilding.floors) as building_floor_height, YEAR(CURDATE()) - yearbuilt AS year_difference, tbuilding.basefloorheight, tbuilding.address, tbuilding.total_additional_rent, tbuilding.idtsubmarket, tsubmarket.ssubname, tbuilding.sbuildingname, tbuilding.class, tbuilding.latitude, tbuilding.longitude, CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) as grossofficearea, tcompany.companyname, tcompany.companyimage, tcoords.coords 
 				FROM tsuite
 				LEFT JOIN tsuiteimages ON tsuiteimages.idtsuite = tsuite.idtsuite
 				LEFT JOIN tbuilding ON tbuilding.idtbuilding = tsuite.idtbuilding
@@ -204,6 +204,7 @@ if(!defined("suite"))
 					$eachRow["coords"] = trim($eachRow["coords"], "\t");
 					$eachRow["coords"] = trim(trim($eachRow["coords"], ""), ",**");
 					$eachRow["coords"] = str_replace("**", "", $eachRow["coords"]);
+					$eachRow["suite_areaV2"] = $this->formatNumberSmart($eachRow["suite_area"]);
 					
 					//Use updated floor height
 					if((int)$eachRow["floor_height2"] > 0)
@@ -244,9 +245,43 @@ if(!defined("suite"))
 				}
 			}
 			
+			$q = "SELECT aos_document_id, aos_document.idtsuite, aos_document.filename, aos_document.filetype, length(filedata) as filesize  FROM aos_document
+					LEFT JOIN tsuite ON tsuite.idtsuite = aos_document.idtsuite
+					LEFT JOIN tbuilding ON tbuilding.idtbuilding = tsuite.idtbuilding
+					LEFT JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket 
+					
+					WHERE tsuite.is_active = 1
+					AND tsubmarket.idtmarket = '".$idtmarket."' order by aos_document.aos_document_id  ";
+			if($result = mysqli_query($mysqliObj, $q))
+			{
+				while($row = mysqli_fetch_assoc($result))
+				{
+					$row["aos_document_id"] = $this->encryptParam($row["aos_document_id"]);
+					$suiteOtherImages[$row["idtsuite"]]["files"][] = $row;
+				}
+			}
+			
 			return array($summaryDetails, $suiteDetails, $suiteOtherImages, $totalOfficeArea);
 		}
 		
+		function formatNumberSmart($number) {
+			if($number == null)
+				return "";
+			$number = str_replace(",", "", trim($number));
+			// Check if number has a decimal part
+			if (floor($number) != $number) {
+				return number_format($number, 2); // with decimals
+			} else {
+				return number_format($number); // no decimals
+			}
+		}
+		
+		function encryptParam($data) {
+			$encryption_key = base64_decode("4587854");
+			$iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('AES-256-CBC'));
+			$encrypted = openssl_encrypt($data, 'AES-256-CBC', $encryption_key, 0, $iv);
+			return base64_encode($encrypted . '::' . $iv);
+		}
 		
 		function getCityFloorplanDetails()
 		{
@@ -264,7 +299,7 @@ if(!defined("suite"))
 			$conn = new dbConnection();
 			$mysqliObj = $conn->Connect();
 			
-			$q = "SELECT tsuite.idtsuite, tsuite.suite_name, tsuite.suite_description, tsuite.suite_area, tsuite.floor_number, tbuilding.class, tbuilding.grossofficearea, tbuilding.sbuildingname, tbuilding.idtbuilding, tbuilding.latitude, tbuilding.longitude, tbuilding.floors, tbuilding.basefloorheight, tbuilding.altitude, tbuilding.floorheight as building_floor_height, tfloors.idtfloors, tfloors.floor_height, tsuiteimages.image_name, tsuiteimages.image_path, tcoords.coords FROM tsuite
+			$q = "SELECT tsuite.idtsuite, tsuite.suite_name, tsuite.suite_description, tsuite.suite_area, tsuite.floor_number, tbuilding.total_additional_rent, tbuilding.class, tbuilding.grossofficearea, tbuilding.sbuildingname, tbuilding.idtbuilding, tbuilding.latitude, tbuilding.longitude, tbuilding.floors, tbuilding.basefloorheight, tbuilding.altitude, tbuilding.floorheight as building_floor_height, tfloors.idtfloors, tfloors.floor_height, tsuiteimages.image_name, tsuiteimages.image_path, tcoords.coords FROM tsuite
 					LEFT JOIN tsuiteimages ON tsuiteimages.idtsuite = tsuite.idtsuite
 					LEFT JOIN tbuilding ON tbuilding.idtbuilding = tsuite.idtbuilding
 					LEFT JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket 
@@ -398,6 +433,24 @@ if(!defined("suite"))
 					$suiteOtherImages[$row["idtsuite"]][$row["image_type"]][] = $row;
 				}
 			}
+			
+			$q = "SELECT aos_document_id, aos_document.idtsuite, aos_document.idtsuite, aos_document.filename, aos_document.filetype, length(filedata) as filesize FROM aos_document
+					LEFT JOIN tsuite ON tsuite.idtsuite = aos_document.idtsuite
+					LEFT JOIN tbuilding ON tbuilding.idtbuilding = tsuite.idtbuilding
+					LEFT JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket 
+					
+					WHERE tsuite.is_active = 1
+					AND tsubmarket.idtcity = '".$idtcity."' order by aos_document.aos_document_id  ";
+			$salt = "33d20ef8";
+			if($result = mysqli_query($mysqliObj, $q))
+			{
+				while($row = mysqli_fetch_assoc($result))
+				{
+					$row["aos_document_id"] = $this->encryptParam($row["aos_document_id"]);
+					$suiteOtherImages[$row["idtsuite"]]["files"][] = $row;
+				}
+			}
+			
 			$floorDetails = array();
 			if($i > 0)
 			{
