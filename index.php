@@ -23,7 +23,7 @@ if (isset($_GET['floorplan'])) {
 	$stmt->store_result();
 	$stmt->bind_result($filename, $filepath);
 	$stmt->fetch();
-	$filedata = file_get_contents("../visgrid-tools/".$filepath.$filename);
+	$filedata = file_get_contents("../measure/visgrid-tools/".$filepath.$filename);
 	header("Content-Type: image/jpeg");
 	header("Content-Disposition: attachment; filename=\"$filename\"");
 	echo $filedata;
