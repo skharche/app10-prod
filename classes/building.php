@@ -73,7 +73,7 @@ if(!defined("building"))
 		@ignore***************************************************************************************************************/
 		function __CONSTRUCT()
 		{
-			$this->BuildingClasses = " 'A', 'AA', 'AAA', 'B', 'C', 'APT', 'SENIOR', 'MDU', 'HOTEL', 'GOV', 'Retail', 'EDU', 'MED', 'PRKS' ";
+			$this->BuildingClasses = " 'A', 'AA', 'AAA', 'B', 'C', 'APT', 'SENIOR', 'MDU', 'EMS', 'HOTEL', 'GOV', 'Retail', 'EDU', 'MED', 'PRKS', 'EMS' ";
 			//Args is used to overload the method. Unused cases should be removed. 
 			$args = func_get_args();
 			switch(count($args))
@@ -162,7 +162,7 @@ if(!defined("building"))
 			$conn = new dbConnection();
 			$mysqliObj = $conn->Connect();
 			
-			$q = "SELECT tbuilding.idtbuilding, tbuilding.idtsubmarket, tbuilding.idtcamera, tsubmarket.ssubname, tbuilding.sbuildingname, tbuilding.parkingstalls, tbuilding.class as buildingclass, YEAR(CURDATE()) - yearbuilt AS year_difference , tbuilding.address, tbuilding.yearbuilt, tbuilding.total_additional_rent, tbuilding.op_maint, tbuilding.realty_tax, tbuilding.lastreno, tbuilding.altitude, tbuilding.floors, tbuilding.basefloorheight, tbuilding.units, tbuilding.hoteldoors, CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) as grossofficearea, CAST(REPLACE(tbuilding.grossretailarea, ',', '') AS UNSIGNED) as grossretailarea, tfloors.idtfloors, tfloors.name, tfloors.idtcoords, tfloors.floor_height, tbuilding.floorheight as buildingfloorheight, tcoords.coords, thotelclass.star_rating
+			$q = "SELECT tbuilding.idtbuilding, tbuilding.latitude, tbuilding.longitude, tbuilding.idtsubmarket, tbuilding.idtcamera, tsubmarket.ssubname, tbuilding.sbuildingname, tbuilding.parkingstalls, tbuilding.class as buildingclass, YEAR(CURDATE()) - yearbuilt AS year_difference , tbuilding.address, tbuilding.yearbuilt, tbuilding.total_additional_rent, tbuilding.op_maint, tbuilding.realty_tax, tbuilding.lastreno, tbuilding.altitude, tbuilding.floors, tbuilding.basefloorheight, tbuilding.units, tbuilding.hoteldoors, CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) as grossofficearea, CAST(REPLACE(tbuilding.grossretailarea, ',', '') AS UNSIGNED) as grossretailarea, tfloors.idtfloors, tfloors.name, tfloors.idtcoords, tfloors.floor_height, tbuilding.floorheight as buildingfloorheight, tcoords.coords, thotelclass.star_rating
 			,(
 				SELECT SUM(suite_area)
 				FROM tsuite
@@ -486,6 +486,8 @@ if(!defined("building"))
 					$classDetails["HOTEL"] = array(0, 0);
 				if(!isset($classDetails["MDU"]))
 					$classDetails["MDU"] = array(0, 0);
+				if(!isset($classDetails["EMS"]))
+					$classDetails["EMS"] = array(0, 0);
 				mysqli_free_result($result);
 				unset($row);
 			}
@@ -659,6 +661,7 @@ if(!defined("building"))
 				"Retail" => array("totalBuildings" => 0, "officeArea" => 0, "year_difference" => 0, "stalls" => 0),
 				"GOV" => array("totalBuildings" => 0, "officeArea" => 0, "year_difference" => 0, "stalls" => 0),
 				"MED" => array("totalBuildings" => 0, "officeArea" => 0, "year_difference" => 0, "stalls" => 0),
+				"EMS" => array("totalBuildings" => 0, "officeArea" => 0, "year_difference" => 0, "stalls" => 0),
 				"EDU" => array("totalBuildings" => 0, "officeArea" => 0, "year_difference" => 0, "stalls" => 0),
 				"SENIOR" => array("totalBuildings" => 0, "officeArea" => 0, "year_difference" => 0, "stalls" => 0),
 				"PRKS" => array("totalBuildings" => 0, "officeArea" => 0, "year_difference" => 0, "stalls" => 0),
@@ -848,7 +851,7 @@ if(!defined("building"))
 				JOIN tcoords ON tcoords.idtcoords = tfloors.idtcoords_auto
 				WHERE 
 					idtsubmarket IN (SELECT idtsubmarket FROM tsubmarket WHERE idtmarket = $idtmarket )
-					AND lower(tbuilding.class) IN ('edu', 'med')
+					AND lower(tbuilding.class) IN ('edu', 'med', 'ems')
 					AND UPPER(tbuilding.tstatus) = 'COMPLETED' 
 					AND tfloors.number = 1 GROUP BY tbuilding.class ";
 			//echo $q;
@@ -1508,6 +1511,25 @@ if(!defined("building"))
 			return $buildings;
 		}
 		
+		function getSubmarketDetailsWithMostBuildings($idtmarket)
+		{
+			$conn = new dbConnection();
+			$mysqliObj = $conn->Connect();
+			
+			$q = "SELECT tsubmarket.idtsubmarket, tsubmarket.ssubname, (SELECT COUNT(*) FROM tbuilding WHERE tbuilding.idtsubmarket = tsubmarket.idtsubmarket) AS cnt 
+				, tcamera.*
+				FROM tsubmarket
+				JOIN tcamera ON tcamera.idtcamera = tsubmarket.idtcamera
+				 WHERE idtmarket = '".$idtmarket."'
+				ORDER BY cnt DESC LIMIT 0,1  ";
+				$data = array();
+			if($result = mysqli_query($mysqliObj, $q))
+			{
+				$data = mysqli_fetch_assoc($result);
+			}
+			return $data;
+		}
+		
 		function getApp10MarketDetails($userId = "")
 		{
 			$conn = new dbConnection();
@@ -1534,16 +1556,18 @@ if(!defined("building"))
 			$buildingDetails["camera"] = array();
 			$buildingDetails["allCitiesWithCountry"] = array();
 			$buildingDetails["citiesAccessible"] = array();
+			$buildingDetails["marketBoundaries"] = array();
 			$buildingDetails["cityBoundaries"] = array();
 			$buildingDetails["cityCameras"] = array();
 			$buildingDetails["cameraRotation"] = array();
 			$buildingDetails["cityAltitudeAdjustment"] = array();
 			$buildingDetails["disabledMarkets"] = array();
+			$buildingDetails["submarketWithMaxBuilding"] = array();
 			
 			$markets = " null ";
 			if($userId != "")
 			{
-				$q = "SELECT tuser_app10_access.idtapp10visualization, tuser_app10_access.idtuser, tcity.country, tmarket.idtmarket, tmarket.marketname, tapp10market.default_enabled, tapp10market.display_order, tapp10visualization.visualization_name, visualization_value, tapp10visualization.display_order 
+				$q = "SELECT tuser_app10_access.idtapp10visualization, tuser_app10_access.idtuser, tcity.country, tmarket.idtmarket, tmarket.marketname, tmarket.market_boundary, tapp10market.default_enabled, tapp10market.display_order, tapp10visualization.visualization_name, visualization_value, tapp10visualization.display_order 
 					FROM 
 					tuser_app10_access
 					JOIN tapp10visualization ON tapp10visualization.idtapp10visualization = tuser_app10_access.idtapp10visualization
@@ -1557,6 +1581,8 @@ if(!defined("building"))
 				{
 					while($eachRow = mysqli_fetch_assoc($result))
 					{
+						$buildingDetails["submarketWithMaxBuilding"][$eachRow["idtmarket"]] = $this->getSubmarketDetailsWithMostBuildings($eachRow["idtmarket"]);
+						$buildingDetails["marketBoundaries"][$eachRow["idtmarket"]] = $eachRow["market_boundary"];
 						if(!in_array($eachRow["idtmarket"], $mktArray))
 						{
 							array_push($mktArray, $eachRow["idtmarket"]);
@@ -1576,6 +1602,8 @@ if(!defined("building"))
 					$markets = " null ";
 				}
 			}
+			$buildingDetails["citiesWithMultipleMarket"] = array();
+			$tempCities = array();
 			//echo "##".$markets;
 			if($markets != " null ")
 			{
@@ -1602,7 +1630,9 @@ if(!defined("building"))
 					while($eachRow = mysqli_fetch_assoc($result))
 					{
 						$eachRow["scityname"] = $this->skipUTFEncode($eachRow["scityname"]);
-						
+						if(!isset($tempCities[$eachRow["idtcity"]]))
+							$tempCities[$eachRow["idtcity"]] = array();
+						$tempCities[$eachRow["idtcity"]][] = $eachRow["idtmarket"];
 						$buildingDetails["cityBoundaries"][$eachRow["idtcity"]] = "[".$eachRow["city_boundary"]."]";
 						$buildingDetails["cityCameras"][$eachRow["idtcity"]] = array( "skylineidtcamera" => $eachRow["skylineidtcamera"], "skylineidtcamera2" => $eachRow["skylineidtcamera2"], "altitudeadjustment" => $eachRow["altitudeadjustment"] );
 						$buildingDetails["data"][$sortOrder[$eachRow["idtmarket"]]] = $eachRow;
@@ -1617,6 +1647,14 @@ if(!defined("building"))
 					}
 					mysqli_free_result($result);
 					unset($row);
+				}
+				
+				foreach($tempCities as $cityId => $citymarkets)
+				{
+					if(count($citymarkets) > 1)
+					{
+						$buildingDetails["citiesWithMultipleMarket"][$cityId] = $citymarkets;
+					}
 				}
 				
 				$q = "SELECT * FROM tcamera WHERE idtcamera IN (".implode(",", $allCameras).");";
@@ -1678,6 +1716,39 @@ if(!defined("building"))
 				unset($row);
 			}
 			
+			$q = "SELECT tcity.scityname, tcity.country, tcity.areaunits, SUM(CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS SIGNED)) AS officearea
+					FROM tbuilding
+					JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket
+					JOIN tmarket ON tsubmarket.idtmarket = tmarket.idtmarket
+					
+					JOIN tcity ON tcity.idtcity = tmarket.idtcity
+					WHERE 1
+					GROUP BY scityname ORDER BY tcity.country, officearea DESC ;";
+			//echo $q;
+			$TEMPOfficeArea = array();
+			if($result = mysqli_query($mysqliObj, $q))
+			{
+				while($eachRow = mysqli_fetch_assoc($result))
+				{
+					$eachRow["scityname"] = $this->skipUTFEncode($eachRow["scityname"]);
+					if((int)$eachRow["officearea"] != 0)
+					{
+						if($eachRow["areaunits"] == "sqm")
+						{
+							$eachRow["officearea"] = number_format(0.092903 * (int)$eachRow["officearea"])." sqm";
+						}
+						else
+						{
+							$eachRow["officearea"] = number_format($eachRow["officearea"])." Sq Ft";
+						}
+					}
+					
+					$TEMPOfficeArea[$eachRow["scityname"]] = $eachRow["officearea"];
+				}
+				mysqli_free_result($result);
+				unset($row);
+			}
+			
 			$q = "SELECT tmarket.*, tcity.scityname, tcity.country, COUNT(tbuilding.idtbuilding) as cnt
 					FROM `tapp10market`
 					JOIN tmarket ON tmarket.idtmarket = tapp10market.idtmarket
@@ -1701,6 +1772,11 @@ if(!defined("building"))
 						$eachRow["floorplans"] = $TEMP[$eachRow["scityname"]];
 					else
 						$eachRow["floorplans"] = 0;
+					//City wise Office Area
+					if(isset($TEMPOfficeArea[$eachRow["scityname"]]))
+						$eachRow["officearea"] = $TEMPOfficeArea[$eachRow["scityname"]];
+					else
+						$eachRow["officearea"] = 0;
 					$buildingDetails["allCitiesWithCountry"][$eachRow["country"]][] = $eachRow;
 					array_push($cities, $eachRow["idtcity"]);
 				}
@@ -1708,12 +1784,14 @@ if(!defined("building"))
 				foreach($buildingDetails["allCitiesWithCountry"] as $country => $rows)
 				{
 					$arr = 0;
+					$floorplancount = 0;
 					foreach($rows as $eachCity)
 					{
 						//print_r($eachCity);
 						$arr += $eachCity["cnt"];
+						$floorplancount += $eachCity["floorplans"];
 					}
-					$buildingDetails["countryWithProperties"][] = array("name" => $country, "total" => $arr);
+					$buildingDetails["countryWithProperties"][] = array("name" => $country, "total" => $arr, "floorplans" => $floorplancount);
 				}
 				mysqli_free_result($result);
 				unset($row);

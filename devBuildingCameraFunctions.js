@@ -474,13 +474,45 @@ async function TravelSlowlyAlongToPath(routePoints) {
   loadSlowModel(position);
 }
 
-
-
-
 //New Clip functions, App15
 var IsEnableClip = false;
 var AllTileLoaded = false;
 function ToggleClipSelectedBuildingApp15(id) {
+	console.log("Inside ToggleClipSelectedBuildingApp15() "+id);
+	window.lastBuildingClipped = id;
+  if (IsEnableClip)
+  {
+    $("#clip").css("font-weight", "normal");
+    IsEnableClip = false;
+	/*
+    for (var item of highLightPolygons) {
+      item.classificationType = Cesium.ClassificationType.CESIUM_3D_TILE;
+    }
+	*/
+    globe.baseColor = Cesium.Color.TRANSPARENT;
+    if (googleTileset.clippingPolygons != undefined) {
+      googleTileset.clippingPolygons.removeAll();
+      googleTileset.clippingPolygons = undefined;
+    }
+  }
+  else
+  {
+	/*
+    for (var item of highLightPolygons) {
+      item.classificationType = Cesium.ClassificationType.BOTH;
+    }
+	*/
+	if(parseInt(lastCityLoaded) == 36)
+	{
+		createFlatTerrain();
+	}
+	currentBuildingwkt = TempBldgData[id].coords;
+    EnableBuildingClipping();
+    globe.baseColor = Cesium.Color.GRAY;
+  }
+}
+
+function ToggleInverseClipSelectedBuildingApp15(id) {
   if (IsEnableClip)
   {
     $("#clip").css("font-weight", "normal");
@@ -504,13 +536,32 @@ function ToggleClipSelectedBuildingApp15(id) {
     }
 	*/
 	currentBuildingwkt = TempBldgData[id].coords;
-    EnableBuildingClipping();
+    EnableBuildingClipping(true);
     globe.baseColor = Cesium.Color.GRAY;
   }
+  
+}
+
+function clearClipSelectedBuildingApp15() {
+	console.log("In clearClipSelectedBuildingApp15()");
+	$("#clip").css("font-weight", "normal");
+    IsEnableClip = false;
+	/*
+    for (var item of highLightPolygons) {
+      item.classificationType = Cesium.ClassificationType.CESIUM_3D_TILE;
+    }
+	*/
+    globe.baseColor = Cesium.Color.TRANSPARENT;
+    if (googleTileset.clippingPolygons != undefined) {
+      googleTileset.clippingPolygons.removeAll();
+      googleTileset.clippingPolygons = undefined;
+    }
+	window.lastBuildingClipped = null;
 }
 
 //currentBuildingwkt = BldgFootprint;
-async function EnableBuildingClipping() {
+window.lastBuildingClipped = null;
+async function EnableBuildingClipping(isInverse = false) {
   if (AllTileLoaded) {
     $("#clip").css("font-weight", "bold");
     IsEnableClip = true;
@@ -531,12 +582,14 @@ async function EnableBuildingClipping() {
         }),
       ],
     });
-    googleTileset.clippingPolygons.inverse = true;
+    googleTileset.clippingPolygons.inverse = !isInverse;
   } else {
+	  /*
     Toast.fire({
       icon: "warning",
       title: "Google Tileset is not loaded completely! Please wait.",
     });
+	  */
   }
 }
 

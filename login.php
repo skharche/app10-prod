@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 								</div>
 
 								<!-- Version Label -->
-								<div class="version-label">version 1.1</div>
+								<div class="version-label">version 1.2</div>
 							</div>
 
 							<style>

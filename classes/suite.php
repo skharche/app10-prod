@@ -165,6 +165,22 @@ if(!defined("suite"))
 			$summaryDetails["Co-Working"] = array("buildings" => array(), "officeArea" => 0, "totalSuites" => 0, "availableOfficeArea" => 0, "availableArea" => 0, "vacancy" => 0);
 			$summaryDetails["Retail"] = array("buildings" => array(), "officeArea" => 0, "totalSuites" => 0, "availableOfficeArea" => 0, "availableArea" => 0, "vacancy" => 0);
 			
+			$lastRecordDate = "";
+			//$q = " SELECT DATE_FORMAT(date_created, '%e %b %Y') as date_created FROM tsuite ORDER BY date_created DESC LIMIT 0,1 ";
+			$q = "SELECT DATE_FORMAT(date_modified, '%e %b %Y') AS date_modified FROM tsuite
+				LEFT JOIN tbuilding ON tbuilding.idtbuilding = tsuite.idtbuilding
+				LEFT JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket
+				WHERE tsubmarket.idtmarket = '".$idtmarket."' 
+				ORDER BY tsuite.date_modified DESC LIMIT 0,1";
+			if($result = mysqli_query($mysqliObj, $q))
+			{
+				$eachRow = mysqli_fetch_assoc($result);
+				if($eachRow != null)
+				{
+					$lastRecordDate = $eachRow["date_modified"];
+				}
+			}
+			
 			$q = "SELECT 
 					SUM(CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED)) AS officeArea
 				FROM 
@@ -181,7 +197,8 @@ if(!defined("suite"))
 				$totalOfficeArea = $eachRow["officeArea"];
 			}
 			//SUM(CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED)) AS grossofficearea
-			$q = " SELECT tsuite.*, DATE_FORMAT(tsuite.date_available, '%M %d %Y') as date_available2, tsuiteimages.image_name, tsuiteimages.image_path, tfloors.number, tfloors.floor_height, tf2.floor_height as floor_height2, tf2.extruded_height, (tbuilding.altitude / tbuilding.floors) as building_floor_height, YEAR(CURDATE()) - yearbuilt AS year_difference, tbuilding.basefloorheight, tbuilding.address, tbuilding.total_additional_rent, tbuilding.idtsubmarket, tsubmarket.ssubname, tbuilding.sbuildingname, tbuilding.class, tbuilding.latitude, tbuilding.longitude, CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) as grossofficearea, tcompany.companyname, tcompany.companyimage, tcoords.coords 
+			$q = " SELECT tsuite.*, DATE_FORMAT(tsuite.date_available, '%M %d %Y') as date_available2, tsuiteimages.image_name, tsuiteimages.image_path, tfloors.number, tfloors.floor_height, tf2.floor_height as floor_height2, tf2.extruded_height, (tbuilding.altitude / tbuilding.floors) as building_floor_height, tbuilding.yearbuilt, tbuilding.lastreno, YEAR(CURDATE()) - yearbuilt AS year_difference, tbuilding.basefloorheight, tbuilding.address, tbuilding.total_additional_rent, tbuilding.idtsubmarket, tsubmarket.ssubname, tbuilding.sbuildingname, tbuilding.class, tbuilding.latitude, tbuilding.longitude, CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) as grossofficearea, tcompany.companyname, tcompany.companyimage, tcoords.coords 
+			, (SELECT sum(suite_area) FROM tsuite WHERE tsuite.idtbuilding = tbuilding.idtbuilding) as total_suite_area, CONCAT_WS(' ',tuser.firstname, tuser.lastname ) as broker, tuser.email as broker_email
 				FROM tsuite
 				LEFT JOIN tsuiteimages ON tsuiteimages.idtsuite = tsuite.idtsuite
 				LEFT JOIN tbuilding ON tbuilding.idtbuilding = tsuite.idtbuilding
@@ -190,6 +207,7 @@ if(!defined("suite"))
 				LEFT JOIN tcoords on tcoords.idtcoords = tfloors.idtcoords_auto
 				LEFT JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket
 				LEFT JOIN tcompany ON tcompany.idtcompany = tsuite.idtcompany
+				LEFT JOIN tuser ON tsuite.idtbroker = tuser.idtuser
 				
 				WHERE 1 AND tsubmarket.idtmarket = '".$idtmarket."' AND tsuite.space_type = 'Office' AND tsuite.is_active = 1 AND tfloors.number = 1 and tf2.number = tsuite.floor_number AND tsuiteimages.image_type = 'floor-plan-images' order by tsuite.floor_number, tsuite.suite_name  ";
 			
@@ -261,7 +279,7 @@ if(!defined("suite"))
 				}
 			}
 			
-			return array($summaryDetails, $suiteDetails, $suiteOtherImages, $totalOfficeArea);
+			return array($summaryDetails, $suiteDetails, $suiteOtherImages, $totalOfficeArea, $lastRecordDate);
 		}
 		
 		function formatNumberSmart($number) {

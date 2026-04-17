@@ -57,7 +57,7 @@ if (isset($_REQUEST["param"])) {
 			break;
 		case "getAvailableOfficeSpaceDetails":
 			$marketData = $objController->getAvailableOfficeSpaceDetails($_REQUEST["idtmarket"]);
-			echo json_encode(array("status" => "success", "summaryDetails" => $marketData[0], "data" => $marketData[1], "suiteOtherImages" => $marketData[2], "totalOfficeArea" => $marketData[3]));
+			echo json_encode(array("status" => "success", "summaryDetails" => $marketData[0], "data" => $marketData[1], "suiteOtherImages" => $marketData[2], "totalOfficeArea" => $marketData[3], "lastRecordDate" => $marketData[4]));
 			break;
 		default:
 			//echo json_encode(array("error" => "Invalid Request Received!!!"));

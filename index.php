@@ -13,7 +13,23 @@ function decryptParam($data) {
     return openssl_decrypt($encrypted_data, 'AES-256-CBC', $encryption_key, 0, $iv);
 }
 
-// Validate and decrypt ID
+if (isset($_GET['floorplan'])) {
+	$suiteId = $_GET['id'];
+	//$id = intval(base64_decode($_GET['id']));
+	$stmt = $conn->prepare("SELECT image_name, image_path FROM tsuiteimages WHERE image_type = 'floor-plan-images' AND idtsuite=?");
+
+	$stmt->bind_param("i", $suiteId);
+	$stmt->execute();
+	$stmt->store_result();
+	$stmt->bind_result($filename, $filepath);
+	$stmt->fetch();
+	$filedata = file_get_contents("../visgrid-tools/".$filepath.$filename);
+	header("Content-Type: image/jpeg");
+	header("Content-Disposition: attachment; filename=\"$filename\"");
+	echo $filedata;
+	return;
+}
+
 if (isset($_GET['id']))
 {
 	$decrypted_id = decryptParam($_GET['id']);
@@ -103,6 +119,8 @@ $classColorDetails = $classColorObj->getClassColorArray();
       rel="stylesheet"
       href="./lib/bootstrap-5.1.1-dist/css/bootstrap.min.css"
     />
+	<link rel="stylesheet" href="./lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="./lib/fontawesome/css/fontawesome.min.css" />
 	<!--
     <link rel="stylesheet" href="./lib/fontawesome/css/all.min.css" />
     <link rel="stylesheet" href="./lib/fontawesome/css/fontawesome.min.css" />
@@ -213,9 +231,14 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		if(isset($_REQUEST["lastSuiteId"]))
 			$lastSuiteId = $_REQUEST["lastSuiteId"];
 		
+		$showLogos = "";
+		if(isset($_REQUEST["showLogos"]))
+			$showLogos = $_REQUEST["showLogos"];
+		
 		$tabYearSelected = "All";
 		if(isset($_REQUEST["year"]))
 			$tabYearSelected = $_REQUEST["year"];
+		
 		$lastSuiteIndex = null;
 		if(isset($_REQUEST["lastSuite"]))
 			$lastSuiteIndex = $_REQUEST["lastSuite"];
@@ -293,6 +316,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		var defaultMarket = null;
 		var defaultBuilding = null;
 		var defaultSuiteId = null;
+		var showLogos = null;
 		var defaultTabYearSelected = "All";
 		var DefaultSuiteIndex = null;
 		var defaultCamera = null;
@@ -306,6 +330,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		defaultMarketId = '<?php echo $marketId; ?>';
 		defaultBuilding = '<?php echo $lastBuildingId; ?>';
 		defaultSuiteId = '<?php echo $lastSuiteId; ?>';
+		showLogos = '<?php echo $showLogos; ?>';
 		defaultTabYearSelected = '<?php echo $tabYearSelected; ?>';
 		DefaultSuiteIndex = '<?php echo $lastSuiteIndex; ?>';
 		defaultEffects = '<?php echo $effects; ?>';
@@ -417,6 +442,9 @@ $classColorDetails = $classColorObj->getClassColorArray();
     <script src="./nearestPoint.js"></script>
     <script src="./cameraFunctions.js"></script>
     <script src="./devBuildingCameraFunctions.js"></script> <!-- App15 and App18 functions-->
+	<script src="./floorLabelFunctions.js"></script>
+	<script src="./mergeCoords.js"></script>
+	<script src="./js/jquery-ui.js"></script> <!-- Measurement Panel JS -->
   </head>
   <body>
 		<div id="tooltip" class="copied-tooltip">Copied!</div>
@@ -550,6 +578,11 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		</div>
     </div>
 	
+	<!-- Zoom Overlay -->
+	<div class="zoom-view" id="zoomView">
+		<span class="zoom-close" onclick="closeZoom()">&times;</span>
+		<img id="zoomImage">
+	</div>
 	
 	<div id="viewerController">
 		<!--div class="image-container">
@@ -593,12 +626,13 @@ $classColorDetails = $classColorObj->getClassColorArray();
 
 		  <!-- Dropdown menu -->
 		  <ul class="dropdown2-menu">
-		    <li><a class="dropdown2-item" id="showLogo-li" data-text="Show Logo" href="#">Show Logos</a></li>
+			<li><a class="dropdown2-item" id="showLogo-li" data-text="Show Logo" href="#">Show Logos</a></li>
 			<li><a class="dropdown2-item" id="hideLogo-li" data-text="Hide Logo" href="#">Hide Logos</a></li>
 			<li><a class="dropdown2-item selected" id="white-overlay-li" data-text="White Overlay" href="#">White Overlay</a></li>
 			<li><a class="dropdown2-item" id="dark-overlay-li" data-text="Dark Overlay" href="#">Dark Overlay</a></li>
 			<li><a class="dropdown2-item" id="shrink-li" data-text="Shrink" href="#">Shrink Mesh</a></li>
 			<li><a class="dropdown2-item" id="fps-li" data-text="FPS" href="#">FPS</a></li>
+			<li><a class="dropdown2-item" id="measure-li" data-text="Measure" href="#">Measure</a></li>
 			<li><a class="dropdown2-item" id="reset-li" data-text="Reset" href="#">Reset</a></li>
 			<!--li id="pano-view-li"><a class="dropdown2-item" id="pano-li" data-text="Pano-View" href="#">Pano</a></li-->
 			<li onClick="logoutUser();"><a class="dropdown2-item" id="user-li" data-text="User" href="#"><?php echo $_COOKIE["app10LoggedInUserName"];?> <img height="24" width="24" src="images/logout.png"/></a></li>
@@ -676,6 +710,174 @@ $classColorDetails = $classColorObj->getClassColorArray();
         </div-->
 	</div>
 	
+	<div id="NYCitymanagementDiv">
+		<table >
+			<tr style="border: 1px solid black;">
+				<td rowspan="4" valign="top">Lower Manhattan</td>
+				<td onClick="reloadHighlight(212);" class="temp-submarket submarket-212">Chinatown</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(22);" class="temp-submarket submarket-22">City Hall</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(21);" class="temp-submarket submarket-21">Financial</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(23);" class="temp-submarket submarket-23">World Financial Center</td>
+			</tr>
+			
+			<tr style="border: 1px solid black;">
+				<td rowspan="13" valign="top">Midtown Manhattan</td>
+				<td onClick="reloadHighlight(29);" class="temp-submarket submarket-29">East Side</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(27);" class="temp-submarket submarket-27">Fifth and Madison Avenue</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(30);" class="temp-submarket submarket-30">Grand Central</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(257);" class="temp-submarket submarket-257">Harlem</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(251);" class="temp-submarket submarket-251">Hudson Yards</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(28);" class="temp-submarket submarket-28">Park Avenue</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(32);" class="temp-submarket submarket-32">Penn Station</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(25);" class="temp-submarket submarket-25">Plaza District</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(26);" class="temp-submarket submarket-26">Sixth and Rockefeller Center</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(24);" class="temp-submarket submarket-24">Times Square and West Side</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(31);" class="temp-submarket submarket-31">Times Square South</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(53);" class="temp-submarket submarket-53">Upper East Side</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(55);" class="temp-submarket submarket-55">Upper West Side</td>
+			</tr>
+			
+			<tr style="border: 1px solid black;">
+				<td rowspan="9" valign="top">Midtown Manhattan South</td>
+				<td onClick="reloadHighlight(33);" class="temp-submarket submarket-33">Chelsea</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(88);" class="temp-submarket submarket-88">East Village</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(36);" class="temp-submarket submarket-36">Flatiron</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(52);" class="temp-submarket submarket-52">Greenwich Village</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(35);" class="temp-submarket submarket-35">Hudson Square and Tribeca</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(63);" class="temp-submarket submarket-63">Lower East Side</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(34);" class="temp-submarket submarket-34">NoHo and SoHo</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(38);" class="temp-submarket submarket-38">Park Avenue South and Madison Square</td>
+			</tr>
+			<tr>
+				<td onClick="reloadHighlight(37);" class="temp-submarket submarket-37">Union Square</td>
+			</tr>
+		</table>
+		
+	</div>
+	
+	<div id="measurementPanel">
+        <div id="measurementPanel_header">
+          Measure Tools
+          <span class="hide_icon" onclick="CloseMeasurementPanel()"
+            ><i class="fas fa-times"></i>
+          </span>
+        </div>
+        <div id="measurementUnitPanel">
+          <div id="unitPanel">
+            <div class="form-check" style="margin-right: 15px">
+              <label class="form-check-label" for="metric"> Metric </label>
+              <input
+                class="form-check-input"
+                type="radio"
+                name="measureUnit"
+                id="metric"
+                onchange="SetMeasureUnit('Metric')"
+              />
+            </div>
+            <div class="form-check">
+              <label class="form-check-label" for="imperial"> Imperial </label>
+              <input
+                class="form-check-input"
+                type="radio"
+                name="measureUnit"
+                id="imperial"
+                onchange="SetMeasureUnit('Imperial')"
+                checked
+              />
+            </div>
+          </div>
+        </div>
+        <div id="measurementContent">
+          <div id="measurementTools">
+            <div
+              id="positionIns"
+              class="measurementButton inactive"
+              title="Position Inspector"
+            >
+              <i class="fa-solid fa-location-dot defaultIcon"></i>
+            </div>
+            <div
+              id="slope"
+              class="measurementButton inactive"
+              title="Component Distance"
+            >
+              <i class="fa-solid fa-ruler defaultIcon"></i>
+            </div>
+            <div
+              id="hrLine"
+              class="measurementButton inactive"
+              title="Horizontal Distance"
+            >
+              <i class="fas fa-ruler-horizontal defaultIcon"></i>
+            </div>
+            <div
+              id="vrLine"
+              class="measurementButton inactive"
+              title=" Vertical Distance"
+            >
+              <i class="fas fa-ruler-vertical defaultIcon"></i>
+            </div>
+            <div
+              id="polyline"
+              class="measurementButton inactive"
+              title="Polyline Distance"
+            >
+              <i class="fa-solid fa-ruler-combined defaultIcon"></i>
+            </div>
+            <div id="area" class="measurementButton inactive" title="Area">
+              <i class="fas fa-draw-polygon defaultIcon"></i>
+            </div>
+            <div id="clear" class="measurementButton inactive" title="Clear">
+              <i class="fa-solid fa-broom defaultIcon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+	  
 	<div id="PolygonCOverlay">
 		<div style="font-size: 22px; margin-bottom: 10px;"><span id="floorNum"></span></div>
 		<div id="FloorViewInInfoBox" onclick="FlyToFloorView()">Floor View</div>
@@ -734,9 +936,8 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		
 		window.IPAddress = '<?php echo $IPAddress; ?>';
 		window.appId = '<?php echo $appId; ?>';
-				
+		
 		function initCesium(){
-	 
 			viewer = new Cesium.Viewer("cesiumContainer", {
 				timeline: false,
 				animation: false,
@@ -895,6 +1096,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				orderIndependentTranslucency: false,
 			});
 			viewer.imageryLayers.removeAll();
+			
 			// Global render error handler
 			viewer.scene.renderError.addEventListener(function(error) {
 				console.error("Cesium Render Error:", error);
@@ -909,6 +1111,8 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				window.reloadingAfterCrash = true;
 			});
 			
+			var ellipsoid = viewer.scene.globe.ellipsoid;
+			var geodesic = new Cesium.EllipsoidGeodesic();
 			let arcgisLayer;
 
 			function addArcGISLayer() {
@@ -927,6 +1131,9 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				arcgisLayer = null;
 			  }
 			}
+			
+			//$(".cesium-widget-credits").html("");
+			//setTimeout(function (){ $(".cesium-widget-credits").html(""); }, 2000);
 			window.camera = viewer.camera;
 			//$(".cesium-widget-credits").html("");
 			//setTimeout(function (){ $(".cesium-widget-credits").html(""); }, 2000);
@@ -1000,6 +1207,8 @@ $classColorDetails = $classColorObj->getClassColorArray();
  			//baseLayer.alpha = 0.0;
   			globe.translucency.enabled = true;
   			globe.undergroundColor = undefined;
+			
+			flatTerrain = new Cesium.EllipsoidTerrainProvider();
 		  } catch (error) {
 			//console.log(error);
 		  }
@@ -1063,6 +1272,10 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		  {
 			viewer.scene.terrainProvider = await Cesium.createWorldTerrainAsync();
 			terrainCreated = true;
+			if(parseInt(lastCityLoaded) == 36)
+			{
+				createFlatTerrain();
+			}
 			//console.log("Terrain Created!");
 		  }
 		  async function createStadiaTerrain()
@@ -1070,7 +1283,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			  if(!terrainCreated)
 			  {
 				//viewer.scene.terrainProvider = await Cesium.createWorldTerrainAsync();
-				//console.log("Terrain Created 2!");
+				////console.log("Terrain Created 2!");
 				/*
 				baseLayerPickerViewModel = viewer.baseLayerPicker.viewModel;
 				baseLayerPickerViewModel.selectedImagery =
@@ -1163,6 +1376,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		window.SelectedBuildingLon = null;
 		window.earthPosition = null;
 		var myPointString = "";
+		floatingPoint = undefined;
 		handler.setInputAction(function(click) {
 			
 			var feature2 = viewer.scene.pickPosition(click.position);
@@ -1176,7 +1390,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			  var heightString = cartographic.height;
 			  window.clickedAltitude = parseInt(heightString);
 			  console.log(longitudeString + ", " + latitudeString + " @ " + heightString);
-			  myPointString += longitudeString + ", " + latitudeString + " @ ";
+			  myPointString += longitudeString + ", " + latitudeString + ", ";
 			  $("#selectedBuildingAltitude").html(parseFloat(heightString) - cameraAltitudeAdjustment);
 			  $("#calculatedFloorHeight").html((parseFloat(heightString) - cameraAltitudeAdjustment) / parseInt($("#selectedBuildingFloors").html()));
 			  /*
@@ -1204,6 +1418,347 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			}
 			var lonlatObj = CartesianToLatlon(feature2);
 			//pointSelected = lonlatObj;
+			
+			if(MeasurementMode != null)
+			{
+				if (MeasurementMode == "alt")
+				{
+				  if (altentities.length !== 0) {
+					RemoveEntitiesByType(altentities);
+					altentities = [];
+				  }
+				  var cartographic = Cesium.Cartographic.fromCartesian(earthPosition);
+				  var longitudeString = Cesium.Math.toDegrees(
+					cartographic.longitude
+				  ).toFixed(8);
+				  var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(
+					8
+				  );
+				  var heightString = cartographic.height.toFixed(3);
+
+				  var shape = viewer.entities.add({
+					name: "markerPin",
+					position: Cesium.Cartesian3.fromDegrees(
+					  parseFloat(longitudeString),
+					  parseFloat(latitudeString),
+					  parseFloat(heightString)
+					),
+					label: {
+					  show: true,
+					  showBackground: true,
+					  font: "14px monospace",
+					  horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+					  verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+					  disableDepthTestDistance: Number.POSITIVE_INFINITY,
+					  pixelOffset: new Cesium.Cartesian2(2, 0),
+					  text: "Altitude: " + Number(heightString) * 3.2808 + " ft",
+					},
+				  });
+
+				  altentities.push(shape);
+				}
+				else if (MeasurementMode == "hrLine")
+				{
+				  if (distanceClickCount == 0 || distanceClickCount > 2) {
+					distanceClickCount = 0;
+				  }
+				  distanceClickCount++;
+				  if (Cesium.defined(earthPosition)) {
+					if (activeShapePoints.length === 0) {
+					  floatingPoint = createPoint(earthPosition);
+					  activeShapePoints.push(earthPosition);
+					  var dynamicPositions = new Cesium.CallbackProperty(function () {
+						return activeShapePoints;
+					  }, false);
+					  activeShape = drawShape(dynamicPositions);
+					}
+					activeShapePoints.push(earthPosition);
+					createPoint(earthPosition);
+					if (distanceClickCount == 2) {
+					  terminateShape();
+					  distanceClickCount = 0;
+					}
+				  }
+				}
+				else if (MeasurementMode == "vrLine")
+				{
+				  if (distanceClickCount == 0 || distanceClickCount > 2) {
+					distanceClickCount = 0;
+				  }
+				  distanceClickCount++;
+				  if (Cesium.defined(earthPosition)) {
+					if (activeShapePoints.length === 0) {
+					  floatingPoint = createPoint(earthPosition);
+					  activeShapePoints.push(earthPosition);
+					  var dynamicPositions = new Cesium.CallbackProperty(function () {
+						return activeShapePoints;
+					  }, false);
+					  activeShape = drawShape(dynamicPositions);
+					}
+					activeShapePoints.push(earthPosition);
+					createPoint(earthPosition);
+					if (distanceClickCount == 2) {
+					  terminateShape();
+					  distanceClickCount = 0;
+					}
+				  }
+				}
+				else if (MeasurementMode == "polyline")
+				{
+				  if (polylineClickCount == 0) {
+					polylineDistance = 0;
+				  }
+				  polylineClickCount++;
+				  if (Cesium.defined(earthPosition)) {
+					if (activeShapePoints.length === 0) {
+					  floatingPoint = createPoint(earthPosition);
+					  activeShapePoints.push(earthPosition);
+					  var dynamicPositions = new Cesium.CallbackProperty(function () {
+						return activeShapePoints;
+					  }, false);
+					  activeShape = drawShape(dynamicPositions);
+					}
+					activeShapePoints.push(earthPosition);
+					createPoint(earthPosition);
+					if (polylineClickCount > 1) {
+					  ellipsoid = viewer.scene.globe.ellipsoid;
+					  if (true) {
+						activeShapePoints = [...new Set(activeShapePoints)];
+						var point1 = ellipsoid.cartesianToCartographic(
+						  activeShapePoints[activeShapePoints.length - 2]
+						);
+						var point2 = ellipsoid.cartesianToCartographic(
+						  activeShapePoints[activeShapePoints.length - 1]
+						);
+						var distance = GetHorizontalDistance(point1, point2);
+						if (measureUnit === "Imperial") {
+						  polylineDistance += parseFloat(distance.replace("ft", ""));
+						} else {
+						  polylineDistance += parseFloat(distance.replace("m", ""));
+						}
+						var midPoint = GetCenterOfPoints(
+						  activeShapePoints[activeShapePoints.length - 2],
+						  activeShapePoints[activeShapePoints.length - 1]
+						);
+						var entity = viewer.entities.add({
+						  name: "polyline",
+						  position: midPoint,
+						  label: {
+							show: true,
+							text: distance,
+							showBackground: true,
+							font: "14px monospace",
+							horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+							verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+							disableDepthTestDistance: Number.POSITIVE_INFINITY,
+							pixelOffset: new Cesium.Cartesian2(-10, -7),
+						  },
+						});
+						polylineEntity.push(entity);
+					  } else {
+						var point1 = ellipsoid.cartesianToCartographic(
+						  activeShapePoints[activeShapePoints.length - 3]
+						);
+						var point2 = ellipsoid.cartesianToCartographic(
+						  activeShapePoints[activeShapePoints.length - 2]
+						);
+						var distance = GetHorizontalDistance(point1, point2);
+						if (measureUnit === "Imperial") {
+						  polylineDistance += parseFloat(distance.replace("ft", ""));
+						} else {
+						  polylineDistance += parseFloat(distance.replace("m", ""));
+						}
+						var midPoint = GetCenterOfPoints(
+						  activeShapePoints[activeShapePoints.length - 3],
+						  activeShapePoints[activeShapePoints.length - 2]
+						);
+						var entity = viewer.entities.add({
+						  name: "polyline",
+						  position: midPoint,
+						  label: {
+							show: true,
+							text: distance,
+							showBackground: true,
+							font: "14px monospace",
+							horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+							verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+							disableDepthTestDistance: Number.POSITIVE_INFINITY,
+							pixelOffset: new Cesium.Cartesian2(-10, -7),
+						  },
+						});
+						polylineEntity.push(entity);
+					  }
+					}
+				  }
+				}
+				else if (MeasurementMode == "area")
+				{
+				  if (areaClickCount == 0) {
+					areastartingPoint = GetlonlatheightfromCartesian(earthPosition);
+				  }
+				  areaClickCount++;
+				  if (true) {
+					// `earthPosition` will be undefined if our mouse is not over the globe.
+					if (Cesium.defined(earthPosition)) {
+					  activeShapePoints.push(earthPosition);
+					  activeShape = drawShape(activeShapePoints);
+					}
+					createPoint(earthPosition);
+				  } else {
+					// `earthPosition` will be undefined if our mouse is not over the globe.
+					if (Cesium.defined(earthPosition)) {
+					  if (activeShapePoints.length === 0) {
+						floatingPoint = createPoint(earthPosition);
+						activeShapePoints.push(earthPosition);
+						var dynamicPositions = new Cesium.CallbackProperty(function () {
+						  return new Cesium.PolygonHierarchy(
+							GetPositionWithExtraHeight(activeShapePoints)
+						  );
+						}, false);
+						activeShape = drawShape(dynamicPositions);
+					  }
+					  activeShapePoints.push(earthPosition);
+					  createPoint(earthPosition);
+					}
+				  }
+				}
+				else if (MeasurementMode == "slope")
+				{
+				  if (true) {
+					if (scene.mode !== Cesium.SceneMode.MORPHING) {
+					  var cartesian = viewer.scene.pickPosition(event.position);
+					  if (Cesium.defined(cartesian)) {
+						if (points.length === 2) {
+						  RemoveSlopeEntities();
+						}
+						//add first point
+						if (points.length === 0) {
+						  pointmb1 = points.add({
+							position: new Cesium.Cartesian3(
+							  cartesian.x,
+							  cartesian.y,
+							  cartesian.z
+							),
+							color: LINEPOINTCOLOR,
+						  });
+						} //add second point and lines
+						else if (points.length === 1) {
+						  pointmb2 = points.add({
+							position: new Cesium.Cartesian3(
+							  cartesian.x,
+							  cartesian.y,
+							  cartesian.z
+							),
+							color: LINEPOINTCOLOR,
+						  });
+						  point1GeoPosition = Cesium.Cartographic.fromCartesian(
+							pointmb1.position
+						  );
+						  point2GeoPosition = Cesium.Cartographic.fromCartesian(
+							pointmb2.position
+						  );
+						  point3GeoPosition = Cesium.Cartographic.fromCartesian(
+							new Cesium.Cartesian3(
+							  pointmb2.position.x,
+							  pointmb2.position.y,
+							  pointmb1.position.z
+							)
+						  );
+
+						  var pl1Positions = [
+							new Cesium.Cartesian3.fromRadians(
+							  point1GeoPosition.longitude,
+							  point1GeoPosition.latitude,
+							  point1GeoPosition.height
+							),
+							new Cesium.Cartesian3.fromRadians(
+							  point2GeoPosition.longitude,
+							  point2GeoPosition.latitude,
+							  point2GeoPosition.height
+							),
+						  ];
+						  var pl2Positions = [
+							new Cesium.Cartesian3.fromRadians(
+							  point2GeoPosition.longitude,
+							  point2GeoPosition.latitude,
+							  point2GeoPosition.height
+							),
+							new Cesium.Cartesian3.fromRadians(
+							  point2GeoPosition.longitude,
+							  point2GeoPosition.latitude,
+							  point1GeoPosition.height
+							),
+						  ];
+						  var pl3Positions = [
+							new Cesium.Cartesian3.fromRadians(
+							  point1GeoPosition.longitude,
+							  point1GeoPosition.latitude,
+							  point1GeoPosition.height
+							),
+							new Cesium.Cartesian3.fromRadians(
+							  point2GeoPosition.longitude,
+							  point2GeoPosition.latitude,
+							  point1GeoPosition.height
+							),
+						  ];
+
+						  polyline1 = polylines.add({
+							show: true,
+							positions: pl1Positions,
+							width: 2,
+							material: new Cesium.Material({
+							  fabric: {
+								type: "Color",
+								uniforms: {
+								  color: LINEPOINTCOLOR,
+								},
+							  },
+							}),
+						  });
+						  polyline2 = polylines.add({
+							show: true,
+							positions: pl2Positions,
+							width: 3,
+							material: new Cesium.Material({
+							  fabric: {
+								type: "PolylineDash",
+								uniforms: {
+								  color: LINEPOINTCOLOR,
+								},
+							  },
+							}),
+						  });
+						  polyline3 = polylines.add({
+							show: true,
+							positions: pl3Positions,
+							width: 2,
+							material: new Cesium.Material({
+							  fabric: {
+								type: "PolylineDash",
+								uniforms: {
+								  color: LINEPOINTCOLOR,
+								},
+							  },
+							}),
+						  });
+						  var labelZ;
+						  if (point2GeoPosition.height >= point1GeoPosition.height) {
+							labelZ =
+							  point1GeoPosition.height +
+							  (point2GeoPosition.height - point1GeoPosition.height) / 2.0;
+						  } else {
+							labelZ =
+							  point2GeoPosition.height +
+							  (point1GeoPosition.height - point2GeoPosition.height) / 2.0;
+						  }
+
+						  addDistanceLabel(pointmb1, pointmb2, labelZ);
+						}
+					  }
+					}
+				  }
+				}
+			}
 			
 			if (typeof IsEnableRotateAroundPoint != "undefined" && IsEnableRotateAroundPoint) {
 			  if (unsubscribeSPoint != null) {
@@ -1646,7 +2201,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
 					$(".floorNumberRowTR").show();
 					$(".floorNumberRowTD").html("<b><span class='floorNumberDisplay'>("+check[1]+")</span></b>");
 					window.lastFloor = parseInt(check[1]);
-					
 					selectedPrimitive = pickedObject.primitive;
 					selectedPrimitiveId = pickedObject.id;
 					lastFloorSelected = selectedPrimitiveId._id;
@@ -2113,33 +2667,39 @@ $classColorDetails = $classColorObj->getClassColorArray();
 					}
 					else if(typeof temp[2] != "undefined" && temp[0] == "floor")
 					{
+						//debugger;
 						//RESETTING Previous
 						//Not changing transparency
+						//window.floorEffectLastColor = "";
 						/*
-						if(lastFloorSelected != null && typeof lastFloorSelected != "undefined")
+						if(lastFloorSelected != null && typeof lastFloorSelected != "undefined" && typeof window.floorEffectLastColor != "undefined")
 						{
 							if(typeof viewer.entities.getById(lastFloorSelected) != "undefined")
 							{
 								var clr = viewer.entities.getById(lastFloorSelected).polygon.material.color;
 								if(typeof clr != "undefined")
 								{
-									if(clr._value.red == 1 && clr._value.green == 1)
-									{
-										viewer.entities.getById(lastFloorSelected).polygon.material.color = Cesium.Color.YELLOW.withAlpha(0.15);
-									}
-									else
-									{
-										viewer.entities.getById(lastFloorSelected).polygon.material.color = Cesium.Color.RED.withAlpha(0.15);
-									}
+									viewer.entities.getById(lastFloorSelected).polygon.material.color = window.floorEffectLastColor;
 								}
 							}
 						}
 						*/
+						
+						if(typeof lastSelectedPolygonEntityId != "undefined" && lastSelectedPolygonEntityId != null)
+						{
+							if(typeof viewer.entities.getById(lastSelectedPolygonEntityId) != "undefined")
+							{
+								viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outline = false;
+							}
+						}
+						
 						$("#infoboxFloorPlanRow").html("");
 						$("#infoboxFloorPlanRow").hide();
 						clearSearchAndSettingBox();
 						selectedPrimitive = pickedObject.primitive;
 						selectedPrimitiveId = pickedObject.id;
+						
+							
 						lastFloorSelected = selectedPrimitiveId._id;
 						$(".floorNumberRowTR").show();
 						$(".floorNumberRowTD").html("<b><span class='floorNumberDisplay'>("+temp[2]+")</span></b>");
@@ -2148,7 +2708,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 						{
 							prepareInfoboxForFiles(temp[1], temp[2]);
 						}
-						if(typeof window.lastSelectedPolygonEntityId != "undefined")
+						if(typeof window.lastSelectedPolygonEntityId != "undefined" && typeof viewer.entities.getById(window.lastSelectedPolygonEntityId) != "undefined")
 						{
 							viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outline = false;
 						}
@@ -2170,25 +2730,32 @@ $classColorDetails = $classColorObj->getClassColorArray();
 						}
 						else
 						{
-							
+							window.lastSelectedPolygonEntityId = "floor-"+temp[1]+"-"+temp[2]+"-"+temp[3];
+							viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outline = true;
+							viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outlineColor = Cesium.Color.WHITE;
+							viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outlineWidth = 10;
 							viewer.entities.removeById("bottomRing");
 							viewer.entities.removeById("topRing");
 						}
+						lastFloor = temp[2];
+						updateURL();
 						////console.log(viewer.entities(pickedObject.id._id));
 						////console.log(viewer.entities(pickedObject.id._id).material);
 						//Not changing transparency
-						/*
+						
 						var clr = viewer.entities.getById(selectedPrimitiveId._id).polygon.material.color;
 						
 						if(clr._value.red == 1 && clr._value.green == 1)
 						{
-							viewer.entities.getById(selectedPrimitiveId._id).polygon.material.color = Cesium.Color.YELLOW;
+							//window.floorEffectLastColor = Cesium.Color.YELLOW.withAlpha(0.07);
+							//viewer.entities.getById(selectedPrimitiveId._id).polygon.material.color = Cesium.Color.WHITE;
 						}
 						else
 						{
-							viewer.entities.getById(selectedPrimitiveId._id).polygon.material.color = Cesium.Color.RED;
+							//window.floorEffectLastColor = Cesium.Color.RED.withAlpha(0.07);
+							//viewer.entities.getById(selectedPrimitiveId._id).polygon.material.color = Cesium.Color.WHITE;
 						}
-						*/
+						
 						
 						$.each(floorLabels, function (jk, tk){
 							viewer.entities.getById(tk).show = false;
@@ -2251,9 +2818,22 @@ $classColorDetails = $classColorObj->getClassColorArray();
 					{
 						FloorViewPauseSlowRotation();
 					}
+					
+					if(selectedPrimitive != null)
+					{
+						var attributes = selectedPrimitive.getGeometryInstanceAttributes(selectedPrimitiveId);
+						////console.log(attributes.color);
+						if(typeof attributes != "undefined")
+						{
+							attributes.color = [selectedPrimitiveColor[0], selectedPrimitiveColor[1], selectedPrimitiveColor[2], selectedPrimitiveColor[3]];
+							attributes.show = [1];
+						}
+					}
+					$(".floorNumberRowTD").html("");
+					
 					viewer.entities.removeById("bottomRing");
 					viewer.entities.removeById("topRing");
-					if(typeof window.lastSelectedPolygonEntityId != "undefined")
+					if(typeof window.lastSelectedPolygonEntityId != "undefined" && typeof viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon != "undefined")
 					{
 						viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outline = false;
 					}
@@ -2266,6 +2846,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 						htmlPolygonCOverlay.remove();
 						RerenderHtmlOverlay();
 					}
+					
 					//$(".full-screen-arrow").hide();
 				}
 			}
@@ -2800,6 +3381,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 	<script src="./pointOrbitSpin.js"></script>
 	<script src="./buildingOrbitSpin.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+	<script src="./measurementPanel.js"></script> <!-- Measurement Panel JS -->
 	<script>
 		//EnableFogInSelectedCity(); //Removed this effect for now.
 	</script>

@@ -69,11 +69,14 @@ searchBox.addEventListener("input", () => {
 				timeoutvalue = 500;
 			}
 			setTimeout(function (){
-				monentarilyGenerateBuildingDash(item.id, item.index);
 				flyToBuildingCamera(item.id);
-				searchBox.value = item.name;
-				suggestions.innerHTML = "";
-				toggleSearchBox(true);
+				if(typeof TempBldgData[parseInt(item.id)] != "undefined")
+				{
+					monentarilyGenerateBuildingDash(item.id, item.index);
+					searchBox.value = item.name;
+					suggestions.innerHTML = "";
+					toggleSearchBox(true);
+				}
 				return;
 				window.autoLoadCityCamera = false;
 				ShowInfobox(item.id, item.index);
@@ -170,12 +173,16 @@ searchBox.addEventListener("keydown", (event) => {
     } else if (event.key === "ArrowUp") {
         event.preventDefault();
         if (items.length === 0) return; 
-
+		if(activeIndex == -1)
+			activeIndex = 0;
         activeIndex = (activeIndex - 1 + items.length) % items.length;
         updateActiveItem(items);
     } else if (event.key === "Enter") {
         event.preventDefault();
-        if (activeIndex >= 0 && activeIndex < items.length) {
+		
+        if ((activeIndex >= 0 && activeIndex < items.length) || items.length == 1) {
+			if(items.length == 1)
+				activeIndex = 0;
             searchBox.value = items[activeIndex].textContent.trim();
 			const selectedItem = {
 				id: items[activeIndex].getAttribute("data-id"),
@@ -192,10 +199,13 @@ searchBox.addEventListener("keydown", (event) => {
 			setTimeout(function (){
 				
 				window.autoLoadCityCamera = false;
-				ShowInfobox(items[activeIndex].getAttribute("data-id"), items[activeIndex].getAttribute("data-index"));
-				monentarilyGenerateBuildingDash(items[activeIndex].getAttribute("data-id"), items[activeIndex].getAttribute("data-index"));
-				highlightSearchedBuilding(items[activeIndex].getAttribute("data-id"), items[activeIndex].getAttribute("data-index"), items[activeIndex].getAttribute("data-entity-index"));
 				flyToBuildingCamera(items[activeIndex].getAttribute("data-id"));
+				if(typeof TempBldgData[parseInt(items[activeIndex].getAttribute("data-id"))] != "undefined")
+				{
+					monentarilyGenerateBuildingDash(items[activeIndex].getAttribute("data-id"), items[activeIndex].getAttribute("data-index"));
+					highlightSearchedBuilding(items[activeIndex].getAttribute("data-id"), items[activeIndex].getAttribute("data-index"), items[activeIndex].getAttribute("data-entity-index"));
+					ShowInfobox(items[activeIndex].getAttribute("data-id"), items[activeIndex].getAttribute("data-index"));
+				}
 				//selectedPrimitive = primitiveCollection[items[activeIndex].getAttribute("data-entity-index")];
 				//selectedPrimitiveId = "bldg-"+items[activeIndex].getAttribute("data-id")+"-"+items[activeIndex].getAttribute("data-index");
 				var attributes = selectedPrimitive.getGeometryInstanceAttributes(selectedPrimitiveId);

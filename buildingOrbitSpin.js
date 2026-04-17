@@ -9,12 +9,14 @@ function monentarilyGenerateBuildingDash(id, index)
 	if(typeof TempBldgData[id] != "undefined" && typeof TempBldgData[id].coords != "undefined")
 	{
 		coords = TempBldgData[id].coords;
-		basefloorheight = TempBldgData[id].basefloorheight;
+		if(TempBldgData[id].basefloorheight != null)
+			basefloorheight = TempBldgData[id].basefloorheight;
 	}
 	else
 	{
 		coords = searchBuildingData[index].coords;
-		basefloorheight = searchBuildingData[index].basefloorheight;
+		if(TempBldgData[id].basefloorheight != null)
+			basefloorheight = searchBuildingData[index].basefloorheight;
 	}
 	setTimeout(function (){ CreateDashedLine(id, coords, ( cityAltitudeAdjustment[lastCityLoaded] + parseFloat(basefloorheight) ), null)}, 2000);
 	setTimeout(function (){ RemoveEntitiesByType(dashedEntityList); }, 5000);

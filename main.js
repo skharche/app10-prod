@@ -18,6 +18,7 @@ var retailClassLower = ["retail"];
 
 var educationalClass = ["EDU"];
 var educationalClassLower = ["edu"];
+var emsClassLower = ["ems"];
 var parkadesClassLower = ["prks"];
 
 var healthcareClass = ["MED"];
@@ -63,6 +64,8 @@ window.countryWithProperties = [];
 window.allRemainingCitiesWithCountry = [];
 window.citiesCounts = [];
 window.cityMarketRelationship = [];
+window.submarketWithMaxBuilding = [];
+window.citiesWithMultipleMarket = [];
 function getApp10MarketDetails()
 {
 	$.ajax({
@@ -88,12 +91,15 @@ function getApp10MarketDetails()
 				});
 				disabledMarkets = data.disabledMarkets;
 				window.citiesToShow = data.citiesAccessible;
+				window.marketBoundaries = data.marketBoundaries;
 				window.cityBoundaries = data.cityBoundaries;
 				window.cityCameras = data.cityCameras;
 				window.allCitiesWithCountry = data.allCitiesWithCountry;
 				window.countryWithProperties = data.countryWithProperties;
 				window.allRemainingCitiesWithCountry = data.allRemainingCitiesWithCountry;
 				window.citiesCounts = data.citiesCounts;
+				window.submarketWithMaxBuilding = data.submarketWithMaxBuilding;
+				window.citiesWithMultipleMarket = data.citiesWithMultipleMarket;
 				
 				$.each(marketDetails, function (index, eachRow){
 					if(typeof window.cityLabels == "undefined")
@@ -178,31 +184,38 @@ function getApp10MarketDetails()
 
 function moveToCityGrid()
 {
-	lastCityLoaded = null;
-	lastMarketLoaded = null;
-	$(".loading-overlay").show();
-	$(".loading-overlay-message").hide();
-	$(".mapLogoOverlay").hide();
-	$(".logoOverlay").hide();
-	if(typeof htmlPolygonCOverlay != "undefined")
-		htmlPolygonCOverlay.remove();
-	lastSelectedBuildingType = "Office";
-	prepareCityGridStructure(window.citiesToShow);
-	stopRotateIfInProgress();
-	setTimeout(function (){ clearPrimitives(); }, 500);
+	if(confirm("Return to City Grid?"))
+	{
+		//Reset parameters
+		lastCityLoaded = null;
+		lastMarketLoaded = null;
+		devSelectedBuilding = null;
+		initiateEffectsArray();
+		
+		$(".loading-overlay").show();
+		$(".loading-overlay-message").hide();
+		$(".mapLogoOverlay").hide();
+		$(".logoOverlay").hide();
+		if(typeof htmlPolygonCOverlay != "undefined")
+			htmlPolygonCOverlay.remove();
+		lastSelectedBuildingType = "Office";
+		prepareCityGridStructure(window.citiesToShow);
+		stopRotateIfInProgress();
+		setTimeout(function (){ clearPrimitives(); }, 500);
+	}
 }
 
 function cityGridSortToggle() {
-  if (window.cityGridSort == "alphabetical") {
-    window.cityGridSort = "properties";
+  /* if (window.cityGridSortOrder == "alphabetical") {
+    window.cityGridSortOrder = "properties";
   } else {
-    window.cityGridSort = "alphabetical";
-  }
-  //console.log("window.cityGridSort: "+window.cityGridSort);
+    window.cityGridSortOrder = "alphabetical";
+  } */
+  //console.log("window.cityGridSortOrder: "+window.cityGridSortOrder);
   prepareCityGridStructure("", false);
 }
 
-window.cityGridSort = "alphabetical";
+window.cityGridSortOrder = "alphabetical";
 window.cityCounts = [];
 function prepareCityGridStructure(citiesGrid, dontSkipHeader = true)
 {
@@ -229,12 +242,24 @@ function prepareCityGridStructure(citiesGrid, dontSkipHeader = true)
 				headerContent += '<span style="">';
 					headerContent += '<span class="badge cityGridLegendBadge" style="background-color: '+classColor['Office']+'">Office</span><span class="badge cityGridLegendBadge" style="background-color: '+classColor['Apartments']+'">Residential</span><span class="badge cityGridLegendBadge" style="background-color: '+classColor['Retail']+'">Retail</span><span class="badge cityGridLegendBadge" style="background-color: '+classColor['Hotel']+'">Hotels</span><span class="badge cityGridLegendBadge" style="background-color: white;">Other</span>';
 				headerContent += '</span>';
+				/*
 				headerContent += '<span style="float:right; ">';
 				txt = "";
 				if(window.cityGridSort == "alphabetical")
 					headerContent += '<span id="sortContainer" onClick="cityGridSortToggle();" class="badge sort-btn badge-button-style pull-right">Sort by Total Properties</span>';
 				if(window.cityGridSort == "properties")
 					headerContent += '<span id="sortContainer" onClick="cityGridSortToggle();" class="badge sort-btn badge-button-style pull-right">Sort Alphabetically</span>';
+				headerContent += '</span>';
+				*/
+				// ─── Header HTML ──────────────────────────────────────────────────────────
+				headerContent += '<span style="float:right;">';
+				headerContent += '  <button id="sortToggleBtn" onclick="openSortDropdown(this)" class="badge sort-btn badge-button-style pull-right">';
+				headerContent += '    Sort ';
+				headerContent += '    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;">';
+				headerContent += '      <line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/>';
+				headerContent += '    </svg>';
+				headerContent += '  </button>';
+				headerContent += '</span>';
 				headerContent += '</span>';
 			headerContent += '</div>';
 		headerContent += '</div>';
@@ -244,9 +269,9 @@ function prepareCityGridStructure(citiesGrid, dontSkipHeader = true)
 	else
 	{
 		txt = "";
-		if(window.cityGridSort == "alphabetical")
+		if(window.cityGridSortOrder == "alphabetical")
 			txt = 'Sort by Total Properties';
-		if(window.cityGridSort == "properties")
+		if(window.cityGridSortOrder == "properties")
 			txt = 'Sort Alphabetically';
 		$("#sortContainer").html(txt);
 		$(".newContainer").html("");
@@ -274,13 +299,17 @@ function prepareCityGridStructure(citiesGrid, dontSkipHeader = true)
 	//console.log(countryMaxCounter);
 	*/
 	
-	if(window.cityGridSort == "properties")
+	if(window.cityGridSortOrder == "properties")
 	{
 		countryWithProperties.sort((a, b) => b.total - a.total);
 	}
-	else if(window.cityGridSort == "alphabetical")
+	else if(window.cityGridSortOrder == "alphabetical")
 	{
 		countryWithProperties.sort((a, b) => a.name.localeCompare(b.name));
+	}
+	else if(window.cityGridSortOrder == "floorplans")
+	{
+		countryWithProperties.sort((a, b) => b.floorplans - a.floorplans);
 	}
 	
 	$.each(countryWithProperties, function (iir, eachRow){
@@ -320,6 +349,10 @@ function prepareCityGridStructure(citiesGrid, dontSkipHeader = true)
 			cityBox.innerHTML = getCityGridBars(citiesCounts[eachCity.idtcity], 3000);
 			var buildingCnt = numberWithCommaWithoutDecimal2(eachCity.cnt);
 			var floorplansCnt = numberWithCommaWithoutDecimal2(eachCity.floorplans);
+			
+			var calculatedOfficeArea = eachCity.officearea;
+			if(calculatedOfficeArea == "0")
+				calculatedOfficeArea = "";
 			/*
 			if(eachCity.floorplans == '')
 				eachCity.floorplans = 0;
@@ -328,6 +361,7 @@ function prepareCityGridStructure(citiesGrid, dontSkipHeader = true)
 			*/
 			cityBox.innerHTML += `
 			  <span class="city-box-name">${eachCity.scityname}</span>
+			  <div class="city-box-count"><span class='city-box-count-label'></span>${calculatedOfficeArea}</div>
 			  <div class="city-box-count"><span class='city-box-count-label'>Properties:</span> ${buildingCnt}</div>
 			  <div class="city-box-count"><span class='city-box-count-label'>Floorplans:</span> ${floorplansCnt}</div>
 			`;
@@ -399,6 +433,72 @@ function prepareCityGridStructure(citiesGrid, dontSkipHeader = true)
 	
 	$(".newContainer").append("<br />"+remainingCities+"<br clear='all'><hr /><a href='http://www.floorplan.city' style='float:left;'>http://www.floorplan.city</a><br /><br />");
 }
+
+// ─── JS — add once on page, outside your render loop ─────────────────────
+
+function openSortDropdown(btn) {
+    // If already open, close it (toggle)
+    var existing = document.getElementById('cityGridSortDropdown');
+    if (existing) { existing.remove(); return; }
+
+    var rect = btn.getBoundingClientRect();
+
+    var ul = document.createElement('ul');
+    ul.id = 'cityGridSortDropdown';
+    ul.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+    ul.style.left = (rect.right  + window.scrollX - 210) + 'px'; // right-align to button
+
+    var options = [
+        { key: 'alphabetical', label: 'Sort alphabetically' },
+        { key: 'properties',   label: 'Sort by total properties' },
+        { key: 'floorplans',   label: 'Sort by total floorplans' }
+    ];
+
+    options.forEach(function(opt) {
+        if (!opt) {
+            var hr = document.createElement('hr');
+            hr.className = 'sort-divider';
+            ul.appendChild(hr); return;
+        }
+        var li = document.createElement('li');
+        if (opt.key === window.cityGridSortOrder) li.className = 'active';
+        li.innerHTML = '<span class="check">✓</span>' + opt.label;
+        li.addEventListener('click', function() { cityGridSort(opt.key); });
+        ul.appendChild(li);
+    });
+
+    document.body.appendChild(ul); // ← appended to body, no overflow clipping
+}
+
+// AFTER (fixed — separate names):
+window.cityGridSortOrder = 'alphabetical'; // state variable
+
+function cityGridSort(sortType) {
+    window.cityGridSortOrder = sortType;   // ← safe, different name
+    var dd = document.getElementById('cityGridSortDropdown');
+    if (dd) dd.remove();
+    //renderCityGrid();
+	cityGridSortToggle();
+}
+/* 
+function openSortDropdown(btn) {
+    ...
+    options.forEach(function(opt) {
+        ...
+        if (opt.key === window.cityGridSortOrder) li.className = 'active'; // ← updated ref
+        ...
+    });
+    ...
+} */
+
+// Close on outside click
+$(document).on('click.cityGridSort', function(e) {
+    var dd = document.getElementById('cityGridSortDropdown');
+    if (!dd) return;
+    if (!$(e.target).closest('#sortToggleBtn, #cityGridSortDropdown').length) {
+        dd.remove();
+    }
+});
 
 function getCityGridBars(rows, total = 0)
 {
@@ -771,6 +871,21 @@ function loadMarket(val)
 	window.lastFloor = null;
 	$("#pano-view-li").hide();
 	$(".full-screen-arrow").hide();
+	if(window.limitUserArray.includes(parseInt(loggedInUserId)))
+	{
+		if([6, 7, 8].includes(lastMarketLoaded))
+		{
+			$("#NYCitymanagementDiv").css("display", "block");
+		}
+		else
+		{
+			$("#NYCitymanagementDiv").css("display", "none");
+		}
+	}
+	else
+	{
+		$("#NYCitymanagementDiv").css("display", "none");
+	}
 	
 	//Stop if Rotation is in progress.
 	/* if (autoRotateSlow)//City Orbit
@@ -795,13 +910,37 @@ function loadMarket(val)
 		}
 	});
 	//lastCityLoaded = mktDetail.idtcity;
-	lastCityLoaded = mktDetail.idtcity;
-	showLoadingMessage(mktDetail.idtcity);
-	console.log("mktDetail.idtcity: "+mktDetail.idtcity);
-	flyToCitySkyline(mktDetail.idtcity)
-	
-	if([1, 6].includes(lastMarketLoaded) && [1, 6].includes(marketDetails.idtmarket))
+	if(lastCityLoaded != mktDetail.idtcity)
+	{
+		showLoadingMessage(mktDetail.idtcity);
+	}
+	else
+	{
 		window.changingMarketWithinCity = true;
+	}
+	
+	lastCityLoaded = mktDetail.idtcity;
+	console.log("mktDetail.idtcity: "+mktDetail.idtcity);
+	
+	if(typeof citiesWithMultipleMarket[parseInt(mktDetail.idtcity)] != "undefined")
+	{
+		if(citiesWithMultipleMarket[parseInt(mktDetail.idtcity)].includes(parseInt(lastMarketLoaded)) && citiesWithMultipleMarket[parseInt(mktDetail.idtcity)].includes(parseInt(mktDetail.idtmarket)))
+			window.changingMarketWithinCity = true;
+		
+		flyToIdtcamera(mktDetail.marketcamera);
+	}
+	else
+	{
+		flyToCitySkyline(mktDetail.idtcity)
+	}
+	
+	/*
+	if([1, 6].includes(parseInt(lastMarketLoaded)) && [1, 6].includes(parseInt(mktDetail.idtmarket)))
+		window.changingMarketWithinCity = true;
+	
+	if([3, 5].includes(parseInt(lastMarketLoaded)) && [3, 5].includes(parseInt(mktDetail.idtmarket)))
+		window.changingMarketWithinCity = true;
+	*/
 	
 	if(window.changingMarketWithinCity)
 	{
@@ -913,6 +1052,8 @@ function showLoadingMessage(cityLoaded)
 	$(".loading-overlay").show();
 }
 window.startCountingMatchedToo = false;
+window.limitUser = false;
+window.limitUserArray = [93];
 function getBuildingData(marketDetails, cameraChange = true)
 {
 	viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
@@ -1046,6 +1187,36 @@ function getBuildingData(marketDetails, cameraChange = true)
 			//10/01
 			//flyToCitySkyline(lastCityLoaded);
 			ShowSummaryInfobox();
+			
+			window.limitUser = false;
+			$("#NYCitymanagementDiv").css("display", "none");
+			if(window.limitUserArray.includes(parseInt(loggedInUserId)))
+			{
+				if(marketDetails.idtmarket == 7)
+				{
+					window.userSpecificSubmarketId.push(212);
+					window.limitUser = true;
+				}
+				else if(marketDetails.idtmarket == 8)
+				{
+					window.userSpecificSubmarketId.push(29);
+					window.limitUser = true;
+				}
+				else if(marketDetails.idtmarket == 9)
+				{
+					window.userSpecificSubmarketId.push(33);
+					window.limitUser = true;
+				}
+				if(userSpecificSubmarketId.length > 0)
+				{
+					$(".temp-submarket").css("font-weight", "");
+					$.each(window.userSpecificSubmarketId, function (innerLoop, ABC){
+						$(".submarket-"+ABC).css("font-weight", "bold");
+					})
+					$("#NYCitymanagementDiv").css("display", "block");
+				}
+			}
+			
 			$.ajax({
 				method: "POST",
 				url: "controllers/buildingController.php",
@@ -1191,6 +1362,8 @@ function loadSubmarketDropdown(idtcity)
 	$(".dropdown3-menu").html("");
 	$(".dropdown3 ul").append('<li><a class="dropdown3-item" id="city-skyline-li" data-text="city-skyline" data-id="'+idtcity+'" href="#">City Skyline</a></li>');
 	$(".dropdown3 ul").append('<li><a class="dropdown3-item" id="city-skyline2-li" data-text="city-skyline2" data-id="'+idtcity+'" href="#">City Skyline2</a></li>');
+	
+	$(".dropdown3 ul").append('<li><a class="dropdown3-item" id="city-submarket-tour-li" data-text="Submarket Max Building" data-id="'+submarketWithMaxBuilding[parseInt(lastMarketLoaded)].idtsubmarket+'" href="#">'+submarketWithMaxBuilding[parseInt(lastMarketLoaded)].ssubname+' Tour*</a></li>');
 	if(typeof window.submarketDetails != "undefined" && window.submarketDetails.length > 0)
 	{
 		$.each(window.submarketDetails, function (index, eachRow) {
@@ -1218,7 +1391,7 @@ window.distortionIndexStep = 5;
 function debugDistortion()
 {
 	window.lastHolesString = "";
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
 	$.each(marketBuildingDetails[lastMarketLoaded], function (index, EachBuilding) {
 		if(index <= distortionIndex && index > 100)
 		{
@@ -1333,6 +1506,41 @@ window.TempBuildingPrimitives = [];
 developmentBuildingFloorEntityForDev3 = [];
 buildingMask = [];
 scaledPolygonList = [];
+
+window.limitStart = 0;
+window.limitLength = 500;
+window.currentLimit = 0;
+window.userSpecificSubmarketId = [];
+function reloadHighlight(id)
+{
+	if(window.userSpecificSubmarketId.includes(id))
+	{
+		temp = [];
+		$.each(userSpecificSubmarketId, function (eachRow, id2){
+			if(id2 != id)
+				temp.push(id2);
+		});
+		window.userSpecificSubmarketId  = temp;
+	}
+	else
+	{
+		window.userSpecificSubmarketId.push(id);
+	}
+	$(".temp-submarket").css("font-weight", "");
+	highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+	$.each(userSpecificSubmarketId, function (eachRow, id){
+		$(".submarket-"+id).css("font-weight", "bold");
+	});
+}
+
+window.marketCoords = [];
+/* 
+//Torronto
+window.marketCoords[3] = '[-79.49093338571947, 43.54247201205126, -79.57558858683318, 43.69630340096864, -79.34519665349166, 43.74993201419262, -79.25176307439135, 43.626815236211684]';
+//Midtown Manhattan
+window.marketCoords[8] = '[-73.96121315967382, 40.69288041117762, -74.07280131021427, 40.748462388511726, -74.00149316845521, 40.844691927026545, -73.847207027215, 40.77688906675466]';
+window.marketCoords[9] = '[-74.05413754217595, 40.806809511398335, -73.88350135921611, 40.731298976602055, -73.96121931450696, 40.63320816636364, -74.16635250682663, 40.695608057821694]'; */
+window.debuggingMarketCoords = false;
 function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBuildingInfobox = false)
 {
 	cameraAltitudeAdjustment = cityAltitudeAdjustment[idtcity];
@@ -1340,7 +1548,7 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 	//console.log("setting new cameraAltitudeAdjustment "+cameraAltitudeAdjustment);
 	clearPrimitives();
 	//$(".infoboxContainer").hide();  $("#infoboxFloorPlanRow").hide();
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 		
 	lastMarketLoaded = marketId;
@@ -1566,6 +1774,7 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 						material: eval(clr),
 					  },
 					});
+					
 					/*
 					lastFloorHeight = lastFloorHeight + loopFloorHt;
 					var ent = viewer.scene.primitives.add(new Cesium.ClassificationPrimitive({
@@ -1610,7 +1819,7 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 	}
 	else
 	{
-		$.each(marketBuildingDetails[marketId], function (index, EachBuilding) {
+		$.each(marketBuildingDetails[parseInt(marketId)], function (index, EachBuilding) {
 			if(typeof EachBuilding != "undefined")// && index > 100 && index < 110)
 			{
 				var proceedWithBuilding = false;
@@ -1634,14 +1843,19 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 				{
 					proceedWithBuilding = true;
 				}
-				else if(lastSelectedBuildingType == "All" && (educationalClassLower.includes(EachBuilding.buildingclass.toLowerCase()) || healthcareClassLower.includes(EachBuilding.buildingclass.toLowerCase()) || parkadesClassLower.includes(EachBuilding.buildingclass.toLowerCase())))
+				else if(lastSelectedBuildingType == "All" && (emsClassLower.includes(EachBuilding.buildingclass.toLowerCase()) || educationalClassLower.includes(EachBuilding.buildingclass.toLowerCase()) || healthcareClassLower.includes(EachBuilding.buildingclass.toLowerCase()) || parkadesClassLower.includes(EachBuilding.buildingclass.toLowerCase())))
 				{
 					proceedWithBuilding = true;
 				}
 				
 				if(window.buildingToSkipForHoles.includes(parseInt(EachBuilding.idtbuilding)))
+				{
+					TempBldgData[EachBuilding.idtbuilding] = EachBuilding;
 					proceedWithBuilding = false;
+				}
 				
+				if(limitUser == true && !userSpecificSubmarketId.includes(parseInt(EachBuilding.idtsubmarket)))
+					proceedWithBuilding = false;
 				//if(window.buildingToSkipForHoles.includes(parseInt(EachBuilding.idtbuilding)))
 				//	proceedWithBuilding = false;
 				
@@ -1650,10 +1864,11 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 					////console.log("Not Retail", EachBuilding);
 					//searchBuildingData.push({id: EachBuilding.idtbuilding, name: EachBuilding.sbuildingname, address: EachBuilding.address, index: index, entityIndex : primitiveCollection.length});
 					TempBldgData[EachBuilding.idtbuilding] = EachBuilding;
-					var tt = EachBuilding.coords.split(",");
-					TempPointsData.push({lat: tt[0], lon: tt[1], bldg: EachBuilding.idtbuilding, id: EachBuilding.idtbuilding, index: index, entityIndex: window.TempBuildingPrimitives.length});
+					//var tt = EachBuilding.coords.split(",");
+					//TempPointsData.push({lat: tt[0], lon: tt[1], bldg: EachBuilding.idtbuilding, id: EachBuilding.idtbuilding, index: index, entityIndex: window.TempBuildingPrimitives.length});
 					if(lastSelectedBuildingType == "All" && window.retailBuildingData[EachBuilding.idtbuilding].skip_fog != 1)
 						window.lastHolesString += ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+tryClosingPolygon(EachBuilding.coords)+' ]), }, ';
+					window.lastHolesArray.push({"id": EachBuilding.idtbuilding, "coords": eval("["+EachBuilding.coords+"]")});
 					var clr = classColorCoding[EachBuilding.buildingclass];
 					var lastFloorHeight = cityAltitudeAdjustment[lastCityLoaded];
 					if(EachBuilding.basefloorheight != null)
@@ -1698,10 +1913,11 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 					////console.log( "Retail Builing Data ", EachBuilding );
 					//searchBuildingData.push({id: EachBuilding.idtbuilding, name: EachBuilding.sbuildingname, address: EachBuilding.address, index: index, entityIndex : primitiveCollection.length});
 					TempBldgData[EachBuilding.idtbuilding] = EachBuilding;
-					var tt = EachBuilding.coords.split(",");
-					TempPointsData.push({lat: tt[0], lon: tt[1], bldg: EachBuilding.idtbuilding, id: EachBuilding.idtbuilding, index: index, entityIndex: window.TempBuildingPrimitives.length});
+					//var tt = EachBuilding.coords.split(",");
+					//TempPointsData.push({lat: tt[0], lon: tt[1], bldg: EachBuilding.idtbuilding, id: EachBuilding.idtbuilding, index: index, entityIndex: window.TempBuildingPrimitives.length});
 					if(lastSelectedBuildingType == "All" && window.retailBuildingData[EachBuilding.idtbuilding].skip_fog != 1)
 						window.lastHolesString += ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+tryClosingPolygon(EachBuilding.coords)+' ]), }, ';
+					window.lastHolesArray.push({"id": EachBuilding.idtbuilding, "coords": eval("["+EachBuilding.coords+"]")});
 					var clr = classColorCoding[EachBuilding.buildingclass];
 					var lastFloorHeight = cityAltitudeAdjustment[lastCityLoaded];
 					if(EachBuilding.basefloorheight != null)
@@ -1743,14 +1959,15 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 					////console.log( "Non Retail Builing Data ", EachBuilding );
 					//searchBuildingData.push({id: EachBuilding.idtbuilding, name: EachBuilding.sbuildingname, address: EachBuilding.address, index: index, entityIndex : primitiveCollection.length});
 					TempBldgData[EachBuilding.idtbuilding] = EachBuilding;
-					var tt = EachBuilding.coords.split(",");
-					TempPointsData.push({lat: tt[0], lon: tt[1], bldg: EachBuilding.idtbuilding, id: EachBuilding.idtbuilding, index: index, entityIndex: window.TempBuildingPrimitives.length});
+					//var tt = EachBuilding.coords.split(",");
+					//TempPointsData.push({lat: tt[0], lon: tt[1], bldg: EachBuilding.idtbuilding, id: EachBuilding.idtbuilding, index: index, entityIndex: window.TempBuildingPrimitives.length});
 					if(lastSelectedBuildingType == "All" && window.nonRetailBuildingData[EachBuilding.idtbuilding].skip_fog != 1)
 						window.lastHolesString += ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+tryClosingPolygon(EachBuilding.coords)+' ]), }, ';
 					if(newLogicCheckForFogSkip(EachBuilding.idtbuilding) && lastSelectedBuildingType != "All")
 					{
 						window.lastHolesString += ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+tryClosingPolygon(EachBuilding.coords)+' ]), }, ';
 					}
+					window.lastHolesArray.push({"id": EachBuilding.idtbuilding, "coords": eval("["+EachBuilding.coords+"]")});
 					var clr = classColorCoding[EachBuilding.buildingclass];
 					var lastFloorHeight = cityAltitudeAdjustment[lastCityLoaded];
 					if(EachBuilding.basefloorheight != null)
@@ -1792,10 +2009,11 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 					////console.log(EachBuilding.idtbuilding);
 					//searchBuildingData.push({id: EachBuilding.idtbuilding, name: EachBuilding.sbuildingname, address: EachBuilding.address, index: index, entityIndex : primitiveCollection.length});
 					TempBldgData[EachBuilding.idtbuilding] = EachBuilding;
-					var tt = EachBuilding.coords.split(",");
-					TempPointsData.push({lat: tt[0], lon: tt[1], bldg: EachBuilding.idtbuilding, id: EachBuilding.idtbuilding, index: index, entityIndex: window.TempBuildingPrimitives.length});
+					//var tt = EachBuilding.coords.split(",");
+					//TempPointsData.push({lat: tt[0], lon: tt[1], bldg: EachBuilding.idtbuilding, id: EachBuilding.idtbuilding, index: index, entityIndex: window.TempBuildingPrimitives.length});
 					////console.log("Bldg " + EachBuilding.idtbuilding+" => "+tryClosingPolygon(EachBuilding.coords));
 					window.lastHolesString += ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+tryClosingPolygon(EachBuilding.coords)+' ]), }, ';
+					window.lastHolesArray.push({"id": EachBuilding.idtbuilding, "coords": eval("["+EachBuilding.coords+"]")});
 					
 					var clr = classColorCoding[EachBuilding.buildingclass];
 					if( typeof devSelectedBuilding != "undefined" && parseInt(devSelectedBuilding) == parseInt(EachBuilding.idtbuilding) )
@@ -1806,19 +2024,21 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 					{
 						clr.alpha = 0.5;
 					}
-					/*
-					var t = eval("["+EachBuilding.coords+"]");
-					viewer.entities.add({
-					  name: "Green cylinder with black outline",
-					  position: Cesium.Cartesian3.fromDegrees(t[0], t[1], 1000.0),
-					  cylinder: {
-						length: 400000.0,
-						topRadius: 20.0,
-						bottomRadius: 20.0,
-						material: Cesium.Color.GREEN,
-					  },
-					});	
-					*/
+					
+					if(window.debuggingMarketCoords)
+					{
+						var t = eval("["+EachBuilding.coords+"]");
+						viewer.entities.add({
+						  id: "green-cylinder-"+EachBuilding.idtbuilding,
+						  position: Cesium.Cartesian3.fromDegrees(t[0], t[1], 1000.0),
+						  cylinder: {
+							length: 400000.0,
+							topRadius: 20.0,
+							bottomRadius: 20.0,
+							material: Cesium.Color.GREEN,
+						  },
+						});	
+					}
 					////console.log(EachBuilding.idtbuilding);//console.log(EachBuilding.coords);
 					var ent = viewer.scene.groundPrimitives.add(new Cesium.ClassificationPrimitive({
 						geometryInstances : new Cesium.GeometryInstance({
@@ -1836,6 +2056,7 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 							},
 							id : "bldg-"+EachBuilding.idtbuilding+"-"+index,
 						}),
+						asynchronous: false,
 						classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
 					}));
 					
@@ -1867,7 +2088,7 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 					}
 				}
 			
-				window.TempBuildingPrimitives.push(ent);
+				//window.TempBuildingPrimitives.push(ent);
 			}
 		});
 	}
@@ -1875,8 +2096,64 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 	
 	
 	////console.log("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[idtcity]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
+	
+	//console.log(" window.lastHolesArray ");
+	//console.log(window.lastHolesArray);
 	if(typeof cityBoundaries[idtcity] != "undefined")
-		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[idtcity]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
+		var boundary = cityBoundaries[idtcity];
+		if(typeof window.marketBoundaries[parseInt(lastMarketLoaded)] != "undefined" && window.marketBoundaries[parseInt(lastMarketLoaded)] != null)
+		{
+			console.warn("Using Market fog");
+			boundary = window.marketBoundaries[parseInt(lastMarketLoaded)];
+			mergedCoords = mergeIntersectingPolygons(window.lastHolesArray);
+			//KEEP HOLE STRING AS IT IS
+			
+			window.lastHolesString = "";
+			$.each(mergedCoords, function (i2, eachRow){
+				window.lastHolesString += ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+tryClosingPolygon(eachRow.coords)+' ]), }, ';
+			});
+			
+			marketHole = '  ';
+			viewer.entities.removeById("NewFogEffectEntity");
+			//console.log("viewer.entities.add({ id: 'NewFogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[idtcity]+"), holes: [{ positions: Cesium.Cartesian3.fromDegreesArray([ "+boundary+" ]), },] }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
+			
+			viewer.entities.add({
+			  id: 'NewFogEffectEntity',
+			  polygon: {
+				hierarchy: new Cesium.PolygonHierarchy(
+				  Cesium.Cartesian3.fromDegreesArray(eval(cityBoundaries[lastCityLoaded])),
+				  [
+					new Cesium.PolygonHierarchy(
+					  Cesium.Cartesian3.fromDegreesArray(boundary.split(',').map(Number))
+					)
+				  ]
+				),
+				material: Cesium.Color[getDarkOverlayColor()].withAlpha(0.5),
+				classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+				// classificationType REMOVED — incompatible with holes (GroundPrimitive limitation)
+			  },
+			});
+			
+			
+			//console.log("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+boundary+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
+			//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+boundary+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
+			boundary = "["+boundary+"]";
+		}
+		else
+		{
+			console.warn("Using City Coords");
+			//KEEP HOLE STRING AS IT IS
+			/*
+			mergedCoords = mergeIntersectingPolygons(window.lastHolesArray);
+			window.lastHolesString = "";
+			$.each(mergedCoords, function (i2, eachRow){
+				window.lastHolesString += ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+tryClosingPolygon(eachRow.coords)+' ]), }, ';
+			});
+			*/
+		}
+		console.log(boundary);
+		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+boundary+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
+		console.log(window.lastHolesString);
 	viewer.entities.removeById("FogEffectEntityPreload");
 	//10/01
 	/*
@@ -1886,6 +2163,36 @@ function highlightAllBuildings(idtcity, marketId, cameraChange = true, retainBui
 	
 	eventsToExecuteAfterLoadingData();
 	//console.log("All Finished!");
+}
+
+function addInstancesToGroundPrimitives(instances)
+{
+	/*
+	for (var i = 0; i < polygons.length; i++) {
+
+		instances.push(
+			new Cesium.GeometryInstance({
+				id: polygons[i].id,   // your custom ID
+				geometry: new Cesium.PolygonGeometry({
+					polygonHierarchy: polygons[i].hierarchy,
+					perPositionHeight: false
+				}),
+				attributes: {
+					color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+						Cesium.Color.RED
+					)
+				}
+			})
+		);
+
+	}
+	*/
+
+	viewer.scene.groundPrimitives.add(
+		new Cesium.GroundPrimitive({
+			geometryInstances: instances
+		})
+	);
 }
 
 function applyScale(scaleFactor, positions, gHeight, exHeight, clr) {
@@ -2046,7 +2353,10 @@ function executeDefaultEffectsAndCamera()
 	{
 		delay = 3000;
 	}
-	//console.log("delay: "+delay);
+	
+	console.log("In executeDefaultEffectsAndCamera();");
+	console.log(defaultEffects);
+	
 	setTimeout(function () {
 		if(typeof defaultEffects != "undefined")
 		{
@@ -2102,8 +2412,13 @@ function executeDefaultEffectsAndCamera()
 							}, timeToWait);
 							
 						break;
-						case 9://Resi Units
-							highlightResiUnitsInBuilding(devSelectedBuilding);
+						case 9://Isolate With Labels
+							createIsolateWithLabelsEffect(devSelectedBuilding);
+							setResetTickForEffectsButtons("isolateButtonWithLabel", true);
+						break;
+						case 10://Isolate on White
+							createIsolateWithWhiteEffect(devSelectedBuilding);
+							setResetTickForEffectsButtons("isolateButtonWhiteEffect", true);
 						break;
 					}
 				}
@@ -2126,7 +2441,7 @@ function executeDefaultEffectsAndCamera()
 			//Go to Default Camera
 			flyToDefaultCameraWithDelay();
 		}
-	}, 1000);
+	}, 3000);
 }
 
 function loadImageUrl(offset, imageUrl)
@@ -2182,6 +2497,8 @@ function RerenderHtmlOverlay() {
 
 function clearPrimitives( clearFog = true, retainMainFog = false )
 {
+	window.lastHolesArray = [];
+	window.officeSalesInfoboxLabel = [];
 	window.tabYearSelected = null;
 	if(typeof RemoveEntitiesByType != "undefined" && typeof dashedEntityList != "undefined")
 		RemoveEntitiesByType(dashedEntityList);
@@ -2206,7 +2523,10 @@ function clearPrimitives( clearFog = true, retainMainFog = false )
 	
 	window.marketAutosuggestBuildings = null;
 	if(!retainMainFog)
+	{
 		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
+	}
 	//viewer.entities.removeById("starRatingBox");
 	if(clearFog)
 	{
@@ -2464,10 +2784,18 @@ function flyToCitySkyline2Slow(id)
 	}
 }
 
-function flyToSubmarketCamera(id, type = 'idtcamera')
+function flyToSubmarketCamera(id, type = 'idtcamera', isTour = false)
 {
+	if (IsEnableSubmarketCameraRotation && isTour == true) {
+		IsEnableSubmarketCameraRotation = false;
+		SubmarketCameraRotationBtn = false;
+		StopSubmarketCameraRotation();
+		isTour = false;
+		setResetSettingFlags("city-submarket-tour-li", false);
+		return;
+	}
 	stopRotateIfInProgress();
-	
+	  
 	$.ajax({
 	  method: "POST",
 	  url: "controllers/buildingController.php",
@@ -2483,6 +2811,19 @@ function flyToSubmarketCamera(id, type = 'idtcamera')
 			if( typeof cam.latitude != "undefined")
 			{
 				flyToCameraView(cam.latitude, cam.longitude, cam.altitude, cam.heading, cam.pitch, cam.roll, 4);
+				if(isTour)
+				{
+					/*
+					setTimeout(function (){
+						ToggleRotateAroundSubmarket(cam.longitude, cam.latitude, (cameraAltitudeAdjustment + parseInt(cam.altitude)));
+					}, 4000);
+					*/
+					
+					setTimeout(function (){
+						FlyToSubmarketPoint(cam.longitude, cam.latitude, (cameraAltitudeAdjustment + parseInt(cam.altitude)), cam.heading, cam.pitch);
+					}, 4000);
+					
+				}
 			}
 			else
 			{
@@ -2494,6 +2835,50 @@ function flyToSubmarketCamera(id, type = 'idtcamera')
 			alert("Something went wrong");
 		}
 	});
+}
+
+async function FlyToSubmarketPoint(lon, lat, alt, heading, pitch) {
+  RemoveEntityByName("tempMarkerPin");
+  entity = viewer.entities.add({
+    name: "tempMarkerPin",
+    position: new Cesium.Cartesian3.fromDegrees(
+      parseFloat(lon),
+      parseFloat(lat),
+      parseFloat(cameraAltitudeAdjustment),
+    ),
+    point: {
+      pixelSize: 10,
+      color: Cesium.Color.RED,
+    },
+  });
+  var options = {
+    maximumHeight: -30,
+    offset: new Cesium.HeadingPitchRange(heading, -0.7853981633974483, 700),
+  };
+  viewer.flyTo(entity, options);
+  setTimeout(SubmarketCameraRotationV2, 3100, lon, lat, alt);
+}
+
+function SubmarketCameraRotationV2(lon, lat, alt) {
+  var currentPosition = new Cesium.Cartesian3.fromDegrees(
+    parseFloat(lon),
+    parseFloat(lat),
+    parseFloat(cameraAltitudeAdjustment),
+  );
+  var pitch = viewer.camera.pitch;
+  var heading = camera.heading;
+  var unsubscribeRotation = viewer.clock.onTick.addEventListener(() => {
+    let rotation = -1; //counter-clockwise; +1 would be clockwise
+    camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    elevation = Cesium.Cartesian3.distance(currentPosition, camera.positionWC);
+    //viewer.scene.screenSpaceCameraController.enableZoom = false;
+    const SMOOTHNESS = 1400; //it would make one full circle in roughly 800 frames
+    heading += (rotation * Math.PI) / SMOOTHNESS;
+    viewer.camera.lookAt(
+      currentPosition,
+      new Cesium.HeadingPitchRange(heading, pitch, elevation),
+    );
+  });
 }
 
 function flyToIdtcamera(id)
@@ -2709,7 +3094,13 @@ function getHotelStarPattern(rating)
 function ShowInfobox(idtbl, id)
 {
 	if(idtbl == null)
+	{
 		return;
+	}
+	if(typeof TempBldgData[idtbl] == "undefined" || typeof TempBldgData[idtbl].idtbuilding == "undefined")
+	{
+		return;
+	}
 	idtbl = parseInt(idtbl);
 	
 	window.lastSelectedSuite = null;
@@ -2728,7 +3119,7 @@ function ShowInfobox(idtbl, id)
 		if(eachRow.idtmarket == lastMarketLoaded)
 			marketData = eachRow;
 	});
-	var st = "<span></span><a href='javascript:void(0)' class='buildingNameOnInfobox' onClick='flyToBuildingCamera("+TempBldgData[idtbl].idtbuilding+");'>"+TempBldgData[idtbl].sbuildingname+"</a>";
+	var st = "<span></span><a href='javascript:void(0)' class='buildingNameOnInfobox' onClick=\"flyToBuildingCamera("+TempBldgData[idtbl].idtbuilding+");\">"+TempBldgData[idtbl].sbuildingname+"</a>";
 	/*
 	if(typeof marketCameraRotationDetails[TempBldgData[idtbl].idtcamera] != "undefined")
 		st += "<span style='position: absolute; right: 15px;font-size: 12px; font-weight: none !important;'><a href='javascript:ToggleCameraRotationForBuilding();'>Orbit</a></span>";
@@ -2930,10 +3321,12 @@ function ShowInfobox(idtbl, id)
 	str += '<ul class="dropdown-menu">';
         
     str += '<li style="margin-right: 10px;" id="isolateSatelliteButton2"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option1" onClick=\'createIsolateSatelliteEffect('+idtbl+');\'><span class="tick">&#x2714;</span>Isolate</a></li>';
+    str += '<li style="margin-right: 10px;" id="isolateButtonWithLabel"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option1" onClick=\'createIsolateWithLabelsEffect('+idtbl+');\'><span class="tick">&#x2714;</span> Isolate with labels</a></li>';
+    str += '<li style="margin-right: 10px;" id="isolateButtonWhiteEffect"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option1" onClick=\'createIsolateWithWhiteEffect('+idtbl+');\'><span class="tick">&#x2714;</span> Isolate on White</a></li>';
     str += '<li style="margin-right: 10px;" id="isolateButton2"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option1" onClick=\'createIsolateEffect('+idtbl+');\'><span class="tick">&#x2714;</span> Isolate on Dark</a></li>';
     str += '<li style="margin-right: 10px;" id="spotlightButton2"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option2" onClick=\'createSpotlightEffect('+idtbl+');\'><span class="tick">&#x2714;</span> Spotlight</a></li>';
     str += '<li style="margin-right: 10px;" id="newHighlightButton2"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option3" onClick=\'createApp6HighlightEffect('+idtbl+');\'><span class="tick">&#x2714;</span> Highlight</a></li>';
-    str += '<li style="margin-right: 10px;" id="clipEffectButton2"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option4" onClick=\'createClipEffect('+idtbl+');\'><span class="tick">&#x2714;</span> Clear</a></li>';
+    str += '<li style="margin-right: 10px;" id="clipEffectButton2"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option4" onClick=\'createClipEffect('+idtbl+');\'><span class="tick">&#x2714;</span> Clear Selected</a></li>';
     //str += '<li style="margin-right: 10px;" id="darkOverlayButton2"><a class="dropdown-item" style="text-decoration:none; color: black;" href="#" data-option="option4" onClick=\'createDarkOverlayEffect('+idtbl+');\'><span class="tick">&#x2714;</span> Dark Overlay</a></li>';
 
     str += '</ul></div>';
@@ -2952,7 +3345,7 @@ function ShowInfobox(idtbl, id)
 	str += "<span class='pull-left'><button class='btn btn-sm btn-secondary actionButtons' id='highlightButton' onClick=\"createFloorsEffect("+idtbl+");\">Floors</button><button class='btn btn-sm btn-secondary actionButtons ' id='assetButton' onClick=\"createBuildingAssets("+idtbl+");\">Files</button><button class='btn btn-sm btn-secondary actionButtons' id='floorplanButton' onClick=\"getDataForFloorPlan("+idtbl+");\">Floorplans</button><button class='btn btn-sm btn-secondary actionButtons ' style='display:none;' id='cameraRotation2' onClick=\"ToggleCameraRotationForPoint2();\">Cam2</button></span>";
 	//Vacancy button in Office infobox, Hiding it for now
 	//<button class='btn btn-sm btn-secondary actionButtons' id='vacancyButton' onClick=\"highlightResiUnitsInBuilding("+idtbl+");\" "+isUnitsAvailable+">Vacancy</button>
-	str += "<span class='pull-right' style='cursor:pointer; float: right; margin-top: 10px; '><span  id='copyURLButton' ><img src='images/link_24.png' height='24px;' width='24px;' /></span></span>";
+	str += "<span class='pull-right' style='cursor:pointer; float: right; margin-top: 10px; '><img height='20px' width='20px' src='images/explore.png' onClick=\"flyToBuildingNADIRView("+TempBldgData[idtbl].idtbuilding+");\" />&nbsp;&nbsp;<span  id='copyURLButton' ><img src='images/link_24.png' height='24px;' width='24px;' /></span></span>";
 	$(".infoboxContainerData").html(str);
 	$(".infoboxContainer").show();
 	
@@ -3050,10 +3443,30 @@ function showDevelopmentInfobox(idtbl, id)
 	updateURL();
 }
 
+window.officeSalesInfoboxLabel = [];
 function ShowInfoboxOfficeMarketSales(idtbl)
 {
 	if(typeof viewer.entities.getById("label-"+idtbl) != "undefined")
-		viewer.entities.getById("label-"+idtbl).show = true;
+			viewer.entities.getById("label-"+idtbl).show = false;
+	if(typeof viewer.entities.getById("label-psf-"+idtbl) != "undefined")
+		viewer.entities.getById("label-psf-"+idtbl).show = false;
+	
+	if(window.officeSalesInfoboxLabel[idtbl] == "undefined" || window.officeSalesInfoboxLabel[idtbl] == null)
+	{
+		if(typeof viewer.entities.getById("label-"+idtbl) != "undefined")
+			viewer.entities.getById("label-"+idtbl).show = true;
+		window.officeSalesInfoboxLabel[idtbl] = "price";
+	}
+	else if(window.officeSalesInfoboxLabel[idtbl] == "price")
+	{
+		if(typeof viewer.entities.getById("label-psf-"+idtbl) != "undefined")
+			viewer.entities.getById("label-psf-"+idtbl).show = true;
+		window.officeSalesInfoboxLabel[idtbl] = "psf";
+	}
+	else if(window.officeSalesInfoboxLabel[idtbl] == "psf")
+	{
+		window.officeSalesInfoboxLabel[idtbl] = null;
+	}
 	
 	devSelectedBuilding = idtbl;
 	lastSelectedBuilding = idtbl;
@@ -3337,6 +3750,8 @@ function ShowLegend()
 			
 			str += '<div class="colorLegend2 " style="width: 115px; background-color: '+classColor["EDU"]+';">Education</div>';
 			str += '<div class="colorLegend2 " style="width: 115px; background-color: '+classColor["MED"]+';">Healthcare</div>';
+			
+			str += '<div class="colorLegend2 " style="width: 115px; background-color: '+classColor["EMS"]+';">EMS</div>';
 			
 			str += '<div class="colorLegend2 " style="width: 115px; background-color: '+classColor["GOV"]+';">Government</div>';
 			str += '<div class="colorLegend2 " style="width: 115px; background-color: '+classColor["PRKS"]+';">Parkades</div>';
@@ -3771,6 +4186,9 @@ function ShowSummaryInfobox()
 			str += "<tr><td class='infoboxLegendTD' style='background-color:"+classColor['SENIOR']+";"+cellWidth+"'>Retirement</td><td  class='alignCenter'>"+allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["SENIOR"][0]+"</td><td  class='alignCenter'>"+printBlankIfNotNull(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["SENIOR"][1])+"</td><td>"+numberWithCommaWithoutDecimal(summaryDetails[lastMarketLoaded]["SENIOR"].officeArea, "", " units")+"</td></tr>"; 
 			str += "<tr><td class='infoboxLegendTD' style='background-color:"+classColor['EDU']+";"+cellWidth+"'>Education</td><td  class='alignCenter'>"+allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["EDU"][0]+"</td><td  class='alignCenter'>"+printBlankIfNotNull(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["EDU"][1])+"</td><td>"+numberWithCommaWithoutDecimal(getAreaInCityUnits(summaryDetails[lastMarketLoaded]["EDU"].officeArea), "", " "+cityAreaMeasurementUnit)+"</td></tr>"; 
 			str += "<tr><td class='infoboxLegendTD' style='background-color:"+classColor['MED']+";"+cellWidth+"'>Healthcare</td><td  class='alignCenter'>"+allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["MED"][0]+"</td><td  class='alignCenter'>"+printBlankIfNotNull(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["MED"][1])+"</td><td>"+numberWithCommaWithoutDecimal(getAreaInCityUnits(summaryDetails[lastMarketLoaded]["MED"].officeArea), "", " "+cityAreaMeasurementUnit)+"</td></tr>"; 
+			
+			str += "<tr><td class='infoboxLegendTD' style='background-color:"+classColor['EMS']+";"+cellWidth+"'>EMS</td><td  class='alignCenter'>"+allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["EMS"][0]+"</td><td  class='alignCenter'>"+printBlankIfNotNull(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["EMS"][1])+"</td><td>"+numberWithCommaWithoutDecimal(getAreaInCityUnits(summaryDetails[lastMarketLoaded]["EMS"].officeArea), "", " "+cityAreaMeasurementUnit)+"</td></tr>"; 
+			
 			str += "<tr><td class='infoboxLegendTD' style='background-color:"+classColor['GOV']+";"+cellWidth+"'>Government</td><td  class='alignCenter'>"+allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["GOV"][0]+"</td><td  class='alignCenter'>"+printBlankIfNotNull(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["GOV"][1])+"</td><td>"+numberWithCommaWithoutDecimal(getAreaInCityUnits(summaryDetails[lastMarketLoaded]["GOV"].officeArea), "", " "+cityAreaMeasurementUnit)+"</td></tr>"; 
 			str += "<tr><td class='infoboxLegendTD' style='background-color:"+classColor['PRKS']+";"+cellWidth+"'>Parkades</td><td  class='alignCenter'>"+allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["PRKS"][0]+"</td><td  class='alignCenter'>"+printBlankIfNotNull(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["PRKS"][1])+"</td><td>"+numberWithCommaWithoutDecimal(summaryDetails[lastMarketLoaded]["PRKS"].stalls, "", " stalls")+"</td></tr>"; 
 			
@@ -3785,10 +4203,10 @@ function ShowSummaryInfobox()
 			
 			totalResidentialUnit = (parseInt(summaryDetails[parseInt(lastMarketLoaded)]["Condominiums"].officeArea) + parseInt(summaryDetails[parseInt(lastMarketLoaded)]["Apartments"].officeArea) + parseInt(summaryDetails[parseInt(lastMarketLoaded)]["SENIOR"].officeArea) );
 			
-			str += "<tr class='row-with-totals'><td>Total</td><td class='alignCenter'>"+numberWithCommaWithoutDecimal(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["TOTAL"][0])+"</td><td class='alignCenter'>"+avgAge+"</td></tr>"; 
+			str += "<tr class='row-with-totals'><td>Total</td><td class='alignCenter'>"+numberWithCommaWithoutDecimal(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["TOTAL"][0])+"</td><td class='alignCenter'></td><td></td></tr>"; 
 			//str += "<tr class='row-with-totals'><td>Total</td><td class='alignCenter'>"+numberWithCommaWithoutDecimal(allBuildingVisualizationSummary[parseInt(lastMarketLoaded)]["TOTAL"][0])+"</td><td class='alignCenter'></td></tr>"; 
-			str += "<tr class='row-with-totals'><td colspan='2'>Market Size (GLA)</td><td></td><td>"+numberWithCommaWithoutDecimal(grossLeasableArea, "", " "+cityAreaMeasurementUnit)+"</td></tr>"; 
-			str += "<tr class='row-with-totals'><td colspan='2'>Residential Inventory</td><td></td>  <td>"+numberWithCommaWithoutDecimal(totalResidentialUnit, "", " units")+"</td></tr>"; 
+			str += "<tr class='row-with-totals2'><td colspan='2'>Commercial Market (GLA)</td><td></td><td>"+numberWithCommaWithoutDecimal(grossLeasableArea, "", " "+cityAreaMeasurementUnit)+"</td></tr>"; 
+			str += "<tr class='row-with-totals2'><td colspan='2'>Residential Inventory</td><td></td>  <td>"+numberWithCommaWithoutDecimal(totalResidentialUnit, "", " units")+"</td></tr>"; 
 		}
 		str += "</table>";
 		
@@ -4086,7 +4504,7 @@ function createSummaryInfoboxForAvailableOfficeSpace()
 			coWorkingVacancy = 0;
 		str += "<td class='alignCenter' style='padding-right:20px !important;'>"+coWorkingVacancy+"%</td>";
 	str += "</tr>";
-	
+		
 	str += "<tr class='row-with-totals'>";
 		str += "<td>Total</td>";
 		str += "<td class='alignCenter'>"+printNumberFormat(parseInt(window.availableOfficeSpaceSummary["Direct"].buildings.length) + parseInt(window.availableOfficeSpaceSummary["Sublease"].buildings.length) + parseInt(window.availableOfficeSpaceSummary["Co-Working"].buildings.length))+"</td>";
@@ -4100,7 +4518,13 @@ function createSummaryInfoboxForAvailableOfficeSpace()
 		else
 			str += "0%";
 		str += "</td>";
+		
 	str += "</tr>";
+	
+	str += "<tr>";
+		str += "<td colspan='5' style='text-align:left !important;'><small>Last record updated: "+window.availableOfficeSpaceLastRecordDate+"</small></td>";
+	str += "</tr>";
+	
 	str += "</table>";
 	$(".summaryInfoboxContainerData").html(str);
 	$(".summaryInfoboxContainer").show();
@@ -4338,8 +4762,8 @@ function createSummaryInfoboxForCalgaryOfficeMarketSales_OLD()
 	
 	str += "<table class='table table-striped minPaddingtable' cellpadding=2 cellspacing=0 border=0 witdh='90%'>";
 	str += "<tr><td colspan='5'></td></tr>";
-	str += "<tr><td>Property Class</td><td class='alignCenter'>Transactions</td>";
-	str += "<td class='alignCenter'>Sq Ft</td>";
+	str += "<tr><td>Class</td><td class='alignCenter'>Transactions</td>";
+	str += "<td class='alignCenter'>GLA <small>(Sq Ft)</td>";
 	str += "<td class='alignCenter'>Value</td>";
 	str += "</tr>";
 	
@@ -4492,9 +4916,19 @@ function reloadCityCamera()
 
 function defaultToOfficeMarket()
 {
-	//clearLastSelectedFunctions();
 	reloadCityCamera();
-	//loadNewBuildingTypeView("Office");
+	/*
+	if(typeof window.citiesWithMultipleMarket[lastCityLoaded] == "undefined")
+	{
+		//clearLastSelectedFunctions();
+		//loadNewBuildingTypeView("Office");
+	}
+	else
+	{
+		console.log("In Else for City With Multiple Markets !!! ");
+		flyToIdtcamera(marketDetailsV2[parseInt(lastMarketLoaded)].marketcamera);
+	}
+	*/
 }
 
 function loadAllVisualizationView(type)
@@ -4981,13 +5415,28 @@ async function CameraSlowRotation(defaultIdtcamera = null, defaultCurrentPositio
 	if(defaultIdtcamera == null)
 	{
 		var mktDetail = [];
-		$.each(marketDetails, function (index, row){
-			if(row.idtcity == lastCityLoaded)
-			{
-				mktDetail = row;
-				idtcameraToRotateAround = mktDetail.skylineidtcamera;
-			}
-		});
+		if(typeof window.citiesWithMultipleMarket[lastCityLoaded] == "undefined")
+		{
+			$.each(marketDetails, function (index, row){
+				if(row.idtcity == lastCityLoaded)
+				{
+					mktDetail = row;
+					idtcameraToRotateAround = mktDetail.skylineidtcamera;
+				}
+			});
+		}
+		else
+		{
+			console.log("In Else for City With Multiple Markets !!! ");
+			$.each(marketDetails, function (index, row){
+				console.log(row.idtmarket+" == "+lastMarketLoaded);
+				if(row.idtmarket == lastMarketLoaded)
+				{
+					mktDetail = row;
+					idtcameraToRotateAround = mktDetail.marketcamera;
+				}
+			});
+		}
 	}
 	if(typeof marketCameraRotationDetails[idtcameraToRotateAround] != "undefined")
 	{
@@ -5164,6 +5613,7 @@ function getMapCenterV2() {
 var lastBuildingSolidFloorHighlighted = null;
 var buildingAssetEffectActive = false;
 window.lastHolesString = "";
+window.lastHolesArray = [];
 window.buildingAssetHeightvalues = [];
 function createBuildingAssets(idtbldg)
 {
@@ -5171,6 +5621,13 @@ function createBuildingAssets(idtbldg)
 	{
 		clearHighlightEffect();
 		highlightEffectActive = !highlightEffectActive;
+	}
+	if(floorplanEffectActive)
+	{
+		effectsArray[7] = 0;//floorplans effect
+		clearFloorplanEffect();
+		window.lastSuite = null;
+		floorplanEffectActive = false;
 	}
 	if(!buildingAssetEffectActive)
 	{
@@ -5185,7 +5642,7 @@ function createBuildingAssets(idtbldg)
 		}
 		else
 		{
-			googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
+			/* googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
 			  polygons: [
 				new Cesium.ClippingPolygon({
 				  positions: new Cesium.Cartesian3.fromDegreesArray(
@@ -5194,18 +5651,21 @@ function createBuildingAssets(idtbldg)
 				}),
 			  ],
 			});
-			googleTileset.clippingPolygons.enabled = true;
+			googleTileset.clippingPolygons.enabled = true; */
+			clearClipSelectedBuildingApp15();
+			ToggleInverseClipSelectedBuildingApp15(idtbldg);
 		}
 		
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
 		
 		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
 		viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
 		
-		//viewer.entities.removeById("FogEffectEntity");
+		//viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
 		
@@ -5261,7 +5721,18 @@ function createBuildingAssets(idtbldg)
 				material: eval(clr),
 			  },
 			});
-			showFloorNumberLabelV3("floorLabelAsset-"+idtbldg+"-"+eachFloor.number, coordsToUse[0], coordsToUse[1], (lastFloorHeight + loopFloorHt - 2), eachFloor.number, "14px Helvetica Neue", 10, true, true, false);
+			defaultShow = false;
+			if(defaultFloorSelected != null && defaultFloorSelected != 0 && defaultFloorSelected == eachFloor.number)
+			{
+				window.lastSelectedPolygonEntityId = "floor-" + idtbldg + "-" + (i+1)+"-"+eachFloor.number;;
+				viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outline = true;
+				viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outlineColor = Cesium.Color.WHITE;
+				viewer.entities.getById(window.lastSelectedPolygonEntityId).polygon.outlineWidth = 10;
+				defaultShow = true;
+				defaultFloorSelected = null;
+			}
+			
+			showFloorNumberLabelV3("floorLabelAsset-"+idtbldg+"-"+eachFloor.number, coordsToUse[0], coordsToUse[1], (lastFloorHeight + loopFloorHt - 2), eachFloor.number, "14px Helvetica Neue", 10, true, true, false, defaultShow);
 			lastFloorHeight = lastFloorHeight + loopFloorHt;
 		});
 		/*
@@ -5291,6 +5762,7 @@ function createBuildingAssets(idtbldg)
 		if(effectsArray[0] == 1 || effectsArray[6] == 1 )
 		{
 			//Create clipping effect for this building
+			/*
 			googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
 			  polygons: [
 				new Cesium.ClippingPolygon({
@@ -5303,6 +5775,8 @@ function createBuildingAssets(idtbldg)
 			googleTileset.clippingPolygons.enabled = true;
 			googleTileset.clippingPolygons.inverse = true;
 			googleTileset.show = true;
+			*/
+			clearClipSelectedBuildingApp15();
 		}
 		else if(effectsArray[1] == 1)
 		{
@@ -5311,13 +5785,15 @@ function createBuildingAssets(idtbldg)
 				window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 			clearPrimitives(false);
 			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("NewFogEffectEntity");
 			viewer.entities.removeById("FogEffectEntityPreload");
 			if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 				eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
 		}
 		else
 		{
-			googleTileset.clippingPolygons.enabled = false;
+			//googleTileset.clippingPolygons.enabled = false;
+			clearClipSelectedBuildingApp15();
 		}
 		$(".floorNumberRowTR").hide();
 		clearBuildingAssets();
@@ -5460,13 +5936,21 @@ var buildingIdInEffect = null;
 window.stadiaMapLoaded = false;
 function createIsolateEffect(idtbldg)
 {
-	//Clear isolate on Satellite if active
-	if(window.isolateSatelliteEffectActive == true)
+	if(window.isolateEffectActive == true)
 	{
-		clearIsolateSatelliteEffect(idtbldg);
-		setResetTickForEffectsButtons("isolateSatelliteButton2", false);
+		window.isolateEffectActive = false;
+		clearIsolateEffect();
+		clearClipSelectedBuildingApp15();
+		
+		$("#transparencyDiv").hide();
+		$("#opacity").val(1);
+		$("#opacityText").val(1);
+		TransparencyDivDisplay = false;
+		$("#legendPanel").show();
+		highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+		return;
 	}
-	
+	clearIfExistingEffectsAreOn();
 	if(typeof window.stadiaMapLoaded == "undefined" || !stadiaMapLoaded)
 	{
 		//Stdia map
@@ -5510,10 +5994,11 @@ function createIsolateEffect(idtbldg)
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
 		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
 		viewer.entities.removeById("FogEffectEntityPreload");
 		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
-		
-		ToggleClipSelectedBuildingApp15(idtbldg);
+		if(window.lastBuildingClipped == null)
+			ToggleClipSelectedBuildingApp15(idtbldg);
 		/*
 		googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
 		  polygons: [
@@ -5532,6 +6017,7 @@ function createIsolateEffect(idtbldg)
 		$("#isolateButton").removeClass("btn-secondary");
 		$("#isolateButton").addClass("btn-primary");
 		//$("#transparencyDiv").show();
+		window.isolateEffectActive = true;
 	}
 	else
 	{
@@ -5555,7 +6041,7 @@ function createIsolateEffect(idtbldg)
 		}
 		else
 		{
-			ToggleClipSelectedBuildingApp15(idtbldg);
+			clearClipSelectedBuildingApp15();
 			/*
 			if(clipTileset != null && typeof clipTileset.clippingPolygons != "undefined")
 			{
@@ -5570,7 +6056,7 @@ function createIsolateEffect(idtbldg)
 			}
 			*/
 		}
-		
+		window.isolateEffectActive = false;
 		clearIsolateEffect();
 		
 		$("#transparencyDiv").hide();
@@ -5584,7 +6070,6 @@ function createIsolateEffect(idtbldg)
 			highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
 		}
 	}
-	window.isolateEffectActive = !window.isolateEffectActive;
 	updateURL();
 }
 
@@ -5601,19 +6086,269 @@ function clearIsolateEffect()
 	}
 	else
 	{
-		if(clipTileset != null && typeof clipTileset.clippingPolygons != "undefined")
-		{
-			clipTileset.clippingPolygons.enabled = false;
-			clipTileset.clippingPolygons.inverse = false;
-			clipTileset.show = false;
-		}
 		
-		if(typeof googleTileset.clippingPolygons != "undefined" & googleTileset.clippingPolygons != null)
-		{
-			googleTileset.clippingPolygons.enabled = false;
-		}
 	}
 	
+	$("#transparencyDiv").hide();
+	$("#opacity").val(1);
+	$("#opacityText").val(1);
+	TransparencyDivDisplay = false;
+	
+	$("#isolateButton").addClass("btn-secondary");
+	$("#isolateButton").removeClass("btn-primary");
+}
+
+window.isolateWithWhiteActive = false;
+window.stadiaWhiteMapLoaded = false;
+function createIsolateWithWhiteEffect(idtbldg)
+{
+	if(window.isolateWithWhiteActive == true)
+	{
+		effectsArray[10] = 0;//re-setting isolate WHITE
+		viewer.scene.globe.depthTestAgainstTerrain = false;
+		
+		clearIsolateWithWhiteEffect();
+		clearClipSelectedBuildingApp15();
+		
+		$("#legendPanel").show();
+		highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+	
+		window.isolateWithWhiteActive = false;
+		return;
+	}
+	//Clear isolate on Satellite if active
+	clearIfExistingEffectsAreOn();
+	
+	if(typeof window.stadiaWhiteMapLoaded == "undefined" || !stadiaWhiteMapLoaded)
+	{
+		//Stdia map
+		const imageryViewModels = [];
+		imageryViewModels.push(new Cesium.ProviderViewModel({
+			name: "Stadia Alidade Smooth Dark",
+			iconUrl: Cesium.buildModuleUrl(
+			  "Widgets/Images/ImageryProviders/stadiaAlidadeSmooth.png"
+			),
+			tooltip: "Stadia Alidade Smooth Dark, like its lighter cousin, is also designed to stay out of the way. It just flips the dark mode switch on the color scheme. With the lights out, your data can now literally shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth/",
+			category: "Other",
+			creationFunction: function() {
+			  return new Cesium.UrlTemplateImageryProvider({
+				url: "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png",
+				minimumLevel: 0,
+				maximumLevel: 20   // important to allow fine detail
+			  });
+			}
+		  }));
+
+		//Finally, create the baseLayerPicker widget using our view models.
+		const layers = viewer.imageryLayers;
+		const baseLayerPicker = new Cesium.BaseLayerPicker("baseLayerPickerContainer", {
+			globe: viewer.scene.globe,
+			imageryProviderViewModels: imageryViewModels
+		});
+		createTerrain();
+		
+		window.stadiaWhiteMapLoaded = true;
+	}
+	if(typeof window.isolateWithWhiteActive == "undefined" || !window.isolateWithWhiteActive)
+	{
+		//viewer.imageryLayers.remove(viewer.imageryLayers.get(0));
+		effectsArray[0] = 1;//setting isolate effect
+		
+		viewer.scene.globe.depthTestAgainstTerrain = true;
+		buildingIdInEffect = idtbldg;
+		//createStadiaTerrain();
+		$("#legendPanel").hide();
+		//ShowInfobox(idtbldg);
+		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
+		clearPrimitives(false);
+		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
+		viewer.entities.removeById("FogEffectEntityPreload");
+		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
+		if(window.lastBuildingClipped == null)
+			ToggleClipSelectedBuildingApp15(idtbldg);
+		/*
+		googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
+		  polygons: [
+			new Cesium.ClippingPolygon({
+			  positions: new Cesium.Cartesian3.fromDegreesArray(
+				eval("["+TempBldgData[idtbldg].coords+"]")
+			  ),
+			}),
+		  ],
+		});
+		googleTileset.clippingPolygons.enabled = true;
+		googleTileset.clippingPolygons.inverse = true;
+		globe.translucency.enabled = false;
+		
+		*/
+		$("#isolateButton").removeClass("btn-secondary");
+		$("#isolateButton").addClass("btn-primary");
+		//$("#transparencyDiv").show();
+		window.isolateWithWhiteActive = true;
+	}
+	else
+	{
+		effectsArray[10] = 0;//re-setting isolate WHITE
+		viewer.scene.globe.depthTestAgainstTerrain = false;
+		/*
+		if(effectsArray[10] == 1)
+		{
+			googleTileset.show = true;
+			googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
+			  polygons: [
+				new Cesium.ClippingPolygon({
+				  positions: new Cesium.Cartesian3.fromDegreesArray(
+					eval("["+TempBldgData[parseInt(devSelectedBuilding)].coords+"]")
+				  ),
+				}),
+			  ],
+			});
+			googleTileset.clippingPolygons.enabled = true;
+			
+		}
+		else
+		{
+			ToggleClipSelectedBuildingApp15(idtbldg);
+		}
+		*/
+		
+		clearIsolateWithWhiteEffect();
+		clearClipSelectedBuildingApp15();
+		$("#transparencyDiv").hide();
+		$("#opacity").val(1);
+		$("#opacityText").val(1);
+		TransparencyDivDisplay = false;
+		//if(!buildingAssetEffectActive && !highlightEffectActive && !spotlightEffectActive && !newHighlightEffectActive)
+		if(effectsArray.includes(1) == false)
+		{
+			$("#legendPanel").show();
+			highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+		}
+		window.isolateWithWhiteActive = false;
+	}
+	updateURL();
+}
+
+function clearIsolateWithWhiteEffect()
+{
+	effectsArray[10] = 0;
+	
+	window.stadiaMapLoaded = false;
+	viewer.scene.globe.depthTestAgainstTerrain = false;
+	globe.translucency.enabled = false;
+	if(effectsArray[5] == 1)
+	{
+		
+	}
+	else
+	{
+		
+	}
+	
+	$("#transparencyDiv").hide();
+	$("#opacity").val(1);
+	$("#opacityText").val(1);
+	TransparencyDivDisplay = false;
+	
+	$("#isolateButton").addClass("btn-secondary");
+	$("#isolateButton").removeClass("btn-primary");
+}
+
+
+window.isolateWithLabelsEffectActive = false;
+function createIsolateWithLabelsEffect(idtbldg)
+{
+	if(window.isolateWithLabelsEffectActive == true)
+	{
+		effectsArray[9] = 0;
+		clearIsolateWithLabelsEffect();
+		clearClipSelectedBuildingApp15();
+		window.isolateWithLabelsEffectActive = false;
+		
+		$("#legendPanel").show();
+		highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+		return;
+	}
+	//Clear isolate on Satellite if active
+	clearIfExistingEffectsAreOn();
+	
+	if(typeof window.googleLayer == "undefined" || !googleLayer)
+	{
+		googleLayer = viewer.imageryLayers.addImageryProvider(
+            new Cesium.UrlTemplateImageryProvider({
+                url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+                maximumLevel: 20,
+                credit: '© Google'
+            })
+        );
+		createTerrain();
+	}
+	if(typeof window.isolateWithLabelsEffectActive == "undefined" || !window.isolateWithLabelsEffectActive)
+	{
+		//viewer.imageryLayers.remove(viewer.imageryLayers.get(0));
+		effectsArray[9] = 1;//setting isolate effect
+		googleLayer.show = true;
+		viewer.scene.globe.depthTestAgainstTerrain = true;
+		buildingIdInEffect = idtbldg;
+		//createStadiaTerrain();
+		$("#legendPanel").hide();
+		//ShowInfobox(idtbldg);
+		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
+		clearPrimitives(false);
+		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
+		viewer.entities.removeById("FogEffectEntityPreload");
+		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
+		if(window.lastBuildingClipped == null)
+			ToggleClipSelectedBuildingApp15(idtbldg);
+		/*
+		googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
+		  polygons: [
+			new Cesium.ClippingPolygon({
+			  positions: new Cesium.Cartesian3.fromDegreesArray(
+				eval("["+TempBldgData[idtbldg].coords+"]")
+			  ),
+			}),
+		  ],
+		});
+		googleTileset.clippingPolygons.enabled = true;
+		googleTileset.clippingPolygons.inverse = true;
+		globe.translucency.enabled = false;
+		
+		*/
+		$("#isolateButton").removeClass("btn-secondary");
+		$("#isolateButton").addClass("btn-primary");
+		//$("#transparencyDiv").show();
+		window.isolateWithLabelsEffectActive = true;
+		createTerrain();
+	}
+	else
+	{
+		effectsArray[9] = 0;
+		clearIsolateWithLabelsEffect();
+		window.isolateWithLabelsEffectActive = false;
+		//if(!buildingAssetEffectActive && !highlightEffectActive && !spotlightEffectActive && !newHighlightEffectActive)
+		if(effectsArray.includes(1) == false)
+		{
+			$("#legendPanel").show();
+			highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+		}
+	}
+	updateURL();
+}
+
+function clearIsolateWithLabelsEffect()
+{
+	if(typeof googleLayer != "undefined")
+		googleLayer.show = false;
+	effectsArray[9] = 0;
+	viewer.scene.globe.depthTestAgainstTerrain = false;
+	clearClipSelectedBuildingApp15();
+	removeTerrain();
+	//window.stadiaMapLoaded = false;
+	viewer.scene.globe.depthTestAgainstTerrain = false;
+	globe.translucency.enabled = false;
 	$("#transparencyDiv").hide();
 	$("#opacity").val(1);
 	$("#opacityText").val(1);
@@ -5630,11 +6365,24 @@ window.arcgisLayer = null;
 //AonzLM7R2VRK3j0N-gTffmMsIPG5i0wolqRoVl7BZRTDNDa9-ZEmGVlQRkldikge
 async function createIsolateSatelliteEffect(idtbldg)
 {
-	if(window.isolateEffectActive == true)
+	if(window.isolateSatelliteEffectActive == true)
 	{
-		clearIsolateEffect();
-		setResetTickForEffectsButtons("isolateButton2", false);
+		effectsArray[6] = 0;//re-setting isolate satelite effect
+		
+		clearIsolateSatelliteEffect(idtbldg);
+		clearClipSelectedBuildingApp15();
+		
+		$("#transparencyDiv").hide();
+		$("#opacity").val(1);
+		$("#opacityText").val(1);
+		TransparencyDivDisplay = false;
+		
+		$("#legendPanel").show();
+		highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+		window.isolateSatelliteEffectActive = false;
+		return;
 	}
+	clearIfExistingEffectsAreOn();
 	if(typeof window.sateliteMapLoaded == "undefined" || !window.sateliteMapLoaded)
 	{
 		window.arcgisLayer = viewer.imageryLayers.addImageryProvider(
@@ -5642,7 +6390,7 @@ async function createIsolateSatelliteEffect(idtbldg)
 			Cesium.ArcGisBaseMapType.SATELLITE
 		  )
 		);
-		
+		createTerrain();
 		if(window.arcgisLayer == null)
 		{
 			/*
@@ -5676,10 +6424,11 @@ async function createIsolateSatelliteEffect(idtbldg)
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
 		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
 		viewer.entities.removeById("FogEffectEntityPreload");
 		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
-		
-		ToggleClipSelectedBuildingApp15(idtbldg);
+		if(window.lastBuildingClipped == null)
+			ToggleClipSelectedBuildingApp15(idtbldg);
 		
 		/*
 		googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
@@ -5699,12 +6448,14 @@ async function createIsolateSatelliteEffect(idtbldg)
 		$("#isolateButton").removeClass("btn-secondary");
 		$("#isolateButton").addClass("btn-primary");
 		//$("#transparencyDiv").show();
+		window.isolateSatelliteEffectActive = true;
 	}
 	else
 	{
 		effectsArray[6] = 0;//re-setting isolate satelite effect
 		
 		clearIsolateSatelliteEffect(idtbldg);
+		clearClipSelectedBuildingApp15();
 		
 		$("#transparencyDiv").hide();
 		$("#opacity").val(1);
@@ -5716,12 +6467,12 @@ async function createIsolateSatelliteEffect(idtbldg)
 			$("#legendPanel").show();
 			highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
 		}
+		window.isolateSatelliteEffectActive = false;
 	}
-	window.isolateSatelliteEffectActive = !window.isolateSatelliteEffectActive;
 	updateURL();
 }
 
-function clearIsolateSatelliteEffect(idtbldg)
+function clearIsolateSatelliteEffect(idtbldg = "")
 {
 	window.arcgisLayer.show = false;
 	globe.translucency.enabled = false;
@@ -5747,7 +6498,7 @@ function clearIsolateSatelliteEffect(idtbldg)
 	}
 	else
 	{
-		ToggleClipSelectedBuildingApp15(idtbldg);
+		clearClipSelectedBuildingApp15();
 		/*
 		if(clipTileset != null && typeof clipTileset.clippingPolygons != "undefined")
 		{
@@ -5771,12 +6522,324 @@ function clearIsolateSatelliteEffect(idtbldg)
 	$("#isolateButton").removeClass("btn-primary");
 }
 
+window.buildingEffectArray = [];
+window.buildingEffectArray["Isolate"] = [];
+window.buildingEffectArray["IsolateWithLabels"] = [];
+window.buildingEffectArray["IsolateOnWhite"] = [];
+window.buildingEffectArray["IsolateOnDark"] = [];
+window.buildingEffectArray["Spotlight"] = [];
+window.buildingEffectArray["Highlight"] = [];
+
+window.buildingEffectArray["Isolate"].push({
+		"name": "Isolate", 
+		"isClip": true, 
+		"isInverseClip": false, 
+		"button": "isolateSatelliteButton2", 
+		"key": 0, 
+		"isActive": null, 
+		"lastBuilding": null
+});
+window.buildingEffectArray["IsolateWithLabels"].push({
+		"name": "Isolate With Labels", 
+		"isClip": true, 
+		"isInverseClip": false, 
+		"button": "isolateButtonWithLabel", 
+		"key": 0, 
+		"isActive": null, 
+		"lastBuilding": null
+});
+window.buildingEffectArray["IsolateOnWhite"].push({
+		"name": "Isolate On White", 
+		"isClip": true, 
+		"isInverseClip": false, 
+		"button": "isolateButtonWhiteEffect", 
+		"key": 0, 
+		"isActive": null, 
+		"lastBuilding": null
+});
+window.buildingEffectArray["IsolateOnDark"].push({
+		"name": "Isolate On Dark", 
+		"isClip": true, 
+		"isInverseClip": false, 
+		"button": "isolateButton2", 
+		"key": 0, 
+		"isActive": null, 
+		"lastBuilding": null
+});
+window.buildingEffectArray["Spotlight"].push({
+		"name": "Spotlight", 
+		"isClip": false, 
+		"isInverseClip": false, 
+		"button": "spotlightButton2", 
+		"key": 0, 
+		"isActive": null, 
+		"lastBuilding": null
+});
+window.buildingEffectArray["Highlight"].push({
+		"name": "Highlight", 
+		"isClip": true, 
+		"isInverseClip": false, 
+		"button": "newHighlightButton2", 
+		"key": 0, 
+		"isActive": null, 
+		"lastBuilding": null
+});
+window.buildingEffectArray.push({
+		"name": "Clear", 
+		"isClip": false, 
+		"isInverseClip": true, 
+		"button": "clipEffectButton2", 
+		"key": 0, 
+		"isActive": null, 
+		"lastBuilding": null
+});
+
+function createBuildingEffectV2(effectName, idtbldg, onlyClear = false)
+{
+	if(onlyClear)
+	{
+		$("#legendPanel").show();
+		highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+		return;
+	}
+	if(window.lastBuildingClipped != idtbldg)
+	{
+		clearClipSelectedBuildingApp15();
+	}
+	
+	if(window.buildingEffectArray[effectName].isClip == true)
+	{
+		//Clip building
+		ToggleClipSelectedBuildingApp15(idtbldg);
+	}
+	
+	if(window.buildingEffectArray[effectName].isInverseClip == true)
+	{
+		//Inverse Clip building
+		ToggleInverseClipSelectedBuildingApp15(idtbldg);
+	}
+	
+	if(window.buildingEffectArray[effectName].isInverseClip == false && window.buildingEffectArray[effectName].isClip == false)
+	{
+		globe.baseColor = Cesium.Color.TRANSPARENT;
+		if (googleTileset.clippingPolygons != undefined) {
+		  googleTileset.clippingPolygons.removeAll();
+		  googleTileset.clippingPolygons = undefined;
+		}
+	}
+	
+	//Clear previous Imagery layer
+	removeTerrain();
+	
+	//Imagery layer changes
+	/*
+		window.buildingEffectArray["Isolate"] = [];
+		window.buildingEffectArray["IsolateWithLabels"] = [];
+		window.buildingEffectArray["IsolateOnWhite"] = [];
+		window.buildingEffectArray["IsolateOnDark"] = [];
+		window.buildingEffectArray["Spotlight"] = [];
+		window.buildingEffectArray["Highlight"] = [];
+	*/
+	switch(effectName)
+	{
+		case "Isolate":
+			//Stdia map
+			imageryViewModels = [];
+			imageryViewModels.push(new Cesium.ProviderViewModel({
+				name: "Stadia Alidade Smooth Dark",
+				iconUrl: Cesium.buildModuleUrl(
+				  "Widgets/Images/ImageryProviders/stadiaAlidadeSmoothDark.png"
+				),
+				tooltip: "Stadia Alidade Smooth Dark, like its lighter cousin, is also designed to stay out of the way. It just flips the dark mode switch on the color scheme. With the lights out, your data can now literally shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth-dark/",
+				category: "Other",
+				creationFunction: function() {
+				  return new Cesium.UrlTemplateImageryProvider({
+					url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png",
+					minimumLevel: 0,
+					maximumLevel: 20   // important to allow fine detail
+				  });
+				}
+			  }));
+
+			//Finally, create the baseLayerPicker widget using our view models.
+			layers = viewer.imageryLayers;
+			baseLayerPicker = new Cesium.BaseLayerPicker("baseLayerPickerContainer", {
+				globe: viewer.scene.globe,
+				imageryProviderViewModels: imageryViewModels
+			});
+			createTerrain();
+			
+			window.stadiaMapLoaded = true;
+		break;
+		
+		case "IsolateWithLabels":
+			googleLayer = viewer.imageryLayers.addImageryProvider(
+				new Cesium.UrlTemplateImageryProvider({
+					url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+					maximumLevel: 20,
+					credit: '© Google'
+				})
+			);
+			createTerrain();
+		break;
+		
+		case "IsolateOnWhite":
+			imageryViewModels = [];
+			imageryViewModels.push(new Cesium.ProviderViewModel({
+				name: "Stadia Alidade Smooth Dark",
+				iconUrl: Cesium.buildModuleUrl(
+				  "Widgets/Images/ImageryProviders/stadiaAlidadeSmooth.png"
+				),
+				tooltip: "Stadia Alidade Smooth Dark, like its lighter cousin, is also designed to stay out of the way. It just flips the dark mode switch on the color scheme. With the lights out, your data can now literally shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth/",
+				category: "Other",
+				creationFunction: function() {
+				  return new Cesium.UrlTemplateImageryProvider({
+					url: "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png",
+					minimumLevel: 0,
+					maximumLevel: 20   // important to allow fine detail
+				  });
+				}
+			  }));
+
+			//Finally, create the baseLayerPicker widget using our view models.
+			layers = viewer.imageryLayers;
+			baseLayerPicker = new Cesium.BaseLayerPicker("baseLayerPickerContainer", {
+				globe: viewer.scene.globe,
+				imageryProviderViewModels: imageryViewModels
+			});
+			createTerrain();
+			
+			window.stadiaWhiteMapLoaded = true;
+		break;
+		case "IsolateOnDark":
+			//Stdia map Dark
+			imageryViewModels = [];
+			imageryViewModels.push(new Cesium.ProviderViewModel({
+				name: "Stadia Alidade Smooth Dark",
+				iconUrl: Cesium.buildModuleUrl(
+				  "Widgets/Images/ImageryProviders/stadiaAlidadeSmoothDark.png"
+				),
+				tooltip: "Stadia Alidade Smooth Dark, like its lighter cousin, is also designed to stay out of the way. It just flips the dark mode switch on the color scheme. With the lights out, your data can now literally shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth-dark/",
+				category: "Other",
+				creationFunction: function() {
+				  return new Cesium.UrlTemplateImageryProvider({
+					url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png",
+					minimumLevel: 0,
+					maximumLevel: 20   // important to allow fine detail
+				  });
+				}
+			  }));
+
+			//Finally, create the baseLayerPicker widget using our view models.
+			layers = viewer.imageryLayers;
+			baseLayerPicker = new Cesium.BaseLayerPicker("baseLayerPickerContainer", {
+				globe: viewer.scene.globe,
+				imageryProviderViewModels: imageryViewModels
+			});
+			createTerrain();
+			
+			window.stadiaMapLoaded = true;
+		break;
+	}
+	//Button tick changes
+	setResetTickForEffectsButtons(window.buildingEffectArray[effectName]["button"], true);
+	
+	//
+	updateURL();
+}
+
+function clearIfExistingEffectsAreOn()
+{
+	if(window.lastBuildingClipped != devSelectedBuilding)
+	{
+		globe.baseColor = Cesium.Color.TRANSPARENT;
+		if (googleTileset.clippingPolygons != undefined) {
+		  googleTileset.clippingPolygons.removeAll();
+		  googleTileset.clippingPolygons = undefined;
+		}
+		window.lastBuildingClipped = null;
+	}
+	//Isolate on Dark
+	if(window.isolateEffectActive == true)
+	{
+		clearIsolateEffect();
+		setResetTickForEffectsButtons("isolateButton2", false);
+		window.isolateEffectActive = null;//IMPORTANT TO SET TO NULL
+	}
+	
+	//Isolate with 
+	if(window.isolateSatelliteEffectActive == true)
+	{
+		clearIsolateSatelliteEffect();
+		setResetTickForEffectsButtons("isolateSatelliteButton2", false);
+		window.isolateSatelliteEffectActive = null;
+	}
+	
+	//Dark Overlay
+	if(window.darkOverlayEffectActive)
+	{
+		clearDarkOverlayEffect();
+		window.darkOverlayEffectActive = null;
+	}
+	
+	//White Overlay
+	if(window.whiteOverlayEffectActive)
+	{
+		clearWhiteOverlayEffect();
+		window.whiteOverlayEffectActive = null;
+	}
+	
+	//Isolate with White
+	if(window.isolateWithWhiteActive)
+	{
+		clearIsolateWithWhiteEffect();
+		setResetTickForEffectsButtons("isolateButtonWhiteEffect", false);
+		window.isolateWithWhiteActive = null;
+	}
+	
+	//Isolate with label
+	if(window.isolateWithLabelsEffectActive)
+	{
+		clearIsolateWithLabelsEffect();
+		setResetTickForEffectsButtons("isolateButtonWithLabel", false);
+		window.isolateWithLabelsEffectActive = null;
+	}
+	
+	if(window.newHighlightEffectActive)
+	{
+		clearApp6HighlightEffect();
+		window.newHighlightEffectActive = null;
+	}
+	
+	if(window.spotlightEffectActive)
+	{
+		clearSpotlightEffect();
+		window.spotlightEffectActive = null;
+	}
+	initiateEffectsArray();
+}
+
 var spotlightEffectActive = false;
 var buildingIdInEffect = null;
 function createSpotlightEffect(idtbldg)
 {
-	if(!spotlightEffectActive)
+	if(window.spotlightEffectActive == true)
 	{
+		clearSpotlightEffect();
+		
+		$("#legendPanel").show();
+		highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+		window.spotlightEffectActive = false;
+		return;
+	}
+	
+	clearIfExistingEffectsAreOn();
+	if(typeof window.spotlightEffectActive == "undefined" || !window.spotlightEffectActive)
+	{
+		if(window.lastBuildingClipped != null)
+		{
+			clearClipSelectedBuildingApp15();
+		}
 		effectsArray[1] = 1;//setting spotlight effect
 		$("#viewerController").css("width", "215px");
 		$("#Transparency").show();
@@ -5790,6 +6853,7 @@ function createSpotlightEffect(idtbldg)
 			window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
 		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
 		viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -5797,6 +6861,8 @@ function createSpotlightEffect(idtbldg)
 		$("#spotlightButton").removeClass("btn-secondary");
 		$("#spotlightButton").addClass("btn-primary");
 		//$("#transparencyDiv").show();
+		window.spotlightEffectActive = true;
+		createTerrain();
 	}
 	else
 	{
@@ -5811,8 +6877,8 @@ function createSpotlightEffect(idtbldg)
 			$("#legendPanel").show();
 			highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
 		}
+		window.spotlightEffectActive = false;
 	}
-	spotlightEffectActive = !spotlightEffectActive;
 	updateURL();
 }
 
@@ -5863,15 +6929,31 @@ function clearSpotlightEffect()
 var newHighlightEffectActive = false;
 function createApp6HighlightEffect(idtbldg)
 {
-	if(!newHighlightEffectActive)
+	if(newHighlightEffectActive == true)
+	{
+		effectsArray[2] = 0;//highlight effect
+		clearApp6HighlightEffect();
+		
+		$("#legendPanel").show();
+		highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
+		newHighlightEffectActive = false;
+		return;
+	}
+	clearIfExistingEffectsAreOn();
+	if(typeof newHighlightEffectActive == "undefined" || !newHighlightEffectActive)
 	{
 		effectsArray[2] = 1;//highlight effect
 		buildingIdInEffect = idtbldg;
+		if(window.lastBuildingClipped != null)
+		{
+			clearClipSelectedBuildingApp15();
+		}
 		
 		//ShowInfobox(idtbldg);
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
 		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
 		viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -5903,6 +6985,7 @@ function createApp6HighlightEffect(idtbldg)
 		$("#newHighlightButton").removeClass("btn-secondary");
 		$("#newHighlightButton").addClass("btn-primary");
 		//$("#transparencyDiv").show();
+		newHighlightEffectActive = true;
 	}
 	else
 	{
@@ -5915,8 +6998,8 @@ function createApp6HighlightEffect(idtbldg)
 			$("#legendPanel").show();
 			highlightAllBuildings(lastCityLoaded, lastMarketLoaded, false, true);
 		}
+		newHighlightEffectActive = false;
 	}
-	newHighlightEffectActive = !newHighlightEffectActive;
 	updateURL();
 }
 
@@ -5936,17 +7019,7 @@ function createClipEffect(idtbldg)
 		effectsArray[8] = 1;//Clip Effect
 		buildingIdInEffect = idtbldg;
 		
-		googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
-		  polygons: [
-			new Cesium.ClippingPolygon({
-			  positions: new Cesium.Cartesian3.fromDegreesArray(
-				eval("["+TempBldgData[idtbldg].coords+"]")
-			  ),
-			}),
-		  ],
-		});
-		googleTileset.clippingPolygons.enabled = true;
-		googleTileset.clippingPolygons.inverse = false;
+		ToggleInverseClipSelectedBuildingApp15(idtbldg);
 		//$("#newHighlightButton").removeClass("btn-secondary");
 		//$("#newHighlightButton").addClass("btn-primary");
 	}
@@ -5970,8 +7043,7 @@ function clearClipEffect()
 {
 	effectsArray[8] = 0;//Clip Effect
 	//clearPrimitives();
-	googleTileset.clippingPolygons.enabled = false;
-	googleTileset.clippingPolygons.inverse = false;
+	clearClipSelectedBuildingApp15();
 	$("#newHighlightButton").addClass("btn-secondary");
 	$("#newHighlightButton").removeClass("btn-primary");
 }
@@ -5984,6 +7056,7 @@ function re_createFogEffect()
 		if(effectsArray[6] == 1 || effectsArray[0] == 1 )
 			cesOverlay = "BOTH";
 		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
 		if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType."+cesOverlay+", }, }) ");
 		viewer.entities.removeById("FogEffectEntityPreload");
@@ -6001,14 +7074,12 @@ function createDarkOverlayEffect(foceClear = false)
 	}
 	else
 	{
-		if(whiteOverlayEffectActive)
-		{
-			clearWhiteOverlayEffect();
-		}
+		clearIfExistingEffectsAreOn();
 		if(!darkOverlayEffectActive)
 		{
 			setResetSettingFlags("dark-overlay-li", true);
 			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("NewFogEffectEntity");
 			viewer.entities.removeById("FogEffectEntityPreload");
 			if(typeof window.lastHolesString == "undefined")
 			{
@@ -6043,14 +7114,12 @@ function createWhiteOverlayEffect(foceClear = false)
 	}
 	else
 	{
-		if(darkOverlayEffectActive)
-		{
-			clearDarkOverlayEffect();
-		}
+		clearIfExistingEffectsAreOn();
 		if(!whiteOverlayEffectActive)
 		{
 			setResetSettingFlags("white-overlay-li", true);
 			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("NewFogEffectEntity");
 			viewer.entities.removeById("FogEffectEntityPreload");
 			if(typeof window.lastHolesString == "undefined")
 			{
@@ -6081,6 +7150,7 @@ function clearDarkOverlayEffect()
 	darkOverlayEffectActive = false;
 	setResetSettingFlags("dark-overlay-li", false);
 	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 	//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
 	//window.darkOverlayEffectColor = 'WHITE';
@@ -6094,6 +7164,7 @@ function clearWhiteOverlayEffect()
 	whiteOverlayEffectActive = false;
 	setResetSettingFlags("white-overlay-li", false);
 	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 	
 	//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
@@ -6109,6 +7180,7 @@ function clearEntireOverlayEffect()
 	whiteOverlayEffectActive = false;
 	
 	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 	
 	window.darkOverlayEffectColor = '';
@@ -6116,14 +7188,14 @@ function clearEntireOverlayEffect()
 
 //window.floorNumberLabels = viewer.scene.primitives.add(new Cesium.LabelCollection());
 window.floorLabels = [];
-function showFloorNumberLabelV3(id, lon, lat, height, label, font, disableDepthTestDistance, fadeByDistance = false, showBackground = true, clearOthers = true)
+function showFloorNumberLabelV3(id, lon, lat, height, label, font, disableDepthTestDistance, fadeByDistance = false, showBackground = true, clearOthers = true, defaultShow = false)
 {
 	if(typeof viewer.entities.getById(id) == "undefined")
 	{
 		floorLabels.push(id);
 		viewer.entities.add({
 			id: id,
-			show: false,
+			show: defaultShow,
 			position: Cesium.Cartesian3.fromDegrees(lon, lat, parseFloat(height.toFixed(2))),
 			label: {
 			  text: label + "",
@@ -6177,6 +7249,13 @@ function createFloorsEffect(idtbldg)
 		if(typeof googleTileset.clippingPolygons != "undefined")
 			googleTileset.clippingPolygons.enabled = false;
 	}
+	if(floorplanEffectActive)
+	{
+		effectsArray[7] = 0;//floorplans effect
+		clearFloorplanEffect();
+		window.lastSuite = null;
+		floorplanEffectActive = false;
+	}
 	if(!highlightEffectActive)
 	{
 		effectsArray[4] = 1;//floorplans effect
@@ -6192,6 +7271,7 @@ function createFloorsEffect(idtbldg)
 		else
 		{
 			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("NewFogEffectEntity");
 			viewer.entities.removeById("FogEffectEntityPreload");
 			if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 				eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -6366,6 +7446,19 @@ window.floorPlanPrimitivesIndexes = [];
 var floorplanEffectActive = false;
 function createFloorplanEffect(idtbldg)
 {
+	if(highlightEffectActive)
+	{
+		clearHighlightEffect();
+		highlightEffectActive = !highlightEffectActive;
+	}
+	if(buildingAssetEffectActive)
+	{
+		clearBuildingAssets();
+		buildingAssetEffectActive = !buildingAssetEffectActive;
+		if(typeof googleTileset.clippingPolygons != "undefined")
+			googleTileset.clippingPolygons.enabled = false;
+	}
+
 	if(!floorplanEffectActive)
 	{
 		effectsArray[7] = 1;//floorplans effect
@@ -6378,6 +7471,7 @@ function createFloorplanEffect(idtbldg)
 			window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
 		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("NewFogEffectEntity");
 		viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -6503,6 +7597,7 @@ function clearFloorplanEffect()
 		if(typeof floorPlanPrimitives[i] != "undefined")
 			floorPlanPrimitives[i].destroy();
 	}
+	
 	floorPlanPrimitives = [];
 }
 
@@ -6583,6 +7678,10 @@ function prepareFloorPlanInInfobox(idtbldg, floorNumber, details)
 
 function prepareAvailableOfficeSpaceInfobox(idtbldg, index, details2, allSuitesOnFloor)
 {
+	lastFloor = details2.floor_number;
+	lastSuite = index;
+	lastSuiteId = details2.idtsuite;
+	updateURL();
 	var bldgName = "";
 	var st = "";
 	if(lastSelectedBuildingType == "Floorplan")
@@ -6619,18 +7718,21 @@ function prepareAvailableOfficeSpaceInfobox(idtbldg, index, details2, allSuitesO
 		st += "<tr><td>Class</td><td>"+details[0]["class"]+"</td><td>Additional Rent</td><td>"+numberWithCommaWithTwoDecimal(details[0]["total_additional_rent"], "$", " /psf")+"</td></tr>";
 		
 		//Created  // "+PrintOnlyDate(PrintIfNotNull(details[0].date_created))+"
-		st += "<tr><td>Age</td><td>";
-		if(details[0]["year_difference"] > 0)
+		st += "<tr><td>Built</td><td>";
+		if(details[0]["yearbuilt"] > 0)
 		{
-			st += details[0]["year_difference"] + " years";
+			st += details[0]["yearbuilt"];
 		}
-		st += "</td><td>Annual Rent</td><td></td></tr>";
+		st += "</td><td>Annual Rent</td><td class='hiddenGrayField'>[Hidden]</td></tr>";
+		st += "<tr><td>Last Reno</td><td>"+details[0]["lastreno"]+"</td>";
 		
-		//Status //Active
-		st += "<tr><td></td><td></td><td>Lease Type</td><td>"+details[0]["lease_type"]+"</td></tr>";
+		var occupancyRate = (parseInt(details[0].grossofficearea) - parseInt(details[0].total_suite_area))/parseInt(details[0].grossofficearea);
+		occupancyRate = (occupancyRate * 100).toFixed(2);
+		st += "<td>Lease Type</td><td>"+details[0]["lease_type"]+"</td></tr>";
+		st += "<tr><td></td><td></td><td>Occupancy Rate</td><td>"+occupancyRate+"%</td></tr>";
 		
 		st += "<tr><td colspan=2>Listing Company</td><td colspan='2' onClick='initiateCompanyLogoEffectWithSpeed();'><strong>"+details[0]["companyname"]+"</strong></td></tr>";
-		st += "<tr><td colspan=2>Listing Broker</td><td></td><td aligh='right' style='padding: 0px !important; float:right'>&nbsp;<span style='cursor:pointer;margin: 0px !important;padding-right:0px !important;' id='copyURLButton' ><img width='24px;' height='24px;' src='images/link_24.png' /></span></td></tr>";
+		st += "<tr><td colspan=2>Listing Broker</td><td><a href='mailto:" + details[0]["broker_email"] + "?subject="+details[0]["sbuildingname"]+". Sent from Floorplan.city'>" + details[0]["broker"] + "</a></td><td aligh='right' style='padding: 0px !important; float:right'>&nbsp;<span style='cursor:pointer;margin: 0px !important;padding-right:0px !important;' id='copyURLButton' ><img width='24px;' height='24px;' src='images/link_24.png' /></span></td></tr>";
 		st += "</table>";
 		$(".infoboxContainerData").html(st);
 		$(".infoboxContainer").show();
@@ -6673,18 +7775,21 @@ function prepareAvailableOfficeSpaceInfobox(idtbldg, index, details2, allSuitesO
 					tabContent += "<tr><td>Class</td><td>"+eachSuite.class+"</td><td>Additional Rent</td><td>"+numberWithCommaWithTwoDecimal(eachSuite.total_additional_rent, "$", " /psf")+"</td></tr>";
 					
 					//Created  //"+PrintOnlyDate(PrintIfNotNull(eachSuite.date_created))+"
-					tabContent += "<tr><td>Age</td><td>";
-					if(eachSuite.year_difference > 0)
+					tabContent += "<tr><td>Built</td><td>";
+					if(eachSuite.yearbuilt > 0)
 					{
-						tabContent += eachSuite.year_difference + " years";
+						tabContent += eachSuite.yearbuilt;
 					}
-					tabContent += "</td><td>Annual Rent</td><td></td></tr>";
+					tabContent += "</td><td>Annual Rent</td><td class='hiddenGrayField'>[Hidden]</td></tr>";
+					tabContent += "<tr><td>Last Reno</td><td>"+eachSuite.lastreno+"</td>";
 					
-					//Status  //Active
-					tabContent += "<tr><td></td><td></td><td>Lease Type</td><td>"+eachSuite.lease_type+"</td></tr>";
+					var occupancyRate = (parseInt(details[0].grossofficearea) - parseInt(details[0].total_suite_area))/parseInt(details[0].grossofficearea);
+					occupancyRate = (occupancyRate * 100).toFixed(2);
+					tabContent += "<td>Lease Type</td><td>"+eachSuite.lease_type+"</td></tr>";
+					tabContent += "<tr><td></td><td></td><td>Occupancy Rate</td><td>"+occupancyRate+"%</td></tr>";
 					
 					tabContent += "<tr><td colspan=2>Listing Company</td><td colspan=2 onClick='initiateCompanyLogoEffectWithSpeed();'><strong>"+eachSuite.companyname+"</strong></td></tr>";
-					tabContent += "<tr><td colspan=2>Listing Broker</td><td></td><td aligh='right' style=' padding: 0px !important; float:right'>&nbsp;<span style='cursor:pointer;margin: 0px !important; padding-right: 0px !important;' id='copyURLButton' ><img height='24px;' width='24px;' src='images/link_24.png' /></span></td></tr>";
+					tabContent += "<tr><td colspan=2>Listing Broker</td><td><a href='mailto:" + eachSuite.broker_email + "?subject="+details[0]["sbuildingname"]+". Sent from Floorplan.city'>" + eachSuite.broker + "</a></td><td aligh='right' style=' padding: 0px !important; float:right'>&nbsp;<span style='cursor:pointer;margin: 0px !important; padding-right: 0px !important;' id='copyURLButton' ><img height='24px;' width='24px;' src='images/link_24.png' /></span></td></tr>";
 					
 					//tabContent += "<tr><td>Company</td><td>"+eachSuite.companyname+"</td><td></td><td></td></tr>";
 				tabContent += "</table>";
@@ -6840,15 +7945,22 @@ function prepareSuiteImagesTabStructure(idtsuite, idtbldg, floorNumber, index, i
 		</div>
 	</div>
 	*/
-	
+	var ln = 0;
 	var tabs = '<li class="nav-item"><a style="float:left; width: 85%;" class="nav-link active featureSheetLI" data-bs-toggle="tab" href="#floorplan-'+index+'">Floorplans</a></li>';
 	var content = '<div class="tab-pane fade show active floorPlanImageDisplay" id="floorplan-'+index+'">';
-	
-		content += "<img onClick=\"openFullScreenImage('"+idtbldg+"', '"+floorNumber+"', '"+index+"', '', '', '"+idtsuite+"', 'Yes');\" src='"+imagePath+"' width='96%'/>";
+		//content += "<span class='overlay' onClick=\"openFullScreenImage('"+idtbldg+"', '"+floorNumber+"', '"+index+"', '', '', '"+idtsuite+"', 'Yes');\"><i class='fa fa-search'></i></span>";
+		content += "<img class='hover-zoom-img' onClick=\"openFullScreenImage('"+idtbldg+"', '"+floorNumber+"', '"+index+"', '', '', '"+idtsuite+"', 'Yes');\" src='"+imagePath+"' width='96%'/>";
+		ln++;
 	
 	content += '</div>';
 	
 	
+	tabs += '<li class="nav-item"><a style="float:left; width: 85%; font-weight: normal !important;" class="nav-link" data-bs-toggle="tab" href="#Tour-'+index+'">Tour</a></li>';
+	content += '<div class="tab-pane fade" id="Tour-'+index+'">';
+	
+		content += "";//
+	
+	content += '</div>';
 	tabs += '<li class="nav-item"><a style="float:left; width: 85%; font-weight: normal !important;" class="nav-link" data-bs-toggle="tab" href="#Amenities-'+index+'">Amenities</a></li>';
 	content += '<div class="tab-pane fade" id="Amenities-'+index+'">';
 	
@@ -6862,7 +7974,7 @@ function prepareSuiteImagesTabStructure(idtsuite, idtbldg, floorNumber, index, i
 		content += '<div class="tab-pane fade tab-images-container" id="tab-'+index+'-interior-images">';
 		$.each(window.suiteOtherImages[cityId][idtsuite]["interior-images"], function (i, row){
 			
-			content += "<img onClick=\"openFullScreenImage('"+idtbldg+"', '"+floorNumber+"', '"+index+"', '"+i+"', 'interior-images', '"+idtsuite+"', 'Yes');\" src='"+adminBaseUrl + row.image_path + row.image_name+"' width='96%'/>";
+			content += "<img class='hover-zoom-img' onClick=\"openFullScreenImage('"+idtbldg+"', '"+floorNumber+"', '"+index+"', '"+i+"', 'interior-images', '"+idtsuite+"', 'Yes');\" src='"+adminBaseUrl + row.image_path + row.image_name+"' width='96%'/>";
 		});
 		content += '</div>';
 	}
@@ -6872,23 +7984,30 @@ function prepareSuiteImagesTabStructure(idtsuite, idtbldg, floorNumber, index, i
 		content += '<div class="tab-pane fade tab-images-container" id="tab-'+index+'-exterior-images">';
 		$.each(window.suiteOtherImages[cityId][idtsuite]["exterior-images"], function (i, row){
 			
-			content += "<img onClick=\"openFullScreenImage('"+idtbldg+"', '"+floorNumber+"', '"+index+"', '"+i+"', 'exterior-images', '"+idtsuite+"', 'Yes');\" src='"+adminBaseUrl + row.image_path + row.image_name+"' width='96%' />";
+			content += "<img class='hover-zoom-img' onClick=\"openFullScreenImage('"+idtbldg+"', '"+floorNumber+"', '"+index+"', '"+i+"', 'exterior-images', '"+idtsuite+"', 'Yes');\" src='"+adminBaseUrl + row.image_path + row.image_name+"' width='96%' />";
 			
 		});
 		content += '</div>';
 	}
 	
-	var ln = 0;
+	
 	content += '<div class="tab-pane fade tab-images-container" id="tab-'+index+'-files">';
-	if(typeof window.suiteOtherImages[cityId][idtsuite] != "undefined" && typeof window.suiteOtherImages[cityId][idtsuite]["files"] != "undefined")
-	{
-			content += '<ul class="list-group file-list">';
-			$.each(window.suiteOtherImages[cityId][idtsuite]["files"], function (i, row){
-				content += '<li class="list-group-item d-flex justify-content-between align-items-center"><a href="'+getURLForFiles(row)+'?id='+row.aos_document_id+'" target="'+getTargetForFiles(row)+'">'+row.filename+' ('+displayFileSize(row.filesize)+')</a></li>';
-				ln++;
-			});
-			content += '</ul>';
-	}
+	
+	//content += "<li class=\"list-group-item d-flex justify-content-between align-items-center\">";
+	//content += "<img onClick=\"openFullScreenImage('"+idtbldg+"', '"+floorNumber+"', '"+index+"', '', '', '"+idtsuite+"', 'Yes');\" src='"+imagePath+"' width='96%'/>";
+		content += '<ul class="list-group file-list">';
+		content += '<li class="list-group-item d-flex justify-content-between align-items-center"><a href="index.php?floorplan=1&id='+idtsuite+'" >Floorplan </a></li>';
+	content += "";
+	//content += "</li>";
+	
+		if(typeof window.suiteOtherImages[cityId][idtsuite] != "undefined" && typeof window.suiteOtherImages[cityId][idtsuite]["files"] != "undefined")
+		{
+				$.each(window.suiteOtherImages[cityId][idtsuite]["files"], function (i, row){
+					content += '<li class="list-group-item d-flex justify-content-between align-items-center"><a href="'+getURLForFiles(row)+'?id='+row.aos_document_id+'" target="'+getTargetForFiles(row)+'">'+row.filename+' ('+displayFileSize(row.filesize)+')</a></li>';
+					ln++;
+				});
+		}
+		content += '</ul>';
 	
 	tabs += '<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-'+index+'-files">Files ('+ln+')</li>';
 	content += '</div>';
@@ -7083,18 +8202,35 @@ function saveCityCamera(cameratype = "")
 function saveCityCameraRotation(cameratype = "")
 {
 	var mktDetail = [];
-	$.each(marketDetails, function (index, row){
-		if(row.idtcity == lastCityLoaded)
-		{
-			mktDetail = row;
-		}
-	});
+	cameraIdToSave = 0;
+	if(typeof window.citiesWithMultipleMarket[lastCityLoaded] == "undefined")
+	{
+		$.each(marketDetails, function (index, row){
+			if(row.idtcity == lastCityLoaded && cameraIdToSave == 0)
+			{
+				mktDetail = row;
+				cameraIdToSave = mktDetail.skylineidtcamera;
+			}
+		});
+	}
+	else
+	{
+		console.log("In Else for City With Multiple Markets !!! ");
+		$.each(marketDetails, function (index, row){
+			console.log(row.idtmarket+" == "+lastMarketLoaded);
+			if(row.idtmarket == lastMarketLoaded && cameraIdToSave == 0)
+			{
+				mktDetail = row;
+				cameraIdToSave = mktDetail.marketcamera;
+			}
+		});
+	}
 	
 	var latLonDetails = getMapCenterV2();
 	$.ajax({
 	  method: "POST",
 	  url: "../visgrid-tools/controller/cityAndSubmarketController.php",
-	  data: { param : "saveCitySkylineCameraRotationDetails" , "idtcamera" : mktDetail.skylineidtcamera, "longitude" : latLonDetails[0], "latitude" : latLonDetails[1], "altitude" : latLonDetails[2], "updatedByName" : ""}
+	  data: { param : "saveCitySkylineCameraRotationDetails" , "idtcamera" : cameraIdToSave, "longitude" : latLonDetails[0], "latitude" : latLonDetails[1], "altitude" : latLonDetails[2], "updatedByName" : ""}
 	})
 	.done(function( data ) {
 		////console.log(data);
@@ -7249,6 +8385,9 @@ function initiateEffectsArray()
 	
 	window.effectsArray[8] = 0;//Clip Effect
 	
+	window.effectsArray[9] = 0;//Isolate with Labels
+	window.effectsArray[10] = 0;//Isolate On White
+	
 	window.cameraValues = [];
 	
 	window.lastFloor = 0;
@@ -7257,6 +8396,7 @@ function initiateEffectsArray()
 }
 
 window.currentURL = "";
+window.showLogosFlag = "";
 window.tabYearSelected = null;
 function updateURL(isResetCamera = false)
 {
@@ -7286,6 +8426,10 @@ function updateURL(isResetCamera = false)
 	if(window.lastSuiteId != null)
 	{
 		window.currentURL += "&lastSuiteId="+window.lastSuiteId	;
+	}
+	if(window.showLogosFlag != null && window.showLogosFlag != "")
+	{
+		window.currentURL += "&showLogos=1";
 	}
 	if(window.tabYearSelected != null)
 	{
@@ -7432,6 +8576,7 @@ window.totalOfficeAreaForVacancy = null;
 window.availableOfficeSpaceImproved = [];
 window.availableOfficeSpaceFloorWise = [];
 window.availableOfficeSpaceSummary = null;
+window.availableOfficeSpaceLastRecordDate = null;
 window.availableOfficeSpacePrimitives = [];
 function getAvailableOfficeSpace(highlight = true)
 {
@@ -7462,6 +8607,7 @@ function getAvailableOfficeSpace(highlight = true)
 			window.availableOfficeSpaceSummary = data.summaryDetails;
 			window.suiteOtherImages[lastCityLoaded] = data.suiteOtherImages;
 			window.totalOfficeAreaForVacancy = data.totalOfficeArea;
+			window.availableOfficeSpaceLastRecordDate = data.lastRecordDate;
 			if(highlight)
 			{
 				highlightAvailableOfficeSpace();
@@ -7548,6 +8694,7 @@ function highlightCityFloorplans(idtcity)
 	clearCityFloorplans();
 	
 	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[idtcity] != "undefined")
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[idtcity]+") }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -7852,6 +8999,7 @@ window.improvedSuitesIndexes = [];
 function highlightSydneyArealyticsSuitesWithLeaseType()
 {
 	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[23] != "undefined")
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[23]+") }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -7948,6 +9096,7 @@ window.suiteHeightValues = [];
 function highlightAvailableOfficeSpace()
 {
 	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[23] != "undefined")
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[23]+") }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -8163,7 +9312,7 @@ function highlightAvailableOfficeSpace()
 				}
 			}
 		});
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
 		viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -8358,7 +9507,7 @@ function highlightCalgaryOfficeMarketSales(yearSelected = "")
 {
 	devSelectedBuilding = "";
 	closeInfobox();
-	//viewer.entities.removeById("FogEffectEntity");
+	//viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[2]+") }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
 	updateURL();
@@ -8468,6 +9617,25 @@ function highlightCalgaryOfficeMarketSales(yearSelected = "")
 					//scaleByDistance: new Cesium.NearFarScalar(100, 1.0, 2000, 1.0), // Maintain size across zoom levels
 				}
 			});
+			var psf = parseFloat(eachSuite.sold_price) / parseFloat(eachSuite.grossofficearea);
+			window.calgaryOfficeSalePrimitivesLabels.push("label-psf-"+eachSuite.idtbuilding);
+			viewer.entities.add({
+				id: "label-psf-"+eachSuite.idtbuilding,
+				position: position,
+				show: false,
+				label: {
+					text: numberWithCommaWithTwoDecimal(psf, "$", " psf"),
+					font: '40px sans-serif',
+					showBackground: true,
+					fillColor: Cesium.Color.WHITE,
+					outlineColor: Cesium.Color.BLACK,
+					outlineWidth: 2,
+					style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+					//pixelOffset: new Cesium.Cartesian2(0, -20), // Adjust vertical position
+					disableDepthTestDistance: Number.POSITIVE_INFINITY, // Always visible
+					//scaleByDistance: new Cesium.NearFarScalar(100, 1.0, 2000, 1.0), // Maintain size across zoom levels
+				}
+			});
 			
 			  
 			//window.calgaryOfficeSalePrimitivesLabels.add();
@@ -8498,7 +9666,7 @@ function highlightCalgaryOfficeMarketSales(yearSelected = "")
 			
 		}
 	});
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[lastCityLoaded] != "undefined")
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[lastCityLoaded]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -8542,7 +9710,7 @@ function initiatePriceSQMRange()
 window.arealyticSuiteHeight = [];
 function highlightSydneyArealyticsSuitesWithPricePerSQM()
 {
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
 	viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[23] != "undefined")
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[23]+") }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -8801,6 +9969,25 @@ $(document).ready(function () {
 		setResetSettingFlags("hideLogo-li", true);
 	}
 	
+	if(showLogos == 1)
+	{
+		console.log("showLogos: " + showLogos);
+		if(isMobile.any() == null)
+		{
+			window.desktop_logo_display = true;
+			window.mobile_logo_display = false;
+			setResetSettingFlags("showLogo-li", true);
+			setResetSettingFlags("hideLogo-li", false);
+		}
+		else
+		{
+			window.desktop_logo_display = false;
+			window.mobile_logo_display = true;
+			setResetSettingFlags("showLogo-li", true);
+			setResetSettingFlags("hideLogo-li", false);
+		}
+		showLogos = null;
+	}
 	//Add more dropdowns here
 });
 
@@ -8872,6 +10059,8 @@ function initiateSettingDropdown()
 			}
 			setResetSettingFlags("showLogo-li", true);
 			setResetSettingFlags("hideLogo-li", false);
+			showLogosFlag = true;
+			updateURL();
 		}
 		else if($(this).attr("data-text") == "Hide Logo")
 		{
@@ -8885,10 +10074,23 @@ function initiateSettingDropdown()
 			}
 			setResetSettingFlags("showLogo-li", false);
 			setResetSettingFlags("hideLogo-li", true);
+			showLogosFlag = null;
+			updateURL();
 		}
 		else if($(this).attr("data-text") == "FPS")
 		{
 			viewer.scene.debugShowFramesPerSecond = !viewer.scene.debugShowFramesPerSecond;
+		}
+		else if($(this).attr("data-text") == "Measure")
+		{
+			if($("#measurementPanel").css("display") == "block")
+			{
+				CloseMeasurementPanel();
+			}
+			else
+			{
+				showMeasurementPanel();
+			}
 		}
 		else if($(this).attr("data-text") == "Shrink")
 		{
@@ -9039,9 +10241,11 @@ function initiateCameraDropdown()
 window.skylineDropdownInitiated = false;
 function initiateSkylineDropdown()
 {
-	//console.log("now initiateSkylineDropdown()");
+	console.log("now initiateSkylineDropdown()");
 	window.skylineDropdownInitiated = true;
-	$('.dropdown3-toggle').on('click', function (e) {
+	$(document)
+  .off('click', '.dropdown3-toggle')
+  .on('click', '.dropdown3-toggle', function (e) {
 		setDropdownWidthClass();
 		toggleSearchBox(true);
 		$(".dropdown2").removeClass("active");
@@ -9060,7 +10264,10 @@ function initiateSkylineDropdown()
 	});
 
 	  // Add click event for dropdown items to toggle selection
-	  $('.dropdown3-item').on('click', function (e) {
+	  //$('.dropdown3-item').on('click', function (e) {
+	  $(document)
+	  .off('click', '.dropdown3-item')
+	  .on('click', '.dropdown3-item', function (e) {
 		e.preventDefault(); // Prevent default link behavior
 
 		// Toggle 'selected' class on the clicked item
@@ -9073,6 +10280,12 @@ function initiateSkylineDropdown()
 		else if($(this).attr("data-text") == "City Skyline2" || $(this).attr("data-text") == "city-skyline2")
 		{
 			flyToCitySkyline2Slow($(this).attr("data-id"));
+		}
+		else if($(this).attr("data-text") == "Submarket Max Building")
+		{
+			console.log("Event Listener: Submarket Max Building");
+			setResetSettingFlags("city-submarket-tour-li", true)
+			flyToSubmarketCamera($(this).attr("data-id"), "idtcamera", true);
 		}
 		else
 		{
@@ -9088,6 +10301,79 @@ function initiateSkylineDropdown()
 		$(".dropdown3-toggle").attr("src", "images/settings.png");
 	  });
 	  */
+}
+
+var IsEnableSubmarketCameraRotation= false;
+function ToggleRotateAroundSubmarket(lon, lat, altitude) {
+  if (IsEnableSubmarketCameraRotation) {
+    IsEnableSubmarketCameraRotation = false;
+    SubmarketCameraRotationBtn = false;
+    $("#orbit").css("font-weight", "normal");
+    StopSubmarketCameraRotation();
+  } else {
+    IsEnableSubmarketCameraRotation = true;
+    SubmarketCameraRotationBtn = true;
+    $("#orbit").css("font-weight", "bold");
+    SubmarketCameraRotation(lon, lat, altitude);
+  }
+}
+
+function SubmarketCameraRotation(lon, lat, altitude) {
+  currentPosition = new Cesium.Cartesian3.fromDegrees(lon, lat, altitude);
+  var pitch = viewer.camera.pitch;
+  var heading = camera.heading;
+  unsubscribeSubmarketRotation = viewer.clock.onTick.addEventListener(() => {
+    let rotation = -1; //counter-clockwise; +1 would be clockwise
+    camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    elevation = Cesium.Cartesian3.distance(currentPosition, camera.position);
+    viewer.scene.screenSpaceCameraController.enableZoom = false;
+    const SMOOTHNESS = 1400; //it would make one full circle in roughly 800 frames
+    heading += (rotation * Math.PI) / SMOOTHNESS;
+    viewer.camera.lookAt(
+      currentPosition,
+      new Cesium.HeadingPitchRange(heading, pitch, elevation),
+    );
+  });
+}
+
+function StopSubmarketCameraRotation() {
+  viewer.scene.screenSpaceCameraController.enableZoom = true;
+  if (unsubscribeSubmarketRotation != null) {
+    unsubscribeSubmarketRotation();
+  }
+  camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+
+function flyToBuildingNADIRView(id)
+{
+	if(typeof TempBldgData[id] != "undefined")
+	{
+		var alt = TempBldgData[id].altitude;
+		if(alt == null || alt == 0)
+		{
+			alt = cameraAltitudeAdjustment + (parseInt(TempBldgData[id].floors) * 4) + 100;
+		}
+		alt = cameraAltitudeAdjustment + (parseInt(TempBldgData[id].floors) * 4) + 100;
+		lookDownAtPoint(TempBldgData[id].latitude, TempBldgData[id].longitude, alt);
+	}
+}
+
+function lookDownAtPoint(lat, lon, heightMeters, durationSeconds = 3) {
+    const destination = Cesium.Cartesian3.fromDegrees(
+        lon,
+        lat,
+        heightMeters
+    );
+
+    viewer.camera.flyTo({
+        destination: destination,
+        orientation: {
+            heading: Cesium.Math.toRadians(0),   // North
+            pitch: Cesium.Math.toRadians(-90),   // Look straight down
+            roll: 0
+        },
+        duration: durationSeconds
+    });
 }
 
 function settingResetToDefault()
@@ -9107,6 +10393,11 @@ function settingResetToDefault()
 	viewer.scene.debugShowFramesPerSecond = false;
 	
 	setResetSettingFlags("reset-li", false);
+	
+	//Measurement
+	setResetSettingFlags("measure-li", false);
+	MeasurementMode = null;
+	CloseMeasurementPanel();
 	
 	//Reset all infobox effects
 	//Do not close infobox
@@ -9521,13 +10812,14 @@ function openFullScreenImageAOS(idtbuilding, floorNumber, index, imgCounter = 0,
 	
 	$(".fullscreen-buildingname").html("");
 	$(".modal-left").html(st);
-	$(".modal-right").html("<div><img class='modalCompanyLogo' height='100px' src='"+adminBaseUrl+details["companyimage"]+"'/></div>");
+	$(".modal-right").html("<div style='text-align:center;'><img class='modalCompanyLogo' height='100px' src='"+adminBaseUrl+details["companyimage"]+"'/></div>");//<br />"+details["broker"]+"
 	
 	var modalImage = '';
 	if(window.modalImageType != '' && typeof window.suiteOtherImages[parseInt(lastCityLoaded)][idtsuite][window.modalImageType] != "undefined" && window.suiteOtherImages[parseInt(lastCityLoaded)][idtsuite][window.modalImageType].length > 1)
 		modalImage += '<button class="prev" onclick="changeModalImage('+details.idtsuite+', -1)">&#10094;</button>';
 	
-	modalImage += '<img id="modalFullScreenImage" src="'+url+'" width="90%">';
+	modalImage += '<img id="modalFullScreenImage" class="modalFullScreenImageClass" src="'+url+'" width="90%">';
+	modalImage += '<div id="imageOverlay" onclick="zoomImage()"><i class="fa fa-search-plus"></i></div>';
 	
 	if(window.modalImageType != '' && typeof window.suiteOtherImages[parseInt(lastCityLoaded)][idtsuite][window.modalImageType] != "undefined" && window.suiteOtherImages[parseInt(lastCityLoaded)][idtsuite][window.modalImageType].length > 1)
 		modalImage += '<button class="next" onclick="changeModalImage('+details.idtsuite+', 1)">&#10095;</button>';
@@ -9536,6 +10828,17 @@ function openFullScreenImageAOS(idtbuilding, floorNumber, index, imgCounter = 0,
 	
 	firstTimeFullScreenModalOpened();
 }
+
+function zoomImage() {
+    const src = document.getElementById('modalFullScreenImage').src;
+    document.getElementById('zoomImage').src = src;
+    document.getElementById('zoomView').style.display = 'flex';
+}
+
+function closeZoom() {
+    document.getElementById('zoomView').style.display = 'none';
+}
+
 
 window.modalImageCurrentCounter = null;
 function changeModalImage(idtsuite, step)
@@ -10084,4 +11387,166 @@ document.addEventListener('keydown', function (ev) {
 	});
 	*/
 
+function createFlatTerrain()
+{
+	viewer.scene.globe.depthTestAgainstTerrain = false;
 
+    viewer.terrainProvider = flatTerrain;
+
+    // Force refresh
+    viewer.scene.requestRender();
+}
+
+$("#measurementPanel").draggable();
+
+
+
+/*	Label on 3D Tile	*/
+/**
+ * Creates a text label rendered on a horizontal rectangle (flat on 3D tileset).
+ * Canvas width is dynamically calculated based on text length.
+ * The rectangle aspect ratio is matched to the canvas so text renders without distortion.
+ *
+ * @param {number} lon1 - First longitude (degrees)
+ * @param {number} lat1 - First latitude (degrees)
+ * @param {number} lon2 - Second longitude (degrees)
+ * @param {number} lat2 - Second latitude (degrees)
+ * @param {string} text - Text to display
+ * @param {number} height - Bottom height of the rectangle (meters)
+ * @param {number} extrudedHeight - Top height of the rectangle (meters)
+ * @param {string} [id=""] - Optional entity ID
+ */
+function createLabelTextOnRectangle(lon1, lat1, lon2, lat2, text, height, extrudedHeight, id = "") {
+    const west  = Math.min(lon1, lon2);
+    const east  = Math.max(lon1, lon2);
+    const south = Math.min(lat1, lat2);
+    const north = Math.max(lat1, lat2);
+
+    // --- Measure the real-world size of the rectangle ---
+    const widthMeters  = haversineDistance(west, (north + south) / 2, east, (north + south) / 2);
+    const heightMeters = Math.abs(extrudedHeight - height);
+
+    // --- Build a canvas whose pixel aspect ratio matches the world aspect ratio ---
+    const { canvas, ctx } = createDynamicTextCanvas(text, widthMeters, heightMeters);
+
+    viewer.entities.add({
+        id: id || Cesium.createGuid(),
+        rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(west, south, east, north),
+            height: height,
+            extrudedHeight: extrudedHeight,
+            material: new Cesium.ImageMaterialProperty({
+                image: canvas,
+                transparent: true
+            }),
+            classificationType: Cesium.ClassificationType.BOTH
+        }
+    });
+
+    viewer.zoomTo(viewer.entities);
+}
+
+/**
+ * Creates a canvas whose pixel dimensions mirror the real-world width/height ratio,
+ * then draws the text scaled to fill it properly.
+ *
+ * @param {string} text
+ * @param {number} worldWidth  - real-world width in meters
+ * @param {number} worldHeight - real-world height in meters
+ * @returns {{ canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D }}
+ */
+function createDynamicTextCanvas(text, worldWidth, worldHeight) {
+    const BASE_HEIGHT_PX = 256; // fixed pixel height — width scales from this
+
+    // Pixel width proportional to real-world aspect ratio
+    const aspectRatio  = worldWidth / Math.max(worldHeight, 0.001);
+    const canvasWidth  = Math.round(BASE_HEIGHT_PX * aspectRatio);
+    const canvasHeight = BASE_HEIGHT_PX;
+
+    const canvas = document.createElement("canvas");
+    canvas.width  = canvasWidth;
+    canvas.height = canvasHeight;
+
+    const ctx = canvas.getContext("2d");
+
+    // --- Background ---
+    ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // --- Auto-fit font size so text fills ~90% of canvas width ---
+    const maxFontSize = canvasHeight * 0.65;   // never taller than 65% of height
+    const padding     = canvasWidth * 0.05;    // 5% horizontal padding each side
+    const maxTextWidth = canvasWidth - padding * 2;
+
+    let fontSize = maxFontSize;
+    ctx.font = `bold ${fontSize}px Arial`;
+
+    // Shrink font until text fits within available width
+    while (ctx.measureText(text).width > maxTextWidth && fontSize > 8) {
+        fontSize -= 1;
+        ctx.font = `bold ${fontSize}px Arial`;
+    }
+
+    // --- Optional: rounded border for readability ---
+    const borderR = canvasHeight * 0.08;
+    ctx.strokeStyle = "rgba(255,255,255,0.4)";
+    ctx.lineWidth   = Math.max(2, canvasHeight * 0.02);
+    roundRect(ctx, 4, 4, canvasWidth - 8, canvasHeight - 8, borderR);
+    ctx.stroke();
+
+    // --- Draw text centered ---
+    ctx.fillStyle    = "white";
+    ctx.textAlign    = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, canvasWidth / 2, canvasHeight / 2);
+
+    return { canvas, ctx };
+}
+
+/**
+ * Haversine distance between two lon/lat points (meters).
+ */
+function haversineDistance(lon1, lat1, lon2, lat2) {
+    const R  = 6371000; // Earth radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    const a  = Math.sin(Δφ / 2) ** 2 +
+               Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Draws a rounded rectangle path on a canvas context.
+ */
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x,     y + h, x,     y + h - r);
+    ctx.lineTo(x,     y + r);
+    ctx.quadraticCurveTo(x,     y,     x + r, y);
+    ctx.closePath();
+}
+
+function confirmRedirect(url)
+{
+	if(confirm("Are you sure?"))
+	{
+		window.location.href = url;
+	}
+}
+
+// -------------------------------------------------------------------
+// Example call from your spec:
+// createLabelTextOnRectangle(
+//   -114.06757610397607, 51.04425025596059,
+//   -114.06720972064971, 51.044248353615814,
+//   "9999444433", 1107, 1098
+// );
+// -------------------------------------------------------------------

@@ -1091,9 +1091,9 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	
 	.logoOverlay {
 	  position: absolute;
-		display: none;
+	  display: none;
 	  bottom: 5px;
-	  right: 5px;
+	  right: 20px;
 	  z-index: 9999; /* ensure it stays above Cesium */
 	  display: none;
 	}
@@ -1185,7 +1185,6 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	}
 	
 	
- 
 	.country-block {
   /*background: #e3f2fd;*/
   border-radius: 8px;
@@ -1368,4 +1367,220 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 /* Make the anchor fill the tab */
 #subTabs-sale .nav-link {
     width: 98%;
+}
+
+
+/* Measurement Panel */
+#measurementPanel {
+  display: none;
+  position: absolute;
+  top: 80%;
+  left: 10%;
+  z-index: 100000;
+  background-color: white;
+  width: 300px;
+  border: 2px solid white;
+  border-radius: 5px;
+  z-index: 100 !important;
+}
+
+#measurementPanel_header {
+  background-color: #21201c;
+  padding: 5px;
+  color: white;
+  font-family: sans-serif;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom: 2px solid white;
+  text-align: center;
+  padding-left: 30px;
+}
+#measurementContent {
+  padding: 10px;
+}
+#measurementTools {
+  display: flex;
+  align-items: center;
+}
+
+.Icon {
+  color: #4b42f5;
+  font-size: 18px;
+}
+#hrLine,
+#vrLine,
+#polyline,
+#area,
+#slope,
+#clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.defaultIcon {
+  color: #4b42f5;
+  font-size: 18px;
+}
+
+.Icon {
+  color: #4b42f5;
+  font-size: 18px;
+}
+#hrLine,
+#vrLine,
+#polyline,
+#area,
+#slope,
+#clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.measurementButton {
+  width: 32px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid;
+  border-color: #4287f5;
+  margin-right: 10px;
+}
+.measurementButton.inactive {
+  background-color: white;
+}
+.measurementButton.active > i {
+  color: green;
+}
+
+#unitPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#measurementUnitPanel {
+  background-color: #21201c;
+  padding: 5px;
+  color: white;
+  font-family: sans-serif;
+}
+
+#measurementPanel {
+  display: none;
+  position: absolute;
+  top: 50px;
+  left: 210px;
+  z-index: 100000;
+  background-color: white;
+  width: 300px;
+  border: 2px solid white;
+  border-radius: 5px;
+}
+
+#measurementPanel_header {
+  background-color: #21201c;
+  padding: 5px;
+  color: white;
+  font-family: sans-serif;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom: 2px solid white;
+  text-align: center;
+  padding-left: 30px;
+}
+
+.hide_icon {
+  float: right;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  background-color: rgba(34, 34, 44, 0.15);
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.modal-center-desktop {
+    position: relative;
+
+    /* 🔥 Shrink wrapper to image width */
+    width: fit-content;
+    max-width: 100%;
+
+    /* Fallback for older browsers */
+    display: inline-block;
+}
+
+.modalFullScreenImageClass {
+    display: block;        /* removes inline-image whitespace */
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+}
+
+/* Fullscreen Zoom */
+.zoom-view {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.zoom-view img {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.zoom-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 32px;
+    cursor: pointer;
+}
+
+/* Overlay */
+#imageOverlay {
+    position: absolute;
+    inset: 0;              /* matches image size */
+    background: rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    border-radius: 6px;
+}
+
+/* Show overlay only on image hover */
+.modalFullScreenImageClass:hover + #imageOverlay,
+#imageOverlay:hover {
+    opacity: 1;
+}
+
+#imageOverlay i {
+    color: #fff;
+    font-size: 36px;
+}
+
+#NYCitymanagementDiv{
+	display: none;
+	position: absolute;
+    bottom: 10px;
+    height: 200px;
+    overflow: scroll;
+	background-color: white;
 }

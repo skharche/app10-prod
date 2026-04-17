@@ -226,7 +226,7 @@ if (isset($_REQUEST["param"])) {
 		case "getApp10MarketDetails":
 			$data = $objBuildingController->getApp10MarketDetails($_POST["user_id"]);
 			//echo "<pre>";print_r($data);
-			echo json_encode(array("status" => "success", "data" => $data["data"], "allCitiesWithCountry" => $data["allCitiesWithCountry"], "countryWithProperties" => $data["countryWithProperties"], "allRemainingCitiesWithCountry" => $data["allRemainingCitiesWithCountry"], "citiesCounts" => $data["citiesCounts"], "citiesAccessible" => $data["citiesAccessible"], "cityBoundaries" => $data["cityBoundaries"], "cityCameras" => $data["cityCameras"], "disabledMarkets" => $data["disabledMarkets"], "marketCamera" => $data["camera"], "cameraRotation" => $data["cameraRotation"], "cityAltitudeAdjustment" => $data["cityAltitudeAdjustment"]));
+			echo json_encode(array("status" => "success", "data" => $data["data"], "allCitiesWithCountry" => $data["allCitiesWithCountry"], "countryWithProperties" => $data["countryWithProperties"], "allRemainingCitiesWithCountry" => $data["allRemainingCitiesWithCountry"], "citiesCounts" => $data["citiesCounts"], "citiesAccessible" => $data["citiesAccessible"], "cityBoundaries" => $data["cityBoundaries"], "cityCameras" => $data["cityCameras"], "disabledMarkets" => $data["disabledMarkets"], "marketCamera" => $data["camera"], "marketBoundaries" => $data["marketBoundaries"], "cameraRotation" => $data["cameraRotation"], "cityAltitudeAdjustment" => $data["cityAltitudeAdjustment"], "submarketWithMaxBuilding" => $data["submarketWithMaxBuilding"], "citiesWithMultipleMarket" => $data["citiesWithMultipleMarket"]));
 			break;
 		case "getMarketBuildingsForAutosuggest":
 			$data = $objBuildingController->getMarketBuildingsForAutosuggest($_POST["marketId"]);

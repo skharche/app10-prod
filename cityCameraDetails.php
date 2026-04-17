@@ -1,6 +1,6 @@
  
   <script> var cityCameraDetails = [];  
-  cityCameraDetails[1] = {cameraAltitudeAdjustment: 48, longitude: -79.36018804067453, latitude: 43.63085078658021, altitude: 482.14397024663447, heading:322.3679124364269, pitch: -8.735015683107829, roll: 0 };  
+  cityCameraDetails[1] = {cameraAltitudeAdjustment: 48, longitude: -79.3627770080359, latitude: 43.63928964260357, altitude: 1410.4345389485916, heading:303.6900086498986, pitch: -38.31625476486529, roll: 0 };  
   cityCameraDetails[2] = {cameraAltitudeAdjustment: 1029, longitude: -114.06369595050006, latitude: 51.033489010743594, altitude: 512.2765280442925, heading:337.2365378854957, pitch: -19.816702683860452, roll: 0 };  
   cityCameraDetails[3] = {cameraAltitudeAdjustment: 0, longitude: -87.60103506481562, latitude: 41.87326004182016, altitude: 1044.083951920105, heading:303.0674880009557, pitch: -17.46641615978011, roll: 0 };  
   cityCameraDetails[4] = {cameraAltitudeAdjustment: 0, longitude: -74.02294, latitude: 40.69640, altitude: 562.60, heading:40.07, pitch: -16.799999999999997, roll: 0 };  
@@ -8,10 +8,10 @@
   cityCameraDetails[6] = {cameraAltitudeAdjustment: 0, longitude: -71.03941509887046, latitude: 42.36478640544769, altitude: 452.4276398526679, heading:233.59371889868814, pitch: -12.62138627658456, roll: 0 };  
   cityCameraDetails[7] = {cameraAltitudeAdjustment: 0, longitude: -75.18331, latitude: 39.95054, altitude: 335.22, heading:75.43, pitch: -13.439999999999998, roll: 0 };  
   cityCameraDetails[8] = {cameraAltitudeAdjustment: 0, longitude: -122.35401291885964, latitude: 47.59592004127265, altitude: 303.1898622372657, heading:43.058137776714766, pitch: -6.347639870955005, roll: 0 };  
-  cityCameraDetails[9] = {cameraAltitudeAdjustment: 0, longitude: -95.37748360247146, latitude: 29.768231818334705, altitude: 380.12147232278693, heading:137.74850370451, pitch: -3.365048973658949, roll: 0 };  
+  cityCameraDetails[9] = {cameraAltitudeAdjustment: 0, longitude: -95.370441555969, latitude: 29.769588992126614, altitude: 459.3064858997954, heading:164.20469747347533, pitch: -17.408126242887516, roll: 0 };  
   cityCameraDetails[10] = {cameraAltitudeAdjustment: 0, longitude: -73.54388020530115, latitude: 45.49694851090539, altitude: 577.2730693595951, heading:280.36996018921565, pitch: -14.716372331478166, roll: 0 };  
   cityCameraDetails[11] = {cameraAltitudeAdjustment: 0, longitude: -118.26490, latitude: 34.03941, altitude: 312.75, heading:25.00, pitch: -12, roll: 0 };  
-  cityCameraDetails[12] = {cameraAltitudeAdjustment: 3, longitude: -123.11712822509381, latitude: 49.297312847137654, altitude: 338.13096236325583, heading:187.15033134516864, pitch: -13.091245161429981, roll: 0 };  
+  cityCameraDetails[12] = {cameraAltitudeAdjustment: 3, longitude: -123.10521417853009, latitude: 49.292636370967855, altitude: 496.051356060857, heading:227.80144900532758, pitch: -22.493800260622677, roll: 0 };  
   cityCameraDetails[13] = {cameraAltitudeAdjustment: 0, longitude: -80.17772296004773, latitude: 25.75878400914651, altitude: 379.5842121272108, heading:315.5512594113656, pitch: -12.553658747527567, roll: 0 };  
   cityCameraDetails[14] = {cameraAltitudeAdjustment: 0, longitude: -75.69482045254684, latitude: 45.40957829679322, altitude: 494.89898237692296, heading:342.1974309539001, pitch: -25.171990953705446, roll: 0 };  
   cityCameraDetails[15] = {cameraAltitudeAdjustment: 650, longitude: -113.4841646745853, latitude: 53.53510727884836, altitude: 288.29599396506126, heading:322.3468407615781, pitch: -16.209639402616233, roll: 0 };  
@@ -25,7 +25,7 @@
   cityCameraDetails[22] = {cameraAltitudeAdjustment: 0, longitude: -104.97654310669695, latitude: 39.741356669222, altitude: 449.87758329519085, heading:288.0723671539255, pitch: -18.095666734921757, roll: 0 };  
   cityCameraDetails[23] = {cameraAltitudeAdjustment: 0, longitude: 151.20571539552898, latitude: -33.85252843444369, altitude: 440.218340368173, heading:176.66428013664225, pitch: -13.694821750260578, roll: 0 };  
   cityCameraDetails[24] = {cameraAltitudeAdjustment: 0, longitude: 2.22376, latitude: 48.89715, altitude: 228.36, heading:122.07, pitch: -6.030000000000001, roll: 0 };  
-  cityCameraDetails[25] = {cameraAltitudeAdjustment: 0, longitude: 0.00034446979156654156, latitude: 51.50618694892392, altitude: 352.29606694347575, heading:265.306045545748, pitch: -10.464615429590717, roll: 0 };  
+  cityCameraDetails[25] = {cameraAltitudeAdjustment: 0, longitude: -0.10873094996807348, latitude: 51.50494146753459, altitude: 540.3306159700046, heading:67.36076119172512, pitch: -15.633452687597277, roll: 0 };  
   cityCameraDetails[26] = {cameraAltitudeAdjustment: 0, longitude: 121.43807, latitude: 31.21772, altitude: 627.98, heading:57.09, pitch: -13.810000000000002, roll: 0 };  
   cityCameraDetails[27] = {cameraAltitudeAdjustment: 0, longitude: -84.39537, latitude: 33.75153, altitude: 284.93, heading:34.31, pitch: -12.920000000000002, roll: 0 };  
   cityCameraDetails[28] = {cameraAltitudeAdjustment: 0, longitude: 76.78397903636596, latitude: 30.732593128476932, altitude: 196.8548472078463, heading:356.58017920064873, pitch: -12.633651345383353, roll: 0 };  
@@ -36,7 +36,7 @@
   cityCameraDetails[33] = {cameraAltitudeAdjustment: 0, longitude: 115.85983, latitude: -31.96866, altitude: 409.48, heading:-7.06, pitch: -11.810000000000002, roll: 0 };  
   cityCameraDetails[34] = {cameraAltitudeAdjustment: 0, longitude: 114.17371076187241, latitude: 22.289884989970997, altitude: 564.4439210405544, heading:241.37768980404275, pitch: -12.154858724634531, roll: 0 };  
   cityCameraDetails[35] = {cameraAltitudeAdjustment: 0, longitude: 153.04624270538415, latitude: -27.473868035045008, altitude: 715.6825634770669, heading:288.68758538951454, pitch: -17.042050767724806, roll: 0 };  
-  cityCameraDetails[36] = {cameraAltitudeAdjustment: 0, longitude: 139.76253846604763, latitude: 35.66840903809636, altitude: 377.8235087369143, heading:358.3794769830214, pitch: -14.416732343722872, roll: 0 };  
+  cityCameraDetails[36] = {cameraAltitudeAdjustment: 0, longitude: 139.80377494237968, latitude: 35.678010883873675, altitude: 1797.6297904339808, heading:274.316384757849, pitch: -27.670045899668192, roll: 0 };  
   cityCameraDetails[37] = {cameraAltitudeAdjustment: 0, longitude: 12.56238367927331, latitude: 55.67160223342839, altitude: 177.54980880404514, heading:9.616410253523302, pitch: -17.88250578443267, roll: 0 };  
   cityCameraDetails[38] = {cameraAltitudeAdjustment: 0, longitude: -123.38701585202443, latitude: 48.422377052313585, altitude: 329.7139790137501, heading:84.37602887256158, pitch: -18.362207899580774, roll: 0 };  
   cityCameraDetails[39] = {cameraAltitudeAdjustment: 0, longitude: 11.575932104580506, latitude: 48.13802963619293, altitude: 386.73258884584743, heading:352.9469012210788, pitch: -38.44280841517763, roll: 0 };  
@@ -62,5 +62,6 @@
   cityCameraDetails[59] = {cameraAltitudeAdjustment: 0, longitude: -112.1079488402477, latitude: 33.4551725292998, altitude: 412.2046951976469, heading:106.07196919636927, pitch: -9.846578622732178, roll: 0 };  
   cityCameraDetails[68] = {cameraAltitudeAdjustment: 35, longitude: 18.42508920655643, latitude: -33.90837819614023, altitude: 317.89108689644837, heading:191.04387008155692, pitch: -9.309688466058375, roll: 0 };  
   cityCameraDetails[69] = {cameraAltitudeAdjustment: 1760, longitude: 28.039052539136737, latitude: -26.196383741803995, altitude: 392.39085356677697, heading:141.95102834488537, pitch: -17.745289615974414, roll: 0 };  
+  cityCameraDetails[70] = {cameraAltitudeAdjustment: 150, longitude: -6.222374897713713, latitude: 53.34360427760482, altitude: 241.95187948136538, heading:296.508873715607, pitch: -21.36830666521463, roll: 0 };  
   
  </script> 

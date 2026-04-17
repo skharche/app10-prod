@@ -70,6 +70,31 @@
   display: block;
 }
 
+#cityGridSortDropdown {
+    position: fixed;           /* fixed, not absolute — bypasses overflow:hidden on ancestors */
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    list-style: none;
+    margin: 0; padding: 4px 0;
+    min-width: 210px;
+    z-index: 9999;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+}
+#cityGridSortDropdown li       { padding: 9px 14px; font-size: 13px; cursor: pointer; display:flex; align-items:center; gap:8px; }
+#cityGridSortDropdown li:hover { background: #f5f5f5; }
+#cityGridSortDropdown li.active{ font-weight: 600; color: #1a6bbf; }
+#cityGridSortDropdown .check   { font-size: 11px; opacity: 0; }
+#cityGridSortDropdown li.active .check { opacity: 1; }
+#cityGridSortDropdown .sort-divider    { border:none; border-top: 1px solid #eee; margin: 4px 0; }
+
+/* Adjust padding for items to make space for the tick */
+.sortDropdown-item {
+  position: relative; /* Required for the tick positioning */
+  padding-left: 25px; /* Add padding to shift text right of the tick */
+}
+
+
 /* Style the dropdown2 */
 .dropdown2 {
   position: relative; /* Ensure positioning relative to the trigger */
