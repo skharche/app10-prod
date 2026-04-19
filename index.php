@@ -2,6 +2,12 @@
 //echo "<pre>";print_r($_COOKIE);exit;
 session_start();
 
+$notLoginUrl = "";
+foreach($_GET as $key => $v)
+{
+	$notLoginUrl .= $key."=".$v."&";
+}
+
 include_once(__DIR__."/classes/connection.php");
 $obj = new dbConnection();
 $conn = $obj->ConnectPrepare();
@@ -54,7 +60,7 @@ if (isset($_GET['id']))
 
 if (!isset($_COOKIE['app10LoggedInUserId'])) {
     // If the cookie is not set, redirect to the login page
-    header("Location: login.php");
+    header("Location: login.php?".$notLoginUrl);
     exit();
 }
 
@@ -82,7 +88,7 @@ if(!$cesiumKeyObject->verifyAppAccess($loggedInUserId, "app10"))
 	setcookie("app10LoggedInUserName", "", time() - 10000, "/");
 	setcookie("app10LoggedInUserId", "", time() - 10000, "/");
 	
-	header("Location: login.php");
+	header("Location: login.php?".$notLoginUrl);
     exit();
 }
 

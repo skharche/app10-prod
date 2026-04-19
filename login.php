@@ -34,10 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 	else
 	{
-		header("Location: index.php");
+		header("Location: index.php?".$_POST['returnURL']);
     }
 }
 
+$returnURL = "";
+foreach($_GET as $key => $v)
+{
+	$returnURL .= $key."=".$v."&";
+}
 ?>
 
 <!DOCTYPE html>
@@ -90,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 									</div>
 									<form class="user" action="" method="POST">
 										<div class="form-group">
+											<input type="hidden" id="returnURL" name="returnURL" value="<?=$returnURL?>" />
 											<input type="text" class="form-control form-control-user" id="inputUsername" name="inputUsername" aria-describedby="emailHelp" placeholder="Username">
 										</div>
 										<div class="form-group">
