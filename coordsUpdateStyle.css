@@ -245,6 +245,13 @@ body {
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.0);
 	z-index: 99999;
+	/* .tourPreviewTile-{id} lives inside .infoboxContainer, which has its own z-index (see rule above),
+	   making it a stacking context. That confines .tourPreviewTileFullscreen's z-index:100000 to compete
+	   only with siblings inside .infoboxContainer - against this backdrop (a direct child of <body>) the
+	   whole infobox subtree loses despite the higher number, so this transparent, invisible div was
+	   silently swallowing every click/wheel/drag meant for the iframe underneath it. pointer-events:none
+	   lets those events fall through to the tile/iframe instead. */
+	pointer-events: none;
 }
 .tourPreviewTileFullscreen{
 	position: fixed !important;

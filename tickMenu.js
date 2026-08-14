@@ -346,6 +346,8 @@ function isTourContextActive()
 }
 
 document.addEventListener('keydown', (event) => {
+	if(window.toursTabSelected == true)
+		return;
 	console.log(event.key);
 	if($("#buildingSearchInput").is(':focus'))
 	{

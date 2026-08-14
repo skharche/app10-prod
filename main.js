@@ -10480,7 +10480,7 @@ function expandTourPreviewToFullScreen(idtsuite, url, idtbldg, bldgNameParam)
 	//it until the fullscreen view was closed and reopened. Checking the "loaded" flag set by the iframe's own
 	//onload (see buildTourPreviewTile) and, if it hasn't fired yet, waiting for it instead of guessing a delay
 	//guarantees the external viewer's input listeners have actually mounted before we hand it focus.
-	var frameEl = document.getElementById("tourPreviewIframe-"+idtsuite);
+	window.frameEl = document.getElementById("tourPreviewIframe-"+idtsuite);
 	if(frameEl)
 	{
 		if(frameEl.dataset.loaded == "1")
@@ -10488,6 +10488,12 @@ function expandTourPreviewToFullScreen(idtsuite, url, idtbldg, bldgNameParam)
 		else
 			frameEl.addEventListener("load", function(){ frameEl.focus(); }, { once: true });
 	}
+
+	$("#tourPreviewFullscreenBackdrop").on("click", function() {
+        
+        frameEl.focus()
+    });
+
 }
 
 //Fixed-position backdrop + title bar + close button drawn around the CSS-expanded preview tile, styled to match
