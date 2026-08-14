@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Graphic Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    /* Reset page */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      border: 1px solid #ccc;
+      margin: 20px;
+      min-height: 300px;
+    }
+
+    /* LEFT: login graphic */
+    .login-graphic {
+      flex: 1 1 100%;
+      min-height: 300px;
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: contain;
+      background-image: url("images/login_graphic2.jpg"); /* mobile default */
+    }
+
+    /* RIGHT: form placeholder */
+    .login-form {
+      flex: 1 1 100%;
+      padding: 20px;
+      text-align: center;
+    }
+
+    /* Side-by-side layout at ≥768px */
+    @media (min-width: 768px) {
+      .login-graphic,
+      .login-form {
+        flex: 1 1 50%;
+      }
+
+      .login-graphic {
+        background-image: url("images/login_graphic.jpg") !important;
+        background-size: cover;
+        min-height: 100%;
+      }
+    }
+
+    /* Optional: smaller heading until 990px */
+    @media (max-width: 990px) {
+      .login-form h1 {
+        font-size: 18px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="login-graphic"></div>
+    <div class="login-form">
+      <h1>Welcome to Floorplan City!</h1>
+      <p>(Form placeholder here)</p>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -852,8 +852,10 @@ setTimeout(function (){
 
 function ClearMeasurement() {
   activeShapePoints.pop();
-  viewer.entities.remove(floatingPoint);
-  viewer.entities.remove(activeShape);
+  if(typeof floatingPoint != "undefined")
+	viewer.entities.remove(floatingPoint);
+  if(typeof activeShape != "undefined")
+	viewer.entities.remove(activeShape);
   floatingPoint = undefined;
   activeShape = undefined;
   activeShapePoints = [];

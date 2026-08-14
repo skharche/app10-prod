@@ -29,7 +29,7 @@ if (isset($_GET['floorplan'])) {
 	$stmt->store_result();
 	$stmt->bind_result($filename, $filepath);
 	$stmt->fetch();
-	$filedata = file_get_contents("../measure/visgrid-tools/".$filepath.$filename);
+	$filedata = file_get_contents("tools/".$filepath.$filename);
 	header("Content-Type: image/jpeg");
 	header("Content-Disposition: attachment; filename=\"$filename\"");
 	echo $filedata;
@@ -57,6 +57,7 @@ if (isset($_GET['id']))
 	echo $filedata;
 	exit;
 }
+
 
 if (!isset($_COOKIE['app10LoggedInUserId'])) {
     // If the cookie is not set, redirect to the login page
@@ -120,11 +121,11 @@ $classColorDetails = $classColorObj->getClassColorArray();
     />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>floorplan.city</title>
-    <link
+    <title>FLOORPLAN.CITY</title>
+    <!--link
       rel="stylesheet"
       href="./lib/bootstrap-5.1.1-dist/css/bootstrap.min.css"
-    />
+    /-->
 	<link rel="stylesheet" href="./lib/fontawesome/css/all.min.css" />
     <link rel="stylesheet" href="./lib/fontawesome/css/fontawesome.min.css" />
 	<!--
@@ -135,24 +136,32 @@ $classColorDetails = $classColorObj->getClassColorArray();
 	-->
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
-    <script src="../measure/CesiumCDN/Cesium-1.130/Build/Cesium/Cesium.js"></script>
+    <script src="CesiumCDN/Cesium-1.142/Build/Cesium/Cesium.js"></script>
+	
 	<!-- Google tag (gtag.js) -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-953HGCEP7T"></script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-FQ7S4X36YW"></script>
 	<script>
 	  window.dataLayer = window.dataLayer || [];
 	  function gtag(){dataLayer.push(arguments);}
 	  gtag('js', new Date());
 
-	  gtag('config', 'G-953HGCEP7T');
+	  gtag('config', 'G-FQ7S4X36YW');
+   
 	</script>
+	
 	<link rel="stylesheet" href="coordsUpdateStyle.css" />
 	<link rel="stylesheet" href="coordsUpdateStyleMobile.css" />
 	<link rel="stylesheet" href="navtabs.css" />
 	<link rel="stylesheet" href="dropdownStyle.css" />
+	<link rel="stylesheet" href="myaccount.css" />
+	<link rel="stylesheet" href="dropdown.css" />
+	<link rel="stylesheet" href="buildingSearch.css" />
     <link
       rel="stylesheet"
-      href="../measure/CesiumCDN/Cesium-1.130/Build/Cesium/Widgets/widgets.css"
+      href="CesiumCDN/Cesium-1.142/Build/Cesium/Widgets/widgets.css"
     />
+    <script src="dropdown.js"></script>
+    <script src="buildingSearch.js"></script>
 	<!--
     <link rel="stylesheet" href="./lib/jquery-ui.css" />
     <script src="./lib/JQuery-1.9.1/jquery-1.9.1-min.js"></script>
@@ -211,6 +220,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		$cityBuildingCount[53] = 26;
 		$cityBuildingCount[68] = 3;
 		$cityBuildingCount[69] = 3;
+		$cityFloorplanCounts = [];
 		include_once("cityBuildingCounts.php");
 		
 		$loadingStatement = "";
@@ -368,6 +378,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		var cityBuildingCount = $.parseJSON( '<?php echo json_encode($cityBuildingCount); ?>' );
 		var marketBuildingCount = $.parseJSON( '<?php echo json_encode($marketBuildingCount); ?>' );
 		marketBuildingCount = [];
+		var cityFloorplanCounts = $.parseJSON( '<?php echo json_encode($cityFloorplanCounts); ?>' );
 		var defaultCityName = $.parseJSON( '<?php echo json_encode($defaultCityName); ?>' );
 		var defaultMarketName = $.parseJSON( '<?php echo json_encode($defaultMarketName); ?>' );
 		var defaultMarketName = $.parseJSON( '<?php echo json_encode($defaultMarketName); ?>' );
@@ -450,6 +461,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
     <script src="./devBuildingCameraFunctions.js"></script> <!-- App15 and App18 functions-->
 	<script src="./floorLabelFunctions.js"></script>
 	<script src="./mergeCoords.js"></script>
+	<script src="./myaccount.js"></script>
 	<script src="./js/jquery-ui.js"></script> <!-- Measurement Panel JS -->
   </head>
   <body>
@@ -481,6 +493,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
     <div class="full-screen-arrow arrow-right" onclick="panoCameraMovement(-1);" >
 		<img src="images/img-right.png" height="78px">
 	</div>
+	<div class='company-logo-image'></div>
 	
     <div id="cesiumContainer">
     </div>
@@ -565,6 +578,114 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		</div>
 	</div>
 	
+	<!-- My Account Modal -->
+	<!--div class="modal fade" id="myAccountModal" tabindex="-1">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+		  
+		  <div class="modal-header">
+			<h5 class="modal-title">My Account</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+		  </div>
+
+		  <div class="modal-body">
+			
+		  </div>
+
+		  <div class="modal-footer">
+			<button class="btn btn-primary" id="saveAccountBtn">Save</button>
+		  </div>
+
+		</div>
+	  </div>
+	</div-->
+	
+	<div id="myAccountModal" class="fullScreenModalWindow">
+	  <div class="myAccountModal-overlay"></div>
+	  <div class="myAccountModal-content">
+
+		<!-- Header -->
+		<div class="mac-header">
+		  <span class="mac-title">My Account</span>
+		  <span id="closeModal" class="mac-close" onclick="closeMyAccountModal()" style="font-size:60px !important;">&times;</span>
+		</div>
+
+		<!-- Body: two-column layout -->
+		<div class="mac-body">
+
+		  <!-- Left: Avatar panel -->
+		  <div class="mac-avatar-panel">
+			<div class="mac-avatar" id="avatarCircle"></div>
+			<div class="mac-avatar-info">
+			  <p class="mac-avatar-name" id="avatarName">John Doe</p>
+			  <p class="mac-avatar-username" id="avatarUsername">@johndoe</p>
+			</div>
+			<label class="mac-upload-btn">
+			  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+				<path d="M2 12h12M8 2v8M5 5l3-3 3 3"
+				  stroke="currentColor" stroke-width="1.5"
+				  stroke-linecap="round" stroke-linejoin="round"/>
+			  </svg>
+			  Upload photo
+			  <input type="file" id="image" accept="image/*">
+			</label>
+			<span class="mac-role-badge" id="userTypeBadge">Admin</span>
+		  </div>
+
+		  <!-- Right: Form fields -->
+		  <div class="mac-form-panel">
+			<p class="mac-section-label">Profile Details</p>
+			<form id="myAccountForm" enctype="multipart/form-data">
+
+			  <div class="mac-field full-width">
+				<label for="name">Full Name</label>
+				<input type="text" id="name" disabled>
+			  </div>
+
+			  <div class="mac-field-row">
+				<div class="mac-field">
+				  <label for="email">Email Address</label>
+				  <input type="email" id="email">
+				</div>
+				<div class="mac-field">
+				  <label for="phone_number">Phone Number</label>
+				  <input type="text" id="phone_number" placeholder="+1 (555) 000-0000">
+				</div>
+			  </div>
+
+			  <div class="mac-field-row">
+				<div class="mac-field">
+				  <label for="username">Username</label>
+				  <input type="text" id="username" disabled>
+				</div>
+				<div class="mac-field">
+				  <label for="user_type">User Type</label>
+				  <input type="text" id="user_type" disabled>
+				</div>
+			  </div>
+
+			  <p class="mac-hint">Greyed fields are managed by your administrator and cannot be edited.</p>
+			</form>
+		  </div>
+		</div>
+
+		<!-- Footer -->
+		<div class="mac-footer">
+			<a href="logout.php" class="mac-btn-logout">
+				<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+					<path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10 11l4-4-4-4M14 8H6"
+					  stroke="currentColor" stroke-width="1.5"
+					  stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+				Logout
+			</a>
+		  <!--button class="mac-btn-cancel" onclick="closeMyAccountModal()">Cancel</button-->
+		  <button class="mac-btn-save" onclick="saveMyAccount()">Save Changes</button>
+		</div>
+
+	  </div>
+	</div>
+	
 	<div id="fullScreenModal" class="fullScreenModalWindow">
 		<div class="fullscreenmodal-content">
 			<span class="fullscreenmodal-title"></span>
@@ -581,6 +702,19 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			<span class="fullscreen-buildingname"></span>
 			<br clear="all">
 			<!--span class="fullscreen-innter-content"></span-->
+		</div>
+    </div>
+	
+	<div id="virtualTourModal" class="virtualTourModalWindow">
+		<div class="fullscreenmodal-content" style="width: 90%">
+			<span class="fullscreenmodal-title"></span>
+			<span id="closeModal" class="close" onClick="closVirtualToureFullScreenModal();">&times;</span>
+			<br />
+			<div class="row full-screen-columns" style="display: flex; ">
+				<div class="modal-center virtual-tour-modal-content">
+					<iframe onClick=\"openFullScreenVirtualTour()\" style="width:96%; min-height: 90% !important; " src="https://360.virtournyc.com/tour/2park-6" title="2 Park Avenue Virtual Tour" allow="fullscreen; vr; xr-spatial-tracking; gyroscope; accelerometer" allowfullscreen loading="lazy" frameborder="0"></iframe>
+				</div>
+			</div>
 		</div>
     </div>
 	
@@ -615,9 +749,10 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			</div>
 			<!-- Dropdown menu -->
 			<ul class="dropdownCam-menu">
-				<li><a class="dropdownCam-item" id="city-orbit-li" data-text="City Orbit" href="#">City Orbit</a></li>
-				<li><a class="dropdownCam-item" id="point-orbit-li" data-text="Point Orbit" href="#">Point Orbit</a></li>
-				<li><a class="dropdownCam-item" id="building-orbit-li" data-text="Building Orbit" href="#">Building Orbit</a></li>
+				<li><a class="dropdownCam-item" id="market-orbit-li" data-text="Market Orbit" href="#">Market orbit</a></li>
+				<!--li><a class="dropdownCam-item" id="city-orbit-li" data-text="City Orbit" href="#">City orbit</a></li-->
+				<li><a class="dropdownCam-item" id="point-orbit-li" data-text="Point Orbit" href="#">Point orbit</a></li>
+				<li><a class="dropdownCam-item" id="building-orbit-li" data-text="Building Orbit" href="#">Building orbit</a></li>
 			</ul>
 		</div>
 		<!--img width="25px" title="Shrink" id="autoRotateZoom2" onClick="toggleShrinkTileset();" class="imgIcon tooltipContainer" src="images/shrink.png" /-->
@@ -632,16 +767,17 @@ $classColorDetails = $classColorObj->getClassColorArray();
 
 		  <!-- Dropdown menu -->
 		  <ul class="dropdown2-menu">
-			<li><a class="dropdown2-item" id="showLogo-li" data-text="Show Logo" href="#">Show Logos</a></li>
-			<li><a class="dropdown2-item" id="hideLogo-li" data-text="Hide Logo" href="#">Hide Logos</a></li>
-			<li><a class="dropdown2-item selected" id="white-overlay-li" data-text="White Overlay" href="#">White Overlay</a></li>
-			<li><a class="dropdown2-item" id="dark-overlay-li" data-text="Dark Overlay" href="#">Dark Overlay</a></li>
-			<li><a class="dropdown2-item" id="shrink-li" data-text="Shrink" href="#">Shrink Mesh</a></li>
+			<li><a class="dropdown2-item" id="showLogo-li" data-text="Show Logo" href="#">Show logos</a></li>
+			<li><a class="dropdown2-item" id="hideLogo-li" data-text="Hide Logo" href="#">Hide logos</a></li>
+			<li><a class="dropdown2-item selected" id="white-overlay-li" data-text="White Overlay" href="#">White overlay</a></li>
+			<li><a class="dropdown2-item" id="dark-overlay-li" data-text="Dark Overlay" href="#">Dark overlay</a></li>
+			<li><a class="dropdown2-item" id="shrink-li" data-text="Shrink" href="#">Shrink mesh</a></li>
 			<li><a class="dropdown2-item" id="fps-li" data-text="FPS" href="#">FPS</a></li>
 			<li><a class="dropdown2-item" id="measure-li" data-text="Measure" href="#">Measure</a></li>
 			<li><a class="dropdown2-item" id="reset-li" data-text="Reset" href="#">Reset</a></li>
+			<li><a class="dropdown2-item" id="myaccount-li" data-text="My Account" href="#">My account</a></li>
 			<!--li id="pano-view-li"><a class="dropdown2-item" id="pano-li" data-text="Pano-View" href="#">Pano</a></li-->
-			<li onClick="logoutUser();"><a class="dropdown2-item" id="user-li" data-text="User" href="#"><?php echo $_COOKIE["app10LoggedInUserName"];?> <img height="24" width="24" src="images/logout.png"/></a></li>
+			<!--li onClick="logoutUser();"><a class="dropdown2-item" id="user-li" data-text="User" href="#"><?php echo $_COOKIE["app10LoggedInUserName"];?> <img height="24" width="24" src="images/logout.png"/></a></li-->
 		  </ul>
 		</div>
 		
@@ -715,7 +851,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
           </div>
         </div-->
 	</div>
-	
 	<div id="NYCitymanagementDiv">
 		<table >
 			<tr style="border: 1px solid black;">
@@ -887,7 +1022,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 	<div id="PolygonCOverlay">
 		<div style="font-size: 22px; margin-bottom: 10px;"><span id="floorNum"></span></div>
 		<div id="FloorViewInInfoBox" onclick="FlyToFloorView()">Floor View</div>
-		<div id="FloorViewTravelInInfoBox" onclick="ToggleFloorViewCameraSlowRotation()">Floor View Travel</div>
+		<div id="FloorViewTravelInInfoBox" onclick="ToggleFloorViewCameraSlowRotation()">Floor View Tour</div>
 	</div>
 
 	<?php include_once("./cityCameraDetails.php"); ?>
@@ -1199,6 +1334,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			if(typeof cityBoundaries[22] != "undefined")
 				eval("viewer.entities.add({ id: 'FogEffectEntityPreload', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[2]+") }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
 			
+			
 			viewer.scene.debugShowFramesPerSecond = false;//for FPS Widget
 			
 			viewer.scene.globe.depthTestAgainstTerrain = false;//To fix issue with Isolate function showing unnecessary tileset portion
@@ -1228,16 +1364,18 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				// Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
 				onlyUsingWithGoogleGeocoder: true,
 			  });
+			  /*
 			  viewer.scene.primitives.add(googleTileset);
 				await googleTileset.allTilesLoaded.addEventListener(() => {
 					AllTileLoaded = true;
 					//console.log("AllTileLoaded = "+AllTileLoaded);
 				});
-			  /*
+			  */
 			  googleTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207, {
 				//maximumScreenSpaceError: 1,
 			  });
 			  viewer.scene.primitives.add(googleTileset);
+			  /*
 			  setTimeout(function (){showTerrain(), 3000});
 			  
 			  googleTileset.allTilesLoaded.addEventListener(function() {
@@ -1245,8 +1383,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				  //defaultToOfficeMarket();
 				});
 			  */
-			  
-			  
 			  /*
 			  clipTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207, {
 				/*maximumScreenSpaceError: 1,* /
@@ -1274,7 +1410,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		  }
 		  
 		  var terrainCreated = false;
-		  async function createTerrain()
+		  async function createTerrain_BAK()
 		  {
 			viewer.scene.terrainProvider = await Cesium.createWorldTerrainAsync();
 			terrainCreated = true;
@@ -1284,6 +1420,78 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			}
 			//console.log("Terrain Created!");
 		  }
+		  
+		  async function createTerrain() {
+			  // --- snapshot absolute camera position before anything changes ---
+			  const savedPosition  = viewer.camera.position.clone();
+			  const savedDirection = viewer.camera.direction.clone();
+			  const savedUp        = viewer.camera.up.clone();
+			 
+			  // --- freeze the camera: disable all input AND ground clamping ---
+			  viewer.scene.screenSpaceCameraController.enableInputs = false;
+			  viewer.camera.percentageChanged = 0;      // suppress camera-changed events
+			 
+			  // Cesium clamps the camera to the terrain surface when this flag is true.
+			  // Disabling it means the terrain swap won't move the camera at all.
+			  const wasCollisionDetectionEnabled = viewer.scene.screenSpaceCameraController.enableCollisionDetection;
+			  viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+			 
+			  // --- load terrain ---
+			  const t0 = performance.now();
+			  viewer.scene.terrainProvider = await Cesium.createWorldTerrainAsync({
+				requestVertexNormals: false,  // No shadows = 50% faster
+				requestWaterMask: false       // No water effects = faster
+			});
+			  console.log("Terrain load setup:",performance.now() - t0);
+			  terrainCreated = true;
+			 
+			  if (parseInt(lastCityLoaded) == 36) {
+				createFlatTerrain();
+			  }
+			 
+			  // --- force camera back to exact saved position ---
+			  // Do this synchronously right after the provider is set,
+			  // before the next frame has any chance to move it.
+			  viewer.camera.setView({
+				destination: savedPosition,
+				orientation: {
+				  direction: savedDirection,
+				  up:        savedUp,
+				},
+			  });
+			 
+			  // --- wait two frames for Cesium to settle, then re-enable everything ---
+			  // One frame is sometimes not enough if tile streaming triggers a second
+			  // camera adjustment, so we wait for the scene to go fully quiet.
+			  await waitFrames(2);
+			 
+			  viewer.camera.setView({
+				destination: savedPosition,
+				orientation: {
+				  direction: savedDirection,
+				  up:        savedUp,
+				},
+			  });
+			 
+			  // restore controller state
+			  viewer.scene.screenSpaceCameraController.enableCollisionDetection = wasCollisionDetectionEnabled;
+			  viewer.scene.screenSpaceCameraController.enableInputs = true;
+			  viewer.camera.percentageChanged = 0.01;   // restore default
+			}
+			 
+			// Resolves after N rendered frames
+			function waitFrames(n) {
+			  return new Promise((resolve) => {
+				let count = 0;
+				const unsub = viewer.scene.postRender.addEventListener(() => {
+				  if (++count >= n) {
+					unsub();
+					resolve();
+				  }
+				});
+			  });
+			}
+
 		  async function createStadiaTerrain()
 		  {
 			  if(!terrainCreated)
@@ -1302,12 +1510,16 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		  }
 		  function removeTerrain()
 		  {
+			  //viewer.scene.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+			  //viewer.scene.globe = new Cesium.Globe(Cesium.Ellipsoid.WGS84);
 			/*viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider(); 
 			terrainCreated = false;
 			//console.log("Terrain Removed!");*/
-			
-			while (viewer.imageryLayers.length > 0) {
-				viewer.imageryLayers.remove(viewer.imageryLayers.get(0)); // Keep base layer
+			//return;
+			while (viewer.imageryLayers.length > 1) {
+				viewer.imageryLayers.remove(
+					viewer.imageryLayers.get(1)
+				);
 			}
  
 			//for now to revert that terrain.
@@ -3147,6 +3359,8 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		window.LogoSpeed = 0.05;
 		function initiateCompanyLogoEffectWithSpeed()
 		{
+			if(typeof imageEntity == "undefined")
+				return;
 			// speed = 1.0 normal, 0.5 slower, 2.0 faster
 			let scaleDelta = 0.01 * window.LogoSpeed;
 			let scale = imageEntity.billboard.scale.getValue(Cesium.JulianDate.now());
@@ -3376,7 +3590,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		
 		*/
 		
-		
+		window.cylinderToShow = false;
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="./tickMenu.js"></script>
@@ -3386,10 +3600,25 @@ $classColorDetails = $classColorObj->getClassColorArray();
 	<script src="./panoSpin.js"></script>
 	<script src="./pointOrbitSpin.js"></script>
 	<script src="./buildingOrbitSpin.js"></script>
+	<script src="./marketOrbit.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 	<script src="./measurementPanel.js"></script> <!-- Measurement Panel JS -->
 	<script>
 		//EnableFogInSelectedCity(); //Removed this effect for now.
+		
+		$(document).on('click', '.dropdown-toggle', function () {
+		  var $btn = $(this);
+		  // give the existing toggle code time to add the "open" class / show the menu
+		  setTimeout(function () {
+			var $menu = $btn.next('.dropdown-menu');
+			var $active = $menu.find('.dropdown-item.active');
+			if ($active.length) {
+			  var menuEl = $menu.get(0);
+			  var activeEl = $active.get(0);
+			  menuEl.scrollTop = activeEl.offsetTop - menuEl.clientHeight / 2 + activeEl.clientHeight / 2;
+			}
+		  }, 0);
+		});
 	</script>
 	
   </body>

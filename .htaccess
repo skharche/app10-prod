@@ -1,0 +1,5 @@
+RewriteEngine On
+
+RewriteCond %{HTTP_HOST} ^melbourne\.floorplan\.city$ [NC]
+RewriteCond %{REQUEST_URI} !^/$
+RewriteRule ^(.*)$ http://floorplan.city/?city=45&market=Floorplan&marketId=62 [L,R=301]

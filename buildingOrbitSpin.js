@@ -88,44 +88,53 @@ function ToggleRotateAroundBuilding()
   }
 }
 
+let wheelHandlerActive = false; // guard so it's only registered once
+
 function CameraRotationAroundBuilding(latlonObj) {
-	$("#autoRotateZoom").attr("src", "images/pause-active.png");
-  currentPosition = new Cesium.Cartesian3.fromDegrees(
+  $("#autoRotateZoom").attr("src", "images/pause-active.png");
+  currentPosition = Cesium.Cartesian3.fromDegrees(
     parseFloat(latlonObj.lon),
     parseFloat(latlonObj.lat),
     parseFloat(latlonObj.height)
   );
+
   var pitch = viewer.camera.pitch;
-  var heading = camera.heading;
-  unsubscribeSPoint = viewer.clock.onTick.addEventListener(() => {
+  var heading = viewer.camera.heading; // ← also fixed: was `camera.heading` inconsistently
+
+  // ✅ Register WHEEL handler ONCE, not inside onTick
+  /*
+  if (!wheelHandlerActive) {
     viewer.screenSpaceEventHandler.setInputAction(function (amount) {
       amount =
         (Cesium.Math.sign(amount) *
           viewer.scene.camera.positionCartographic.height) /
         Math.log(viewer.scene.camera.positionCartographic.height);
       viewer.scene.camera.zoomIn(amount);
-      //viewer.scene.camera.zoomOut(amount);
       pitch = viewer.camera.pitch;
-      heading = camera.heading;
+      heading = viewer.camera.heading;
     }, Cesium.ScreenSpaceEventType.WHEEL);
-    let rotation = -1; //counter-clockwise; +1 would be clockwise
-    camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-    elevation = Cesium.Cartesian3.distance(currentPosition, camera.position);
+    wheelHandlerActive = true;
+  }
+  */
 
-    const SMOOTHNESS = 5250;//SpeedForPointOrbit; //it would make one full circle in roughly 800 frames
+  unsubscribeSPoint = viewer.clock.onTick.addEventListener(() => {
+    let rotation = -1;
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    elevation = Cesium.Cartesian3.distance(currentPosition, viewer.camera.position);
+    const SMOOTHNESS = 5250;
     heading += (rotation * Math.PI) / SMOOTHNESS;
     viewer.camera.lookAt(
       currentPosition,
       new Cesium.HeadingPitchRange(heading, pitch, elevation)
     );
+
     if (
       Math.abs(heading.toFixed(3)) == (12.35694262027422).toFixed(3) ||
       Math.abs(heading.toFixed(3)) > (12.35694262027422).toFixed(3)
     ) {
       IsEnableRotateAroundBuilding = false;
       RotateAroundPointBtn = false;
-      unsubscribeSPoint();
-      camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+      StopCameraRotationAroundBuilding(); // ← unified cleanup
     }
   });
 }
@@ -133,8 +142,18 @@ function CameraRotationAroundBuilding(latlonObj) {
 function StopCameraRotationAroundBuilding() {
   if (unsubscribeSPoint != null) {
     unsubscribeSPoint();
+    unsubscribeSPoint = null;
   }
-  camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+  // ✅ Remove custom WHEEL handler → Cesium restores its default smooth scroll
+  /*
+  viewer.screenSpaceEventHandler.removeInputAction(
+    Cesium.ScreenSpaceEventType.WHEEL
+  );
+	*/
+  wheelHandlerActive = false;
+
+  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }
 
 async function FlyToPointBuildingOrbit() {
@@ -142,7 +161,7 @@ async function FlyToPointBuildingOrbit() {
   if (buildingPointSelected != null) {
     entity = viewer.entities.add({
       name: "tempMarkerPin",
-      position: new Cesium.Cartesian3.fromDegrees(
+      position: Cesium.Cartesian3.fromDegrees(
         parseFloat(buildingPointSelected.lon),
         parseFloat(buildingPointSelected.lat),
         parseFloat(buildingPointSelected.height)
@@ -172,7 +191,7 @@ async function FlyToCityOrbit() {
   defaultToOfficeMarket();
     entity = viewer.entities.add({
       name: "tempMarkerPin",
-      position: new Cesium.Cartesian3.fromDegrees(
+      position: Cesium.Cartesian3.fromDegrees(
         parseFloat(camDetails.longitude),
         parseFloat(camDetails.latitude),
         parseFloat(camDetails.altitude)

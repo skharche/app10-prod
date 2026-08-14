@@ -1,0 +1,352 @@
+/* ============================================================
+   Self-contained dropdown styling — no Bootstrap required.
+   Every rule is scoped under .nested-dropdown so this file can
+   NEVER affect any other dropdown on the page that happens to
+   reuse the same generic .dropdown/.btn/.dropdown-menu/
+   .dropdown-item class names (e.g. an existing Effects dropdown).
+   ============================================================ */
+
+.nested-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* ── Toggle button ── */
+.nested-dropdown > .btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  /*padding: 8px 12px;*/
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1;
+  color: #212529;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.nested-dropdown > .btn:hover { border-color: #adb5bd; }
+.nested-dropdown > .btn:focus,
+.nested-dropdown > .btn:focus-visible {
+  outline: none;
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, .18);
+}
+.nested-dropdown.open > .btn { border-color: #86b7fe; }
+
+.nested-dropdown > .btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* caret, drawn with CSS only */
+.nested-dropdown > .btn::after {
+  content: '';
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #6c757d;
+  transition: transform .15s ease;
+}
+.nested-dropdown.open > .btn::after { transform: rotate(180deg); }
+
+.nested-dropdown .w-100 { width: 100%; }
+
+/* ── Menu panel ── */
+.nested-dropdown > .dropdown-menu {
+  display: none;
+  overflow-x: hidden;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1000;
+  min-width: 100%;
+  max-width: 320px;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, .1);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(20, 20, 30, .12);
+}
+.nested-dropdown.open > .dropdown-menu {
+  display: block;
+}
+
+.nested-dropdown-menu {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+/* ── Items ── */
+.nested-dropdown .dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 7px 16px;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.nested-dropdown .dropdown-item:hover,
+.nested-dropdown .dropdown-item:focus {
+  background-color: #f1f3f5;
+  color: #212529;
+}
+.nested-dropdown .dropdown-item.active,
+.nested-dropdown .dropdown-item:active {
+  background-color: #0d6efd;
+  color: #fff;
+}
+.nested-dropdown .dropdown-item.disabled {
+  pointer-events: none;
+  color: #adb5bd;
+}
+
+.nested-dropdown .dropdown-divider {
+  height: 0;
+  margin: 6px 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(0, 0, 0, .1);
+}
+
+/* ── Group headers (Country / City) ── */
+.nested-dropdown .dropdown-header {
+  display: block;
+  margin: 0;
+  padding: 6px 16px 2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Nested levels — Country > City > Market
+   ============================================================ */
+
+/* Level 0 — Country (bold, no indent) */
+.nested-dropdown-menu .dropdown-header.nested-level-0 {
+  font-weight: 700 !important;
+  font-size: 0.85rem;
+  color: #212529;
+  padding-top: 8px;
+}
+.nested-dropdown-menu li:first-child .dropdown-header.nested-level-0 {
+  padding-top: 6px;
+}
+
+/* Level 1 — City, as a group header above multiple markets */
+.nested-dropdown-menu .dropdown-header.nested-level-1 {
+  font-weight: 400 !important;
+  font-size: 0.85rem;
+  color: #495057;
+  padding-left: 28px;
+}
+
+/* Level 1 — City, as a clickable leaf (only one market) */
+.nested-dropdown-menu .dropdown-item.nested-level-1 {
+  font-weight: 400;
+  padding-left: 28px;
+}
+
+/* Level 2 — Market, nested under a city header */
+.nested-dropdown-menu .dropdown-item.nested-level-2 {
+  font-weight: 400;
+  font-size: 0.9rem;
+  padding-left: 44px;
+}
+
+/* Building-type dropdown: preserve "All Properties" emphasis */
+.nested-dropdown .dropdown-item.allPropertiesTextStyle {
+  font-weight: 700;
+}
+
+
+
+/* ============================================================
+   Effects dropdown — minimal standalone CSS.
+   Only handles what's structurally required for a dropdown to
+   function (positioning + show/hide). Deliberately does NOT style
+   .tick or .disabledEffectsLI — those stay whatever your existing
+   app logic already makes them.
+   ============================================================ */
+
+#newEffectsButton {
+  position: relative;
+}
+
+#newEffectsButton + .dropdown-menu {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  min-width: 200px;
+  margin: 0px 0 0;
+  padding: 6px 0;
+  list-style: none;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, .15);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(20, 20, 30, .12);
+}
+
+#newEffectsButton + .dropdown-menu.show {
+  display: block;
+}
+
+#newEffectsButton + .dropdown-menu .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+#newEffectsButton + .dropdown-menu .dropdown-item:hover {
+  background-color: #f1f3f5;
+}
+
+/* keep disabled effect items visually + functionally inert */
+.disabledEffectsLI .dropdown-item {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+
+/* ============================================================
+   Custom confirm popup — small centered box, positioned with
+   spacing from the top of the screen (not a full-width bar).
+   Message on its own line, Yes/No buttons on the line below.
+   Scoped under #customConfirmBar / #customConfirmBackdrop so it
+   can't collide with anything else on the page.
+   ============================================================ */
+
+.custom-confirm-backdrop {
+  visibility: hidden;
+  opacity: 0;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 25, .38);
+  z-index: 2000;
+  transition: opacity .18s ease, visibility 0s linear .18s;
+}
+.custom-confirm-backdrop.show {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity .18s ease;
+}
+
+.custom-confirm-bar {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  top: 48px;                 /* spacing from the top of the screen */
+  left: 50%;
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: calc(100% - 40px);
+  max-width: 340px;
+  padding: 20px 22px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .2), 0 2px 8px rgba(0, 0, 0, .08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transform: translate(-50%, -10px);
+  transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+}
+.custom-confirm-bar.show {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.custom-confirm-message {
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #1f2530;
+  text-align: center;
+}
+
+/* Yes/No sit on their own line below the message */
+.custom-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.custom-confirm-btn {
+  min-width: 88px;
+  min-height: 42px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.custom-confirm-yes {
+  background-color: #0d6efd;
+  color: #ffffff;
+}
+.custom-confirm-yes:hover,
+.custom-confirm-yes:focus-visible {
+  background-color: #0b5ed7;
+}
+
+.custom-confirm-no {
+  background-color: #f1f3f5;
+  color: #1f2530;
+  border-color: #dee2e6;
+}
+.custom-confirm-no:hover,
+.custom-confirm-no:focus-visible {
+  background-color: #e9ecef;
+}
+
+.custom-confirm-btn:focus-visible {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+/* ── Mobile: still a small popup, just tighter side margins ── */
+@media (max-width: 480px) {
+  .custom-confirm-bar {
+    top: 32px;
+    width: calc(100% - 32px);
+    padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+  .custom-confirm-btn {
+    min-height: 46px;
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-confirm-bar,
+  .custom-confirm-backdrop {
+    transition: none;
+  }
+}

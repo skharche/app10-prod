@@ -56,10 +56,11 @@ foreach($_GET as $key => $v)
     <meta name="description" content="">
     <meta name="author" content="">
 	<link rel="icon" href="images/floorplan-icon.png">
-    <title>Login</title>
+    <title>FLOORPLAN.CITY</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+	<link href="myaccount.css" rel="stylesheet" type="text/css">
     <link
         href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
         rel="stylesheet">
@@ -83,15 +84,20 @@ foreach($_GET as $key => $v)
                         <!-- Nested Row within Card Body -->
                         <div class="row">
                             
-                            <div class="col-lg-6 bg-login-image" >
+                            <div class="col-lg-6 bg-login-image">
 								<img id="loginImage" src="" class="img-fluid">
+								<div id="cityNames"></div>
 							</div>
 							
 							<div class="col-lg-6 position-relative">
 								<div class="p-5">
 									<div class="text-center loginHeader">
 										<img src="images/FLOORPLAN-CITY.png" class="loginLogo">
-										<h1 class="h4 text-gray-900 mb-4">Welcome to Floorplan City!</h1>
+										<h1 class="h4 text-gray-900 mb-2">Welcome to Floorplan City!</h1>
+										<p class="mb-4" style="font-size:13px;color:#888;">
+											Don't have an account?
+											<a href="javascript:void(0)" onclick="openRequestAccessModal()" style="color:#4e73df;font-weight:600;text-decoration:none;">New Account</a>
+										</p>
 									</div>
 									<form class="user" action="" method="POST">
 										<div class="form-group">
@@ -122,7 +128,7 @@ foreach($_GET as $key => $v)
 								</div>
 
 								<!-- Version Label -->
-								<div class="version-label">version 1.2</div>
+								<div class="version-label">version 1.3</div>
 							</div>
 
 							<style>
@@ -188,6 +194,75 @@ foreach($_GET as $key => $v)
 
     </div>
 	
+	
+		<!-- Request Access Modal -->
+	<div id="requestAccessModal" class="fullScreenModalWindow">
+	  <div class="myAccountModal-content" style="max-width:520px;">
+
+		<!-- Header -->
+		<div class="mac-header">
+			<div class="mac-header-left">
+				<img src="images/FLOORPLAN-CITY.png" class="loginLogo2" alt="Logo">
+				<span class="mac-title">New Account</span>
+			</div>
+
+			<span class="mac-close" onclick="closeRequestAccessModal()">&times;</span>
+		</div>
+
+		<!-- Body -->
+		<div class="mac-body" style="display:block;">
+
+		  <!-- Default form view -->
+		  <div id="raForm" class="mac-form-panel">
+			<p class="mac-section-label">Your Details</p>
+			<div class="mac-field-row">
+			  <div class="mac-field">
+				<label for="ra_firstname">First Name</label>
+				<input type="text" id="ra_firstname" placeholder="">
+			  </div>
+			  <div class="mac-field">
+				<label for="ra_lastname">Last Name</label>
+				<input type="text" id="ra_lastname" placeholder="">
+			  </div>
+			</div>
+			<div class="mac-field full-width" style="margin-bottom:14px;">
+			  <label for="ra_company">Company</label>
+			  <input type="text" id="ra_company" placeholder="">
+			</div>
+			<div class="mac-field-row">
+			  <div class="mac-field">
+				<label for="ra_city">City</label>
+				<input type="text" id="ra_city" placeholder="">
+			  </div>
+			  <div class="mac-field">
+				<label for="ra_email">Email Address</label>
+				<input type="email" id="ra_email" placeholder="">
+			  </div>
+			</div>
+			<div id="raError" style="color:#dc2626;font-size:13px;margin-top:4px;display:none;"></div>
+		  </div>
+
+		  <!-- Success view (hidden by default) -->
+		  <div id="raSuccess" style="display:none;text-align:center;padding:40px 24px;">
+			<div style="font-size:48px;margin-bottom:12px;">✅</div>
+			<p style="font-size:16px;font-weight:600;color:#111;margin-bottom:6px;">Request Sent!</p>
+			<p style="font-size:13px;color:#888;">Thanks! We'll be in touch shortly.</p>
+		  </div>
+
+		</div>
+
+		<!-- Footer -->
+		<div class="mac-footer" id="raFooter">
+		  <span></span><!-- spacer to keep save button right-aligned -->
+		  <div class="mac-footer-actions">
+			<button class="mac-btn-cancel" onclick="closeRequestAccessModal()">Cancel</button>
+			<button class="mac-btn-save" id="raSaveBtn" onclick="submitRequestAccess()">Send Request</button>
+		  </div>
+		</div>
+
+	  </div>
+	</div>
+	
 	<style>
 	.error-message {
 	  color: red;
@@ -197,7 +272,58 @@ foreach($_GET as $key => $v)
 	{
 		font-family: Helvetica !important;
 	}
-	
+	.mac-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		padding: 20px 24px;
+		border-bottom: 1px solid #e5e5e5;
+	}
+
+	.mac-header-left {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.loginLogo2 {
+		display: block;
+		max-width: 220px;
+		max-height: 40px;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+		margin-bottom: 12px;
+		padding-bottom: 0;
+	}
+
+	.mac-title {
+		font-size: 15px;
+		font-weight: 600;
+		color: #222;
+	}
+
+	.mac-close {
+		font-size: 60px;
+		font-weight: bold;
+		color: #aaa;
+		cursor: pointer;
+		line-height: 0.8;
+	}
+
+	.mac-close:hover {
+		color: #333;
+	}
+	.loginLogo2 {
+	  display: block;
+	  max-width: 340px;   /* limit width */
+	  max-height: 40px;   /* limit height */
+	  width: 100%;        /* responsive scaling */
+	  height: auto;       /* preserve aspect ratio */
+	  margin: 0 auto;     /* center horizontally */
+	  object-fit: contain; /* make sure it never stretches */
+	  padding-bottom: 20px;
+	}
 	.loginLogo {
 	  display: block;
 	  max-width: 640px;   /* limit width */
@@ -227,72 +353,103 @@ foreach($_GET as $key => $v)
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
 	<script>
-	var isMobile = {
-			Android: function() {
-				return navigator.userAgent.match(/Android/i);
-			},
-			BlackBerry: function() {
-				return navigator.userAgent.match(/BlackBerry/i);
-			},
-			iOS: function() {
-				return navigator.userAgent.match(/iPhone|iPad|iPod/i);
-			},
-			Opera: function() {
-				return navigator.userAgent.match(/Opera Mini/i);
-			},
-			Windows: function() {
-				return navigator.userAgent.match(/IEMobile/i);
-			},
-			any: function() {
-				return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
-			}
+	var desktopImages = {
+		'Calgary'   : 'images/Calgary_large.jpg',
+		'Toronto'   : 'images/Toronto_large.jpg',
+		'Vancouver' : 'images/Vancouver_large.jpg'
+		/*'Montreal'  : 'images/Montreal_large.jpg'*/
+	};
+	var mobileImages = {
+		'Calgary'   : 'images/Calgary_small.jpg',
+		'Toronto'   : 'images/Toronto_small.jpg',
+		'Vancouver' : 'images/Vancouver_small.jpg'
+		/*'Montreal'  : 'images/Montreal_mobile.jpg'*/
+	};
+
+	var currentImageSet = desktopImages;
+	var cityKeys        = Object.keys(currentImageSet);
+	var currentIndex    = 0;
+	var rotateInterval  = null;
+
+	function renderCityNames() {
+		var container = document.getElementById('cityNames');
+		container.innerHTML = cityKeys.map(function(city, i) {
+			return '<span class="city-label' + (i === currentIndex ? ' active' : '') + '" data-index="' + i + '">' + city + '</span>';
+		}).join('<span class="city-sep"> | </span>');
+
+		container.querySelectorAll('.city-label').forEach(function(el) {
+			el.addEventListener('click', function() {
+				currentIndex = parseInt(this.getAttribute('data-index'));
+				showImage(currentIndex);
+				// restart timer from this point
+				if (rotateInterval) clearInterval(rotateInterval);
+				rotateInterval = setInterval(autoAdvance, 4000);
+			});
+		});
+	}
+
+	function showImage(index) {
+		var img = document.getElementById('loginImage');
+		img.style.opacity = '0';
+		setTimeout(function() {
+			img.src = cityKeys[index] ? currentImageSet[cityKeys[index]] : '';
+			img.style.opacity = '1';
+		}, 400);
+		// update city labels
+		document.querySelectorAll('.city-label').forEach(function(el, i) {
+			el.classList.toggle('active', i === index);
+		});
+	}
+
+	function autoAdvance() {
+		currentIndex = (currentIndex + 1) % cityKeys.length;
+		showImage(currentIndex);
+	}
+
+	function startRotation() {
+		if (rotateInterval) clearInterval(rotateInterval);
+		showImage(currentIndex);
+		rotateInterval = setInterval(autoAdvance, 4000);
+	}
+
+	// debounce helper to avoid firing too often
+	function debounce(fn, delay) {
+		let t;
+		return function() {
+			clearTimeout(t);
+			t = setTimeout(fn, delay);
 		};
-		if(isMobile.any() != null)
-		{
-			$("#loginImage").attr("src", "images/login_graphic2.jpg");
-			$(".bg-login-image").addClass('onlyMobileHeader');   // ✅ add class
-			$(".p-5").addClass('p-5-width');   // ✅ add class
-			$("#loginImage").removeClass('desktopImageStyle');
+	}
+
+	function updateLoginImageBasedOnLayout() {
+		const imgCol   = document.querySelector('.bg-login-image');
+		const cols     = document.querySelectorAll('.col-lg-6');
+		const otherCol = Array.from(cols).find(el => el !== imgCol);
+		if (!imgCol || !otherCol) return;
+
+		const imgTop   = Math.round(imgCol.getBoundingClientRect().top);
+		const otherTop = Math.round(otherCol.getBoundingClientRect().top);
+		const stacked  = imgTop !== otherTop;
+
+		if (stacked && window.innerWidth < 992) {
+			currentImageSet = mobileImages;
+			$('.bg-login-image').addClass('onlyMobileHeader');
+			$('.p-5').addClass('p-5-width');
+			$('#loginImage').removeClass('desktopImageStyle');
+		} else {
+			currentImageSet = desktopImages;
+			$('.bg-login-image').removeClass('onlyMobileHeader');
+			$('#loginImage').addClass('desktopImageStyle');
+			$('.p-5').removeClass('p-5-width');
 		}
-		
-		// vanilla JS with debounce
-		// debounce helper to avoid firing too often
-function debounce(fn, delay){ 
-  let t; 
-  return function(){ 
-    clearTimeout(t); 
-    t = setTimeout(fn, delay); 
-  }; 
-}
+		cityKeys = Object.keys(currentImageSet);
+		renderCityNames();
+		startRotation();
+	}
 
-function updateLoginImageBasedOnLayout() {
-  const img = document.getElementById('loginImage');
-  const imgCol = document.querySelector('.bg-login-image');
-  const cols = document.querySelectorAll('.col-lg-6');
-  const otherCol = Array.from(cols).find(el => el !== imgCol);
-  if (!img || !imgCol || !otherCol) return;
-
-  const imgTop = Math.round(imgCol.getBoundingClientRect().top);
-  const otherTop = Math.round(otherCol.getBoundingClientRect().top);
-  const stacked = imgTop !== otherTop; // stacked if tops differ
-	console.log(stacked);
-  if (stacked && window.innerWidth < 992) {
-    img.setAttribute('src', 'images/login_graphic2.jpg');
-    $(".bg-login-image").addClass('onlyMobileHeader');   // ✅ add class
-    $("#loginImage").removeClass('desktopImageStyle');
-	$(".p-5").addClass('p-5-width');
-  } else {
-    img.setAttribute('src', 'images/login_graphic.jpg');
-    $(".bg-login-image").removeClass('onlyMobileHeader'); // ✅ remove class
-    $("#loginImage").addClass('desktopImageStyle');
-	$(".p-5").removeClass('p-5-width');
-  }
-}
-
-
-const updateDebounced = debounce(updateLoginImageBasedOnLayout, 20);
-window.addEventListener('load', updateDebounced);
-window.addEventListener('resize', updateDebounced);
+	const updateDebounced = debounce(updateLoginImageBasedOnLayout, 20);
+	window.addEventListener('load', updateDebounced);
+	window.addEventListener('resize', updateDebounced);
 	</script>
 
 <script>
@@ -324,9 +481,112 @@ window.addEventListener('resize', updateDebounced);
 	}
 	.desktopImageStyle{
 		width: 100%; margin-top: 35px; margin-left: 20px;
-	}																 
+	}
+	#loginImage {
+		transition: opacity 0.4s ease-in-out;
+	}
+	#cityNames {
+		text-align: center;
+		padding: 8px 4px 4px;
+		font-size: 12px;
+		letter-spacing: 0.03em;
+	}
+	.city-label {
+		color: #222;
+		cursor: pointer;
+		transition: color 0.4s ease-in-out;
+		font-weight: 500;
+	}
+	.city-label.active {
+		color: #4e73df;
+		font-weight: 700;
+	}
+	.city-label:hover {
+		color: #4e73df;
+	}
+	.city-sep {
+		color: #aaa;
+	}
 	</style>
 	<?php include_once("forgot-password-modal.php");?>
+
+	<script>
+	function openRequestAccessModal() {
+		// Reset to form state each time it opens
+		document.getElementById('raForm').style.display    = 'block';
+		document.getElementById('raSuccess').style.display = 'none';
+		document.getElementById('raFooter').style.display  = 'flex';
+		document.getElementById('raError').style.display   = 'none';
+		document.getElementById('raError').textContent     = '';
+		['ra_firstname','ra_lastname','ra_company','ra_city','ra_email'].forEach(function(id) {
+			document.getElementById(id).value = '';
+		});
+		document.getElementById('requestAccessModal').classList.add('open');
+	}
+
+	function closeRequestAccessModal() {
+		document.getElementById('requestAccessModal').classList.remove('open');
+	}
+
+	async function submitRequestAccess() {
+		var btn = document.getElementById('raSaveBtn');
+		var errBox = document.getElementById('raError');
+
+		var fields = {
+			firstname : document.getElementById('ra_firstname').value.trim(),
+			lastname  : document.getElementById('ra_lastname').value.trim(),
+			company   : document.getElementById('ra_company').value.trim(),
+			city      : document.getElementById('ra_city').value.trim(),
+			email     : document.getElementById('ra_email').value.trim()
+		};
+
+		// Basic validation
+		for (var key in fields) {
+			if (!fields[key]) {
+				errBox.textContent = 'Please fill in all fields.';
+				errBox.style.display = 'block';
+				return;
+			}
+		}
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)) {
+			errBox.textContent = 'Please enter a valid email address.';
+			errBox.style.display = 'block';
+			return;
+		}
+		errBox.style.display = 'none';
+
+		btn.textContent = 'Sending…';
+		btn.disabled = true;
+
+		try {
+			var formData = new FormData();
+			Object.keys(fields).forEach(function(k) { formData.append(k, fields[k]); });
+
+			var response = await fetch('request-access.php', { method: 'POST', body: formData });
+			var result   = await response.json();
+
+			if (result.status === 'success') {
+				document.getElementById('raForm').style.display    = 'none';
+				document.getElementById('raFooter').style.display  = 'none';
+				document.getElementById('raSuccess').style.display = 'block';
+			} else {
+				errBox.textContent = result.message || 'Something went wrong. Please try again.';
+				errBox.style.display = 'block';
+			}
+		} catch (err) {
+			errBox.textContent = 'Network error. Please try again.';
+			errBox.style.display = 'block';
+		} finally {
+			btn.textContent = 'Send Request';
+			btn.disabled = false;
+		}
+	}
+
+	// Close modal on overlay click
+	document.getElementById('requestAccessModal').addEventListener('click', function(e) {
+		if (e.target === this) closeRequestAccessModal();
+	});
+	</script>
 </body>
 
 </html>

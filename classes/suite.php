@@ -6,6 +6,7 @@ if(!defined("suite"))
 	/*		Included files																									*/
 	/************************************************************************************************************************/
 	include_once(__DIR__."/connection.php");
+	include_once(__DIR__."/building.php");
 	/************************************************************************************************************************/	
 	
 	class suite
@@ -274,12 +275,16 @@ if(!defined("suite"))
 			{
 				while($row = mysqli_fetch_assoc($result))
 				{
+					$row["aos_document_id2"] = base64_encode("8087-".$row["aos_document_id"]);
 					$row["aos_document_id"] = $this->encryptParam($row["aos_document_id"]);
 					$suiteOtherImages[$row["idtsuite"]]["files"][] = $row;
 				}
 			}
 			
-			return array($summaryDetails, $suiteDetails, $suiteOtherImages, $totalOfficeArea, $lastRecordDate);
+			$objBuilding = new building();
+			$companySummary = $objBuilding->getCompanySummary($idtmarket);
+
+			return array($summaryDetails, $suiteDetails, $suiteOtherImages, $totalOfficeArea, $lastRecordDate, $companySummary);
 		}
 		
 		function formatNumberSmart($number) {
@@ -464,6 +469,7 @@ if(!defined("suite"))
 			{
 				while($row = mysqli_fetch_assoc($result))
 				{
+					$row["aos_document_id2"] = base64_encode("8087-".$row["aos_document_id"]);
 					$row["aos_document_id"] = $this->encryptParam($row["aos_document_id"]);
 					$suiteOtherImages[$row["idtsuite"]]["files"][] = $row;
 				}

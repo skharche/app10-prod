@@ -10,7 +10,7 @@ function CameraRotation2(longitude, latitude, altitude) {
 	altitude = (parseFloat(window.lastCameraAltitude) + cameraAltitudeAdjustment);
 	console.log("Altitude Correction  "+altitude);
 	
-  currentPosition = new Cesium.Cartesian3.fromDegrees(
+  currentPosition = Cesium.Cartesian3.fromDegrees(
     parseFloat(latLonObj.lon),
     parseFloat(latLonObj.lat),
     parseFloat(altitude)
@@ -250,7 +250,198 @@ function generateIntermediatePoints(lat1, lon1, lat2, lon2, interval = 1) {
 }
 
 
+let activeRotation = null; // so a new call cancels any in-progress rotation
 
+/**
+ * Smoothly orbit the camera 180° around a geographic point, then stop.
+ * Starts from the camera's current heading/pitch/distance relative to the point.
+ *
+ * @param {number} longitude  Longitude in degrees
+ * @param {number} latitude   Latitude in degrees
+ * @param {object} [options]
+ * @param {number} [options.degrees=180]  How far to rotate
+ * @param {number} [options.duration=4]   Duration in seconds
+ * @param {number} [options.height=0]     Height (m) of the orbit center
+ * @param {boolean} [options.clockwise=true]  Direction of rotation
+ */
+function rotateAroundPoint(longitude, latitude, options = {}) {
+    const {
+        degrees = 180,
+        duration = 4.0,
+        height = 0,
+        clockwise = true,
+    } = options;
 
+    const camera = viewer.camera;
+    const center = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
+    const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+
+    // Lock to the center's ENU frame to read the CURRENT orbit parameters.
+    camera.lookAtTransform(transform);
+    const startHeading = camera.heading;
+    const pitch = camera.pitch;
+    const range = Cesium.Cartesian3.magnitude(camera.position); // distance to center
+    camera.lookAtTransform(Cesium.Matrix4.IDENTITY); // release until per-frame relock
+
+    const totalRotation =
+        Cesium.Math.toRadians(degrees) * (clockwise ? 1 : -1);
+    const startTime = performance.now();
+
+    // Smooth ease-in / ease-out so it accelerates and decelerates.
+    const easeInOutCubic = (t) =>
+        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    // Cancel any rotation already running before starting a new one.
+    if (activeRotation) activeRotation();
+
+    function onPreRender() {
+        const elapsed = (performance.now() - startTime) / 1000;
+        let t = duration > 0 ? elapsed / duration : 1;
+        if (t > 1) t = 1;
+
+        const heading = startHeading + totalRotation * easeInOutCubic(t);
+
+        camera.lookAtTransform(
+            transform,
+            new Cesium.HeadingPitchRange(heading, pitch, range)
+        );
+
+        if (t >= 1) {
+            finish();
+        }
+    }
+
+    function finish() {
+        // Release the camera from the orbit frame so the user regains control.
+        camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        viewer.scene.preRender.removeEventListener(onPreRender);
+        activeRotation = null;
+    }
+
+    viewer.scene.preRender.addEventListener(onPreRender);
+    activeRotation = finish; // expose a canceller
+}
+
+// Tolerance thresholds for camera position comparison
+const CAMERA_TOLERANCE = {
+    latitude: 0.0001,      // ~11 meters
+    longitude: 0.0001,     // ~11 meters  
+    altitude: 10           // 10 meters
+};
+
+/**
+ * Get current camera position in lat/lon/altitude
+ */
+function getCurrentCameraPosition() {
+    const cartographic = Cesium.Cartographic.fromCartesian(viewer.camera.position);
+    return {
+        latitude: Cesium.Math.toDegrees(cartographic.latitude),
+        longitude: Cesium.Math.toDegrees(cartographic.longitude),
+        altitude: cartographic.height
+    };
+}
+ 
+let camera180InProgress = false;
+function start180CameraRotation()
+{
+	if(camera180InProgress)
+	{
+		stop180CameraRotation();
+		return;
+	}
+	//console.log("Before Alt "+getCameraValues().altitude+" & "+buildingCameraAltitudeValue);
+	var time = 4000;
+	if(typeof buildingCameraDataLogged[devSelectedBuilding] != "undefined")
+	{
+		if(isCameraAtPosition(parseFloat(buildingCameraDataLogged[devSelectedBuilding].latitude), parseFloat(buildingCameraDataLogged[devSelectedBuilding].longitude), parseFloat(buildingCameraDataLogged[devSelectedBuilding].altitude)+parseFloat(cameraAltitudeAdjustment)))
+		{
+			console.log("Camera already at target position - starting rotation immediately");
+			time = 0;
+		}
+		else
+		{
+			flyToCameraView(buildingCameraDataLogged[devSelectedBuilding].latitude, buildingCameraDataLogged[devSelectedBuilding].longitude, buildingCameraDataLogged[devSelectedBuilding].altitude, buildingCameraDataLogged[devSelectedBuilding].heading, buildingCameraDataLogged[devSelectedBuilding].pitch, buildingCameraDataLogged[devSelectedBuilding].roll, 4);
+		}
+	}
+	else
+	{
+		flyToBuildingCamera(devSelectedBuilding);
+	}
+	console.log("time: "+time);
+	setTimeout(function () {
+		if(TempBldgData[devSelectedBuilding].latitude == null || TempBldgData[devSelectedBuilding].longitude == null)
+		{
+			var t = TempBldgData[devSelectedBuilding].coords.split(",");
+			CameraRotationAroundPoint180(t[1], t[0], Cesium.Cartographic.fromCartesian(viewer.camera.position).height);//getCameraValues().altitude);
+		}
+		else
+		{
+			//console.log("After Alt "+getCameraValues().altitude+"& "+buildingCameraAltitudeValue);
+			CameraRotationAroundPoint180(SelectedBuildingLat, SelectedBuildingLon, clickedAltitude);//, getCameraValues().altitude);
+		}
+	}, time);
+}
+
+let forceStop180CameraRotation = false;
+function stop180CameraRotation()
+{
+	forceStop180CameraRotation = true;
+}
+
+function CameraRotationAroundPoint180(latitude, longitude, height) {
+
+	camera180InProgress = true;
+	$("#rotateCamera180ImgContainer").attr("src", "images/pause-active.png");
+  currentPosition = Cesium.Cartesian3.fromDegrees(
+    parseFloat(longitude),
+    parseFloat(latitude),
+    parseFloat(height)
+  );
+  
+  var pitch = viewer.camera.pitch;
+  var heading = viewer.camera.heading;
+  var startingHeading = heading;
+  var totalRotation = 0;
+  
+  let unsubscribe180Rotation = viewer.clock.onTick.addEventListener(() => {
+    // ADDED: check if 180 degrees (Math.PI) completed
+	console.log(totalRotation);
+    if (totalRotation >= Math.PI || forceStop180CameraRotation) {
+		camera180InProgress = false;
+		viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+      unsubscribe180Rotation(); // stop the rotation
+	  $("#rotateCamera180ImgContainer").attr("src", "images/redo-24.png");
+	  forceStop180CameraRotation = false;
+      return;
+    }
+	
+	/*
+    viewer.screenSpaceEventHandler.setInputAction(function (amount) {
+      amount =
+        (Cesium.Math.sign(amount) *
+          viewer.scene.camera.positionCartographic.height) /
+        Math.log(viewer.scene.camera.positionCartographic.height);
+      viewer.scene.camera.zoomIn(amount);
+      pitch = viewer.camera.pitch;
+      heading = viewer.camera.heading;
+    }, Cesium.ScreenSpaceEventType.WHEEL);
+	*/
+    
+    let rotation = -1; // counter-clockwise
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    var elevation = Cesium.Cartesian3.distance(currentPosition, viewer.camera.position);
+    
+    const SMOOTHNESS = 1400;
+    var increment = (rotation * Math.PI) / SMOOTHNESS;
+    
+    totalRotation += Math.abs(increment);
+    heading += increment;
+    
+    viewer.camera.lookAt(
+      currentPosition,
+      new Cesium.HeadingPitchRange(heading, pitch, elevation)
+    );
+  });
+}
 
 

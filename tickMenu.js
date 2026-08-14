@@ -333,8 +333,24 @@ viewer.clock.onTick.addEventListener(function(clock) {
 	}
 });
 
+//True when the embedded Tour/3DGS viewer is what the user is looking at - either the fullscreen
+//virtual tour/3DGS modal, or the small live preview under the infobox's Tours sub-tab - so the
+//global WASD/effect-toggle shortcuts below should stay out of its way.
+function isTourContextActive()
+{
+	if($("#virtualTourModal").css("display") == 'block')
+		return true;
+	if($('.tab-pane[id^="Tour-"].show.active').length > 0)
+		return true;
+	return false;
+}
+
 document.addEventListener('keydown', (event) => {
 	console.log(event.key);
+	if($("#buildingSearchInput").is(':focus'))
+	{
+		return;
+	}
 	if(!$("#searchBox").is(':focus'))
 	{
 		if (event.key === 'f') {
@@ -357,6 +373,9 @@ document.addEventListener('keydown', (event) => {
 				setResetSettingFlags("showLogo-li", window.mobile_logo_display);
 				setResetSettingFlags("hideLogo-li", !window.mobile_logo_display);
 			}
+		}
+		else if (event.ctrlKey) {
+			console.log("maximumScreenSpaceError: "+viewer.scene.globe.maximumScreenSpaceError);
 		}
 		else if (event.ctrlKey && event.key === 'f') {
 			event.preventDefault(); // Prevent the browser's default find action
@@ -395,8 +414,18 @@ document.addEventListener('keydown', (event) => {
 					break;
 			}
 		}
+		else if(isTourContextActive())
+		{
+			//WASD is reserved for the embedded Tour/3DGS viewer here - without this guard, W/D fall through to the
+			//switch below and silently toggle the White/Dark overlay effects on the main map instead.
+			if(event.key === 'Escape' && $("#virtualTourModal").css("display") == 'block')
+			{
+				closVirtualToureFullScreenModal();
+			}
+		}
 		else
 		{
+			if(window.toursTabSelected == false)
 			switch (event.key) {
 				case 'Escape':
 					//Clear search and its effect.

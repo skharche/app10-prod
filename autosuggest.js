@@ -35,6 +35,8 @@ searchBox.addEventListener("input", () => {
 
     for (const item of searchBuildingData) {
       if (seenIds.has(item.id)) continue;
+      if (item.name == null) continue;
+      if (item.address == null) continue;
       //console.log("Item", item);
       if (item.name.toLowerCase().startsWith(lowerQuery)) {
         filtered.push({ id: item.id, display: item.name, type: "name", index: item.index, entityIndex: item.entityIndex });
@@ -260,7 +262,7 @@ function initiateDropdownToggle()
 		dropdown.classList.toggle('show');
 	  });
 
-	  // Handle tick toggle
+	  /* // Handle tick toggle
 	  var atleastOneTick = false;
 	  dropdownItems.forEach(item => {
 		item.addEventListener('click', () => {
@@ -272,7 +274,7 @@ function initiateDropdownToggle()
 		  }
 		  checkEffectsClass();
 		});
-	  });
+	  }); */
 
 	  // Close dropdown when clicking outside
 	  document.addEventListener('click', (event) => {
@@ -294,6 +296,17 @@ function setResetTickForEffectsButtons(btnId, flag)
 	{
 		$("#"+btnId+" .tick").css("visibility", "");;
 	}
+	
+	var isVisible = $('.dropdown-menu li').find('span.tick').filter(function() {
+		return $(this).css('visibility') === 'visible';
+	  }).length > 0;
+
+	  if (isVisible) {
+		  $("#newEffectsButton").addClass("btn-primary");
+	  } else {
+		  $("#newEffectsButton").removeClass("btn-primary");
+		//console.log("No span with class 'tick' is visible.");
+	  }
 }
 
 function checkEffectsClass()
@@ -302,7 +315,7 @@ function checkEffectsClass()
 	var atleastOneTick = false;
 	 dropdownItems2.forEach(item => {
 		var tick = item.querySelector('.tick');
-		  if (tick.style.visibility === 'visible') {
+		  if (tick != null && tick.style.visibility === 'visible') {
 			atleastOneTick = true;
 		  }
 	  });

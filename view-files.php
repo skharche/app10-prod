@@ -30,11 +30,16 @@ if (isset($_GET['floorplan'])) {
 if (!isset($_GET['id'])) {
     die("Invalid request");
 }
-
-$decrypted_id = decryptParam($_GET['id']);
+$t = base64_decode($_GET['id']);
+$idSplit = explode("8087-", $t);
+$decrypted_id = $idSplit[1];
+/*
+echo "<hr />";
+echo $decrypted_id = decryptParam($_GET['id']);exit;
 if (!$decrypted_id) {
     die("Invalid or expired download link");
 }
+*/
 
 //$id = intval(base64_decode($_GET['id']));
 $stmt = $conn->prepare("SELECT filename, filetype, filedata FROM aos_document WHERE aos_document_id=?");

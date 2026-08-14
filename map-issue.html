@@ -145,43 +145,9 @@
 			
 			viewer.scene.debugShowFramesPerSecond = false;//for FPS Widget
 			
-			viewer.scene.globe.depthTestAgainstTerrain = false;//To fix issue with Isolate function showing unnecessary tileset portion
 			
-			globe = viewer.scene.globe;
-			globe.baseColor = Cesium.Color.TRANSPARENT;
-			viewer.scene.globe.depthTestAgainstTerrain = true;
-  			viewer.scene.highDynamicRange = false;
-  			viewer.scene.globe.enableLighting = false;
-  			viewer.scene.fog.enabled = false;
-			//const baseLayer = viewer.scene.imageryLayers.get(0);
- 			//baseLayer.alpha = 0.0;
-  			globe.translucency.enabled = true;
-  			globe.undergroundColor = undefined;
 		  } catch (error) {
 			console.log(error);
-		  }
-		  
-		  var googleTileset = null;
-		  var clipTileset = null;
-		  async function ShowGoggleTileset() {
-			  //return "";
-			  googleTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207, {
-				/*maximumScreenSpaceError: 1,*/
-			  });
-			  viewer.scene.primitives.add(googleTileset);
-			  /*
-			  clipTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207, {
-				/*maximumScreenSpaceError: 1,* /
-			  });
-			  viewer.scene.primitives.add(clipTileset);
-			  clipTileset.show = false;
-			  */
-			  setTimeout(function (){showTerrain(), 3000});
-		  }
-		  
-		  async function showTerrain()
-		  {
-			viewer.scene.terrainProvider = await Cesium.createWorldTerrainAsync();
 		  }
 		  
 		  setTimeout(function(){
@@ -246,14 +212,6 @@
 			else
 			{
 				viewer.scene.globe.depthTestAgainstTerrain = false;
-				/*
-				if(clipTileset != null && typeof clipTileset.clippingPolygons != "undefined")
-				{
-					clipTileset.clippingPolygons.enabled = false;
-					clipTileset.clippingPolygons.inverse = false;
-					clipTileset.show = false;
-				}
-				*/
 				if(typeof googleTileset.clippingPolygons != "undefined" & googleTileset.clippingPolygons != null)
 				{
 					googleTileset.clippingPolygons.enabled = false;

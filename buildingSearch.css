@@ -1,0 +1,72 @@
+.buildingSearchRow {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.citygridelement {
+    display: block;
+    margin: 6px 0;
+}
+
+.buildingAutosuggestWrapper {
+    position: relative;
+    width: 260px;
+    max-width: 100%;
+}
+
+.buildingSearchInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    font-size: 0.9em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+}
+
+.buildingSearchInput:focus {
+    border-color: #6699ff;
+    box-shadow: 0 0 0 2px rgba(102,153,255,0.2);
+}
+
+/* Force dropdown to always open downward */
+.buildingSuggestList {
+    position: absolute;
+    top: 100%;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    margin: 2px 0 0 0;
+    padding: 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+.buildingSuggestList li {
+    padding: 6px 10px;
+    font-size: 0.9em;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.buildingSuggestList li:hover,
+.buildingSuggestList li.active {
+    background-color: #6699ff;
+    color: #fff;
+}
+
+.buildingSuggestList li .suggest-sub {
+    display: block;
+    font-size: 0.8em;
+    opacity: 0.75;
+}
+

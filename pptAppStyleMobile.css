@@ -1,0 +1,15 @@
+
+	
+	/* Styles for devices with max width of 768px (common for tablets and mobile) */
+	@media only screen and (device-width: 768px),
+       only screen and (max-width: 768px) {
+		body {
+			font-size: 12px !important;
+		}
+		
+		#submarketStatistics{
+			width: 75%;
+		}
+	}
+	
+	

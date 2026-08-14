@@ -65,13 +65,19 @@ class buildingController extends BaseController
 		$objBuilding = new building();
 		return $objBuilding->getSubmarketDetails($idtmarket);
 	}
-	
+
+	function getSubmarketSummary($idtmarket, $buildingType = 'Office')
+	{
+		$objBuilding = new building();
+		return $objBuilding->getSubmarketSummary($idtmarket, $buildingType);
+	}
+
 	function getBuildingHotelSummary($idtmarket)
 	{
 		$objBuilding = new building();
 		return $objBuilding->getBuildingHotelSummary($idtmarket);
 	}
-	
+
 	function getDevelopmentBuildingSummary($idtmarket)
 	{
 		$objBuilding = new building();
@@ -135,16 +141,16 @@ class buildingController extends BaseController
 		return $objBuilding->buildingFloorUpdates($idtbldg, $buildingBaseHeight, $floorHeight);
 	}
 	
-	function getMarketSalesData($idtcity)
+	function getMarketSalesData($idtcity, $idtmarket)
 	{
 		$objBuilding = new building();
-		return $objBuilding->getMarketSalesData($idtcity);
+		return $objBuilding->getMarketSalesData($idtcity, $idtmarket);
 	}
 	
-	function getMarketSalesDataSummary($idtcity)
+	function getMarketSalesDataSummary($idtcity, $idtmarket)
 	{
 		$objBuilding = new building();
-		return $objBuilding->getMarketSalesDataSummary($idtcity);
+		return $objBuilding->getMarketSalesDataSummary($idtcity, $idtmarket);
 	}
 	
 	function getGroupColorCodes($class_name)
@@ -211,12 +217,13 @@ if (isset($_REQUEST["param"])) {
 			$allBuildingVisualizationSummary = $objBuildingController->getAllVisualizationBuildingSummary($_REQUEST["idtmarket"]);
 			$summaryData = $objBuildingController->getBuildingSummaryDetails($_REQUEST["idtmarket"]);
 			$submarketData = $objBuildingController->getSubmarketDetails($_REQUEST["idtmarket"]);
+			$submarketSummary = $objBuildingController->getSubmarketSummary($_REQUEST["idtmarket"], 'Office');
 			$retailBuildingData = $objBuildingController->getRetailBuildingData();
 			$nonRetailBuildingData = $objBuildingController->getNonRetailBuildingData();
 			$retailBuildingMap = $objBuildingController->getFullRetailBuildingMapping();
 			$activeUnitDetails = $objBuildingController->getActiveUnitDetails($_REQUEST["idtmarket"]);
-			
-			echo json_encode(array("status" => "success", "data" => $data[0], "developmentBuildings" => $data[1], "developmentBuildingFloors" => $data[2], "buildingFiles" => $data[3], "hotelSummary" => $hotelSummary, "developmentSummary" => $developmentSummary, "submarketDetails" => $submarketData, "summary" => $summaryData, "allBuildingVisualizationSummary" => $allBuildingVisualizationSummary, "retailBuildingData" => $retailBuildingData, "nonRetailBuildingData" => $nonRetailBuildingData, "retailBuildingMap" => $retailBuildingMap, "activeUnitDetails" => $activeUnitDetails));
+
+			echo json_encode(array("status" => "success", "data" => $data[0], "developmentBuildings" => $data[1], "developmentBuildingFloors" => $data[2], "buildingFiles" => $data[3], "buildingClasses" => $data[4], "hotelSummary" => $hotelSummary, "developmentSummary" => $developmentSummary, "submarketDetails" => $submarketData, "submarketSummary" => $submarketSummary, "summary" => $summaryData, "allBuildingVisualizationSummary" => $allBuildingVisualizationSummary, "retailBuildingData" => $retailBuildingData, "nonRetailBuildingData" => $nonRetailBuildingData, "retailBuildingMap" => $retailBuildingMap, "activeUnitDetails" => $activeUnitDetails));
 			break;
 		case "getSubmarketDetails":
 			$submarketData = $objBuildingController->getSubmarketDetails($_REQUEST["idtmarket"]);
@@ -226,7 +233,7 @@ if (isset($_REQUEST["param"])) {
 		case "getApp10MarketDetails":
 			$data = $objBuildingController->getApp10MarketDetails($_POST["user_id"]);
 			//echo "<pre>";print_r($data);
-			echo json_encode(array("status" => "success", "data" => $data["data"], "allCitiesWithCountry" => $data["allCitiesWithCountry"], "countryWithProperties" => $data["countryWithProperties"], "allRemainingCitiesWithCountry" => $data["allRemainingCitiesWithCountry"], "citiesCounts" => $data["citiesCounts"], "citiesAccessible" => $data["citiesAccessible"], "cityBoundaries" => $data["cityBoundaries"], "cityCameras" => $data["cityCameras"], "disabledMarkets" => $data["disabledMarkets"], "marketCamera" => $data["camera"], "marketBoundaries" => $data["marketBoundaries"], "cameraRotation" => $data["cameraRotation"], "cityAltitudeAdjustment" => $data["cityAltitudeAdjustment"], "submarketWithMaxBuilding" => $data["submarketWithMaxBuilding"], "citiesWithMultipleMarket" => $data["citiesWithMultipleMarket"]));
+			echo json_encode(array("status" => "success", "data" => $data["data"], "allCitiesWithCountry" => $data["allCitiesWithCountry"], "countryWithProperties" => $data["countryWithProperties"], "allRemainingCitiesWithCountry" => $data["allRemainingCitiesWithCountry"], "citiesCounts" => $data["citiesCounts"], "citiesAccessible" => $data["citiesAccessible"], "cityBoundaries" => $data["cityBoundaries"], "cityCameras" => $data["cityCameras"], "disabledMarkets" => $data["disabledMarkets"], "marketCamera" => $data["camera"], "marketBoundaries" => $data["marketBoundaries"], "cameraRotation" => $data["cameraRotation"], "cityAltitudeAdjustment" => $data["cityAltitudeAdjustment"], "marketOrbit" => $data["marketOrbit"], "submarketWithMaxBuilding" => $data["submarketWithMaxBuilding"], "citiesWithMultipleMarket" => $data["citiesWithMultipleMarket"]));
 			break;
 		case "getMarketBuildingsForAutosuggest":
 			$data = $objBuildingController->getMarketBuildingsForAutosuggest($_POST["marketId"]);
@@ -250,6 +257,15 @@ if (isset($_REQUEST["param"])) {
 			foreach($data[1] as $marketId => $cnt)
 			{
 				$str .= ' $marketBuildingCount['.$marketId.'] = '.$cnt.'; ';
+				$str .= " \n ";
+			}
+
+			$str .= " \n ";
+			$str .= ' $cityFloorplanCounts = array();';
+			$str .= " \n ";
+			foreach($data[2] as $cityId => $cnt)
+			{
+				$str .= ' $cityFloorplanCounts['.$cityId.'] = '.$cnt.'; ';
 				$str .= " \n ";
 			}
 			file_put_contents(__DIR__.'/../cityBuildingCounts.php', '<?php '.$str.'  ?>');
@@ -303,8 +319,8 @@ if (isset($_REQUEST["param"])) {
 			//file_put_contents(__DIR__.'/../arealyticSuiteData.json', json_encode(array("status" => "success", "data" => $data, "summary" => $summary, "pricePerSQMSummary" => $pricePerSQMSummary)));
 			break;
 		case "getMarketSalesDataCalgary":
-			$data = $objBuildingController->getMarketSalesData($_REQUEST["idtcity"]);
-			$summary = $objBuildingController->getMarketSalesDataSummary($_REQUEST["idtcity"]);
+			$data = $objBuildingController->getMarketSalesData($_REQUEST["idtcity"], $_REQUEST["idtmarket"]);
+			$summary = $objBuildingController->getMarketSalesDataSummary($_REQUEST["idtcity"], $_REQUEST["idtmarket"]);
 			$colorCodes = $objBuildingController->getGroupColorCodes("INVESTMENT-SALE");
 			echo json_encode(array("status" => "success", "data" => $data[0], "yearWiseData" => $data[1], "summary" => $summary[0], "allSummary" => $summary[1], "investmentSalesColors" => $colorCodes));
 			break;

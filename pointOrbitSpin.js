@@ -19,7 +19,7 @@ async function FlyToPoint(latlonObj) {
   RemoveEntityByName("tempMarkerPin");
   entity = viewer.entities.add({
     name: "tempMarkerPin",
-    position: new Cesium.Cartesian3.fromDegrees(
+    position: Cesium.Cartesian3.fromDegrees(
       parseFloat(latlonObj.lon),
       parseFloat(latlonObj.lat),
       parseFloat(latlonObj.height)
@@ -44,7 +44,7 @@ async function FlyToPoint(latlonObj) {
 function CameraRotationAroundPoint(latlonObj) {
   $("#speedWindowForPointOrbit").css("display", "block");
   $("#SRotate").attr("src", "./images/pause.svg");
-  currentPosition = new Cesium.Cartesian3.fromDegrees(
+  currentPosition = Cesium.Cartesian3.fromDegrees(
     parseFloat(latlonObj.lon),
     parseFloat(latlonObj.lat),
     parseFloat(latlonObj.height)
@@ -119,7 +119,7 @@ function CameraRotationAroundPoint(latlonObj) {
 	$("#autoRotateZoom").attr("src", "images/pause-active.png");
 	$("#speedWindowForPointOrbit").css("display", "block");
 	$("#SRotate").attr("src", "./images/pause.svg");
-  currentPosition = new Cesium.Cartesian3.fromDegrees(
+  currentPosition = Cesium.Cartesian3.fromDegrees(
     parseFloat(latlonObj.lon),
     parseFloat(latlonObj.lat),
     parseFloat(latlonObj.height)

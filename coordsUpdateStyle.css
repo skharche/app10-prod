@@ -105,7 +105,8 @@ body {
 	font-weight: bold;
 }
 .summaryInfoboxCityDetails{
-	padding-top: 5px !important;
+	/*padding-top: 5px !important;*/
+	margin-top: -5px !important;
 }
 .summaryInfoboxContainer{
 	font-family: Helvetica !important;
@@ -150,6 +151,27 @@ body {
 	display: none;
 }
 
+.summaryCollapsibleSection{
+	margin-bottom: 6px;
+}
+.summaryCollapsibleHeader{
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	cursor: pointer;
+	font-weight: bold;
+	padding: 6px 4px;
+	background-color: #f2f2f2;
+}
+.summarySortableHeader{
+	cursor: pointer;
+	user-select: none;
+}
+.companySummaryGroupHeader td{
+	font-weight: bold;
+	background-color: #e9e9e9 !important;
+}
+
 .minPaddingtable>tbody>tr>td, .minPaddingtable>tbody>tr>th, .minPaddingtable>tfoot>tr>td, .minPaddingtable>tfoot>tr>th, .minPaddingtable>thead>tr>td, .minPaddingtable>thead>tr>th
 {
 	padding: 2px !important;
@@ -158,6 +180,133 @@ body {
 .minPadding6pxtable>tbody>tr>td, .minPadding6pxtable>tbody>tr>th, .minPadding6pxtable>tfoot>tr>td, .minPadding6pxtable>tfoot>tr>th, .minPadding6pxtable>thead>tr>td, .minPadding6pxtable>thead>tr>th
 {
 	padding: 6px !important;
+}
+.mutedFieldLabel{
+	color: grey !important;
+}
+
+/* Experimental tour/3DGS iframe preview tiles - see buildTourPreviewTile() in main.js. Safe to remove if reverted. */
+.tourLinksRow{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 20px;
+	width: 100%;
+}
+.tourPreviewRow{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	/*justify-content: center;*/
+	align-items: flex-start;
+	width: 100%;
+}
+.tourPreviewTile1{
+	position: relative;
+	width: 100%;
+	/*
+	max-width: 220px;
+	height: 250px;
+	*/
+	cursor: pointer;
+	/*
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	*/
+	overflow: hidden;
+}
+.tourPreviewTile{
+	position: relative;
+	width: 100%;
+	/*max-width: 220px;*/
+	height: 250px;
+	cursor: pointer;
+	/*
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	*/
+	overflow: hidden;
+}
+.tourPreviewTile .tourPreviewIframe{
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+/* Expands the preview tile (and its iframe) to cover the viewport in place - see expandTourPreviewToFullScreen()
+   in main.js. Reparenting the iframe into a separate modal reloads it (iframes re-navigate on every insertion
+   per the HTML spec), so this avoids moving the node at all. Styling mirrors .fullScreenModalWindow /
+   .fullscreenmodal-content / #closeModal so it reads as the same modal treatment used elsewhere in the app. */
+.tourPreviewFullscreenBackdrop{
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.0);
+	z-index: 99999;
+}
+.tourPreviewTileFullscreen{
+	position: fixed !important;
+	top: 8.5% !important;
+	left: 2.5% !important;
+	right: 2.5% !important;
+	width: auto !important;
+	height: 90vh !important;
+	max-width: none !important;
+	margin: 0 auto !important;
+	z-index: 100000 !important;
+	background: #fff !important;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	box-sizing: border-box !important;
+	padding-top: 50px !important;
+	padding-bottom: 20px !important;
+	cursor: default !important;
+}
+.tourPreviewTileFullscreen .tourPreviewLabel{
+	display: none;
+}
+.tourPreviewFullscreenChrome{
+	display: none;
+	padding-top: 10px;
+	position: fixed;
+	top: 5%;
+	left: 2.5%;
+	right: 2.5%;
+	height: 50px;
+	z-index: 100001;
+	align-items: center;
+	justify-content: center;
+	background: #fff;
+}
+/*
+.tourPreviewFullscreenChrome .tourPreviewFullscreenTitle{
+	text-align: center;
+}
+.tourPreviewFullscreenChrome .tourPreviewFullscreenClose{
+	position: absolute;
+	top: 0px;
+	right: 20px;
+	font-size: 48px;
+	font-weight: bold;
+	color: #aaa;
+	cursor: pointer;
+	line-height: 1;
+}
+.tourPreviewFullscreenChrome .tourPreviewFullscreenClose:hover{
+	color: #333;
+}
+*/
+.tourPreviewTile .tourPreviewLabel{
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: white;
+	color: black;
+	font-size: 12px;
+	/*text-align: center;*/
+	padding: 3px 0;
 }
 
 table {
@@ -508,6 +657,9 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 		font-size: 18px;
 		/*font-weight: bold;*/
 	}
+	.buildingNameOnInfoboxBOLD{
+		font-weight: bold !important;
+	}
 	.modalHeaderText{
 		font-size: 44px !important;
 		font-weight: bold;
@@ -695,6 +847,19 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 		text-align: center;
 	}
 
+	.myAccountModal-content {
+		position: absolute !important;
+		top: 5%;
+		left: 2.5%;
+		right: 2.5%;
+		min-height: 40%;
+		margin: 0 auto !important;
+		background: #fff;
+		padding: 10px;
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+		text-align: center;
+	}
+	
 	.modalCompanyLogo {
 	  max-width: 100%;         /* fits inside its column */
 	  max-height: 80px;        /* keep it reasonable */
@@ -792,10 +957,13 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 
 	.grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr); /* 6 columns */
+      grid-template-columns: repeat(6, minmax(0, 1fr)); /* 6 equal columns, content can't force one wider */
       gap: 10px;
       max-width: 1000px;
       width: 100%;
+    }
+    .city-wrapper {
+      min-width: 0; /* let the box shrink to its grid column instead of growing with content */
     }
     .city-box {
       display: flex;
@@ -829,9 +997,9 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	.city-extra-row {
 	  display: flex;
 	  flex-direction: column;
-	  gap: 2px;
+	  gap: 0px;
 	  justify-content: space-between;
-	  padding: 6px 10px;
+	  padding: 0px 5px;
 	  background-color: #e9e9e9;
 	  border-top: 1px solid #ccc;
 	  font-size: 12px;
@@ -842,6 +1010,49 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	  width: 100%;
 	}
 	*/
+	 .extra-item-with-space{
+		 padding-bottom: 7px;
+	 }
+	 
+	.country-group .extra-item {
+		/*
+	  padding-top: 4px;
+	  padding-bottom: 4px;
+	  */
+	}
+	.city-extra-row .city-extra-dropdown > .btn {
+	  padding: 0px 6px;
+	  margin: 0;
+	  font-size: 13px;
+	  line-height: 1.6;
+	  min-height: 0;
+	}
+	.city-extra-row .city-extra-dropdown .dropdown-item {
+	  padding: 4px 10px;
+	  font-size: 13px;
+	}
+	.city-extra-row .city-extra-dropdown .dropdown-menu {
+	  min-width: 0;
+	  width: 100%;
+	}
+	.city-extra-row .city-extra-dropdown .dropdown-header {
+	  padding: 4px 10px 1px;
+	  font-size: 10px;
+	}
+	@media (max-width: 768px) {
+	  .city-extra-row .city-extra-dropdown > .btn {
+		padding: 6px 10px;
+		font-size: 14px;
+	  }
+	  .city-extra-row .city-extra-dropdown .dropdown-item {
+		padding: 10px 14px;
+		font-size: 14px;
+	  }
+	  .city-extra-row .city-extra-dropdown .dropdown-header {
+		padding: 8px 14px 4px;
+		font-size: 12px;
+	  }
+	}
     .city-disabled {
 		color: gray !important;
 		cursor: not-allowed !important;
@@ -857,7 +1068,8 @@ tr:nth-child(even) {background-color: #f2f2f2;}
       color: white;
     }
 	*/
-	.city-box {
+	.city-box,
+	.disabled-city-box {
 	  position: relative;
 	  overflow: hidden;
 	}
@@ -893,7 +1105,7 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	.city-box-name {
 		font-size: 18px;
 	  position: absolute;
-	  top: 10px;
+	  top: 7px;
 	  z-index: 2;
 	  color: #000;
 	  font-weight: 600;
@@ -983,7 +1195,7 @@ tr:nth-child(even) {background-color: #f2f2f2;}
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 10px;
     }
 	/*
@@ -1006,12 +1218,23 @@ tr:nth-child(even) {background-color: #f2f2f2;}
     }
 	*/
 	
+	.gfc-tag{
+		display:none;
+		margin-right: 15px;
+		float: left;
+		padding: 2px;
+		/*
+		border: 1px solid black;
+		border-radius: 0.25rem;
+		*/
+		margin-top: 15px;
+	}
+	
 	.cesium-viewer-toolbar{
 		bottom: 50% !important;
 		position: absolute;
 		top: auto;
 	}
-	
 	
 	/* Arrow Buttons */
 	.prev, .next {
@@ -1117,7 +1340,7 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	  }
 	}
 	.gridLogoOverlay {
-	  margin-bottom: 70px;
+	  /*margin-bottom: 70px;*/
 	  right: 10px;
 	  z-index: 9999; /* ensure it stays above Cesium */
 	}
@@ -1188,9 +1411,10 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	.country-block {
   /*background: #e3f2fd;*/
   border-radius: 8px;
-  padding: 10px 15px;
+  padding: 4px 15px;
   margin-bottom: 15px;
   /*box-shadow: 0 1px 3px rgba(0,0,0,0.05);*/
+  display: flow-root; /* contain the floated .city pills so blocks don't collapse and overlap */
 }
 .country-name {
   font-weight: 600;
@@ -1508,15 +1732,25 @@ tr:nth-child(even) {background-color: #f2f2f2;}
   cursor: pointer;
 }
 
-.modal-center-desktop {
+.modal-center-desktop,
+.modal-center-mobile {
     position: relative;
 
-    /* 🔥 Shrink wrapper to image width */
+    /* Shrink wrapper to image width */
     width: fit-content;
     max-width: 100%;
 
-    /* Fallback for older browsers */
-    display: inline-block;
+    /* Stack the image and #imageOverlay directly on top of each other,
+       sized to the image, regardless of how the row around this
+       wrapper computes its available width. */
+    display: inline-grid;
+}
+
+.modal-center-desktop > .modalFullScreenImageClass,
+.modal-center-desktop > #imageOverlay,
+.modal-center-mobile > .modalFullScreenImageClass,
+.modal-center-mobile > #imageOverlay {
+    grid-area: 1 / 1;
 }
 
 .modalFullScreenImageClass {
@@ -1547,14 +1781,14 @@ tr:nth-child(even) {background-color: #f2f2f2;}
     top: 20px;
     right: 30px;
     color: #fff;
-    font-size: 32px;
+    font-size: 52px;
     cursor: pointer;
 }
 
 /* Overlay */
 #imageOverlay {
-    position: absolute;
-    inset: 0;              /* matches image size */
+    width: 100%;
+    height: 100%;
     background: rgba(0,0,0,0.25);
     display: flex;
     align-items: center;
@@ -1583,4 +1817,356 @@ tr:nth-child(even) {background-color: #f2f2f2;}
     height: 200px;
     overflow: scroll;
 	background-color: white;
+}
+
+.sort-divider {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 6px 0;
+}
+
+/*
+//Simple box
+.city-box-gfc {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 3;
+  font-size: 10px;
+  font-weight: 700;
+  color: #555;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.5px;
+}
+
+//Badge style box.
+.city-box-gfc {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+  font-size: 9px;
+  font-weight: 700;
+  color: #d97706;
+  background-color: rgba(255, 247, 230, 0.92);
+  border: 1px solid #d97706;
+  border-radius: 4px;
+  padding: 1px 5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  text-shadow: none;
+  line-height: 1.6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+*/
+
+.disabledEffectsLI{
+	pointer-events: none;
+	opacity: 0.6;
+	cursor: not-allowed;
+	user-select: none;
+}
+
+.allPropertiesTextStyle{
+	font-weight: bold;
+}
+
+/*
+.citygridelement {
+	position: absolute;
+	right: 5px;
+	bottom: 0;
+	valign: bottom;
+	top: 10px;
+	margin-top: 60px;
+}
+*/
+
+.virtualTourModalWindow .fullscreenmodal-content {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    height: 90vh;
+}
+
+.virtualTourModalWindow .row.full-screen-columns {
+    flex: 1;
+    display: flex;
+    height: 100%;
+}
+
+.virtualTourModalWindow .modal-center.virtual-tour-modal-content {
+    flex: 1;
+    display: flex;
+    padding: 0;
+}
+
+.ratio-16x9{
+	width: 100% !important;
+	height: 100% !important;
+}
+/*
+.virtualTourModalWindow iframe {
+    width: 100% !important;
+    height: 100% !important;
+    margin-left: 0 !important;
+    border: none;
+}
+*/
+
+/* ============================================================
+   Nested Bootstrap dropdown styling — replicates the original
+   native <optgroup>/<option> look (bold country, lighter-weight
+   indented city, further-indented market) using div/li markup.
+   ============================================================ */
+ 
+.nested-dropdown {
+  position: relative;
+}
+ 
+.nested-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+}
+.nested-dropdown-toggle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+ 
+.nested-dropdown-menu {
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 4px 0;
+  font-size: 13px;
+}
+ 
+/* Level 0 — Country: bold, no indent (mirrors default <optgroup label>) */
+.nested-dropdown-menu .dropdown-header.nested-level-0 {
+  font-weight: 700 !important;
+  font-size: 0.85rem;
+  color: #212529;
+  padding: 6px 12px 2px;
+  margin-top: 4px;
+  text-transform: none;
+}
+.nested-dropdown-menu .dropdown-header.nested-level-0:first-child {
+  margin-top: 0;
+}
+ 
+/* Level 1 — City (as a group header when it has multiple markets):
+   lighter weight + left indent (mirrors the original
+   "font-weight:400 !important" + "&nbsp;&nbsp;" indentation) */
+.nested-dropdown-menu .dropdown-header.nested-level-1 {
+  font-weight: 400 !important;
+  font-size: 0.85rem;
+  color: #495057;
+  padding: 4px 12px 2px 28px;
+}
+ 
+/* Level 1 — City (as a leaf item, when it has only one market):
+   same indent as the city header above, but clickable */
+.nested-dropdown-menu .dropdown-item.nested-level-1 {
+  font-weight: 400;
+  padding-left: 28px;
+}
+ 
+/* Level 2 — Market: further indent, nested under a city header */
+.nested-dropdown-menu .dropdown-item.nested-level-2 {
+  font-weight: 400;
+  font-size: 0.9rem;
+  padding-left: 44px;
+}
+ 
+/* Selected / active state */
+.nested-dropdown-menu .dropdown-item.active,
+.nested-dropdown-menu .dropdown-item:active {
+  background-color: #0d6efd;
+  color: #fff;
+}
+.nested-dropdown-menu .dropdown-item.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+ 
+/* Building-type dropdown: preserve the "All Properties" emphasis
+   from the original allPropertiesTextStyle class */
+.nested-dropdown-menu .dropdown-item.allPropertiesTextStyle {
+  font-weight: 700;
+}
+
+.company-logo-image {
+  display: none;              /* hidden by default */
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  /*
+  width: 60px;
+  height: 60px;
+  background-image: url('logo.png');
+  */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 1000;
+  pointer-events: none;       /* remove if it needs to be clickable */
+}
+
+.company-logo-image.show {
+  display: block;
+}
+
+@keyframes companyLogoPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.2); }
+  100% { transform: scale(1); }
+}
+
+@media (max-width: 600px) {
+  .company-logo-image {
+    width: 40px;
+    height: 40px;
+    left: 8px;
+    bottom: 8px;
+  }
+}
+
+.listing-company-name{
+	cursor: pointer;
+}
+
+.cityGridFilterBar {
+  overflow: visible; /* the old wrapper's overflow:hidden was clipping the button */
+}
+
+.cityGridLegendRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.cityGridLegendBadges {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cityGridLegendBadges::-webkit-scrollbar { display: none; }
+.cityGridLegendBadges .badge { flex-shrink: 0; white-space: nowrap; }
+
+.cityGridSortWrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+/*
+.buildingSearchRow {
+  margin-top: 10px;
+}
+*/
+
+@media (max-width: 600px) {
+  .cityGridLegendBadges .badge {
+    font-size: 0.85em;
+    padding: 4px 8px;
+  }
+  .sortBtnLabel {
+    display: none; /* icon-only on small screens */
+  }
+  .sort-btn {
+    padding: 6px !important;
+    border-radius: 50%;
+  }
+  .buildingAutosuggestWrapper{
+	  width: 95% !important;
+  }
+}
+
+.highlight-company-name{
+	font-weight: bold;
+}
+
+.brokerRow{
+	text-decoration: underline;
+	color: -webkit-link;
+	cursor: pointer;
+}
+
+.floorsToggleLabel{
+	text-decoration: underline;
+	cursor: pointer;
+	color: -webkit-link;
+}
+.floorsToggleLabel.btn-primary{
+	font-weight: bold;
+	background: none !important;
+	background-color: transparent !important;
+	border: none !important;
+	color: inherit !important;
+	padding: 0 !important;
+}
+.floorsToggleLabel.btn-secondary{
+	font-weight: normal;
+	background: none !important;
+	background-color: transparent !important;
+	border: none !important;
+	color: inherit !important;
+	padding: 0 !important;
+}
+
+#companySummaryTable tr.highlight-company-name-row{
+	background-color: #000 !important;
+}
+#companySummaryTable tr.highlight-company-name-row td{
+	color: #fff !important;
+}
+#companySummaryTable tr.highlight-company-name-row .brokerRow{
+	color: #fff !important;
+}
+#companySummaryTable .highlight-company-name{
+	font-weight: normal;
+}
+#companySummaryTable .listingCompanyCol{
+	width: 40%;
+}
+#companySummaryTable tbody tr td:first-child{
+	padding-right: 28px;
+}
+
+#submarketSummaryTable .submarketNameCol{
+	width: 32%;
+}
+#submarketSummaryTable tbody tr td:first-child{
+	padding-right: 28px;
+}
+#submarketSummaryTable tr.summaryRowSelected{
+	background-color: #000 !important;
+}
+#submarketSummaryTable tr.summaryRowSelected td{
+	color: #fff !important;
+}
+#submarketSummaryTable tr.summaryRowSelected a{
+	color: #fff !important;
+}
+
+.summarySortActive{
+	font-weight: bold;
+}
+.avgAgeCol{
+	padding-left: 16px !important;
 }

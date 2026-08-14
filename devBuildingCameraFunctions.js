@@ -31,12 +31,12 @@ async function FlyToFloorView() {
   RemoveEntityByName("FloorView");
   if (currentFloorCoord) {
     var centerLatLon = CartesianToLatlon(currentFloorCenter);
-    var pointA = new Cesium.Cartesian3.fromDegrees(
+    var pointA = Cesium.Cartesian3.fromDegrees(
       currentFloorCoord.lon,
       currentFloorCoord.lat,
       currentFloorHeight
     );
-    var pointB = new Cesium.Cartesian3.fromDegrees(
+    var pointB = Cesium.Cartesian3.fromDegrees(
       parseFloat(centerLatLon.lon),
       parseFloat(centerLatLon.lat),
       currentFloorHeight
@@ -258,7 +258,7 @@ async function ComputeSlowRoutePath(routeEntities) {
       new Cesium.JulianDate()
     );
     var centerLatLon = CartesianToLatlon(currentFloorCenter);
-    var pointB = new Cesium.Cartesian3.fromDegrees(
+    var pointB = Cesium.Cartesian3.fromDegrees(
       parseFloat(centerLatLon.lon),
       parseFloat(centerLatLon.lat),
       currentFloorHeight
@@ -477,8 +477,47 @@ async function TravelSlowlyAlongToPath(routePoints) {
 //New Clip functions, App15
 var IsEnableClip = false;
 var AllTileLoaded = false;
-function ToggleClipSelectedBuildingApp15(id) {
-	console.log("Inside ToggleClipSelectedBuildingApp15() "+id);
+function ToggleClipSelectedBuildingApp15(id, forceEnable = false) {
+	if(forceEnable == true)
+		IsEnableClip = false;
+	console.log("Inside ToggleClipSelectedBuildingApp15() "+id+" With Enable Clip "+IsEnableClip);
+	window.lastBuildingClipped = id;
+  if (IsEnableClip)
+  {
+    $("#clip").css("font-weight", "normal");
+    IsEnableClip = false;
+	/*
+    for (var item of highLightPolygons) {
+      item.classificationType = Cesium.ClassificationType.CESIUM_3D_TILE;
+    }
+	*/
+    globe.baseColor = Cesium.Color.TRANSPARENT;
+    if (googleTileset.clippingPolygons != undefined) {
+      googleTileset.clippingPolygons.removeAll();
+      googleTileset.clippingPolygons = undefined;
+    }
+  }
+  else
+  {
+	/*
+    for (var item of highLightPolygons) {
+      item.classificationType = Cesium.ClassificationType.BOTH;
+    }
+	*/
+	if(parseInt(lastCityLoaded) == 36)
+	{
+		createFlatTerrain();
+	}
+	currentBuildingwkt = TempBldgData[id].coords;
+    EnableBuildingClipping();
+    globe.baseColor = Cesium.Color.GRAY;
+  }
+}
+
+function ToggleClipSelectedBuildingApp19(id, forceEnable = false) {
+	if(forceEnable == true)
+		IsEnableClip = false;
+	console.log("Inside ToggleClipSelectedBuildingApp15() "+id+" With Enable Clip "+IsEnableClip);
 	window.lastBuildingClipped = id;
   if (IsEnableClip)
   {
@@ -561,8 +600,14 @@ function clearClipSelectedBuildingApp15() {
 
 //currentBuildingwkt = BldgFootprint;
 window.lastBuildingClipped = null;
+//currentBuildingwkt = BldgFootprint;
+window.lastBuildingClipped = null;
 async function EnableBuildingClipping(isInverse = false) {
-  if (AllTileLoaded) {
+	console.log("AllTileLoaded: "+AllTileLoaded);
+	console.log(googleTileset);
+	console.log(googleTileset.url);
+	console.log(googleTileset.clippingPolygons);
+  if (AllTileLoaded || typeof googleTileset.show != "undefined") {
     $("#clip").css("font-weight", "bold");
     IsEnableClip = true;
     var BufferCoords = [];
@@ -578,7 +623,7 @@ async function EnableBuildingClipping(isInverse = false) {
     googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
       polygons: [
         new Cesium.ClippingPolygon({
-          positions: new Cesium.Cartesian3.fromDegreesArray(BufferCoords),
+          positions:  Cesium.Cartesian3.fromDegreesArray(BufferCoords),
         }),
       ],
     });
@@ -625,4 +670,84 @@ function computeCentroidCartesian(positions) {
 }
 
 
+
+
+/*
+let clippingTurfPoly = null;
+let tileVisibleHandler = null;
+async function EnableBuildingClipping(isInverse = false) {
+  if (AllTileLoaded || typeof googleTileset.show != 'undefined') {
+    $('#clip').css('font-weight', 'bold');
+    IsEnableClip = true;
+
+    await GetTurfPolyGon(currentBuildingwkt);
+
+    // ✅ Buffer with steps:8 — steps:0 produces degenerate polygon
+    let buffered = turf.buffer(TurfPolygon, 5, { units: 'meters', steps: 8 });
+
+    // ✅ Simplify to reduce vertex count fed to GPU shader
+    buffered = turf.simplify(buffered, { tolerance: 0.00001, highQuality: false });
+    clippingTurfPoly = buffered;
+
+    const BufferCoords = buffered.geometry.coordinates[0]
+      .flatMap(([lng, lat]) => [lng, lat]);
+
+    const newPolygon = new Cesium.ClippingPolygon({
+      positions: Cesium.Cartesian3.fromDegreesArray(BufferCoords),
+    });
+
+    // ✅ Reuse existing collection — avoids GPU resource churn
+    if (googleTileset.clippingPolygons && !googleTileset.clippingPolygons.isDestroyed()) {
+      googleTileset.clippingPolygons.removeAll();
+      googleTileset.clippingPolygons.add(newPolygon);
+    } else {
+      // ✅ inverse set inline — avoids post-construction shader recompile
+      googleTileset.clippingPolygons = new Cesium.ClippingPolygonCollection({
+        polygons: [newPolygon],
+        inverse: !isInverse,
+      });
+    }
+
+    // ✅ KEY FIX: Reject tiles BEFORE they reach the GPU
+    if (tileVisibleHandler) {
+      googleTileset.tileVisible.removeEventListener(tileVisibleHandler);
+    }
+
+    tileVisibleHandler = (tile) => {
+      if (!clippingTurfPoly || !tile.boundingSphere) return;
+      try {
+        const carto = Cesium.Cartographic.fromCartesian(tile.boundingSphere.center);
+        const lng = Cesium.Math.toDegrees(carto.longitude);
+        const lat = Cesium.Math.toDegrees(carto.latitude);
+        const r = tile.boundingSphere.radius / 111320;
+        const bbox = turf.bboxPolygon([lng - r, lat - r, lng + r, lat + r]);
+
+        // Hide tile entirely if it doesn't touch the clipping polygon
+        tile.show = turf.booleanIntersects(clippingTurfPoly, bbox);
+      } catch (e) {
+        tile.show = true; // safety fallback — never crash render loop
+      }
+    };
+
+    googleTileset.tileVisible.addEventListener(tileVisibleHandler);
+
+    // ✅ Raise SSE + enable dynamic LOD to reduce total tile count
+    googleTileset.maximumScreenSpaceError = 32;
+    googleTileset.dynamicScreenSpaceError = true;
+    googleTileset.skipLevelOfDetail = true;
+  }
+}
+
+function DisableBuildingClipping() {
+  if (tileVisibleHandler) {
+    googleTileset.tileVisible.removeEventListener(tileVisibleHandler);
+    tileVisibleHandler = null;
+  }
+  clippingTurfPoly = null;
+  googleTileset.maximumScreenSpaceError = 16;
+  googleTileset.dynamicScreenSpaceError = false;
+  googleTileset.skipLevelOfDetail = false;
+  if (googleTileset.clippingPolygons) googleTileset.clippingPolygons.removeAll();
+}
+*/
 
