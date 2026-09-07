@@ -174,7 +174,7 @@ async function flyToCameraViewV2(
   window.lastCameraAltitude = alt;
   var entity = viewer.entities.add({
     name: "tempMarkerPin",
-    position: Cesium.Cartesian3.fromDegrees(
+    position: new Cesium.Cartesian3.fromDegrees(
       parseFloat(latLonObj.lon),
       parseFloat(latLonObj.lat),
       parseFloat(alt) + parseFloat(cameraAltitudeAdjustment),

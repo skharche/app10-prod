@@ -128,7 +128,7 @@ foreach($_GET as $key => $v)
 								</div>
 
 								<!-- Version Label -->
-								<div class="version-label">version 1.3</div>
+								<div class="version-label">version 1.4</div>
 							</div>
 
 							<style>
@@ -206,7 +206,10 @@ foreach($_GET as $key => $v)
 				<span class="mac-title">New Account</span>
 			</div>
 
-			<span class="mac-close" onclick="closeRequestAccessModal()">&times;</span>
+			<span class="mac-close" onclick="closeRequestAccessModal()" style="font-size: 60px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;">&times;</span>
 		</div>
 
 		<!-- Body -->
@@ -288,8 +291,8 @@ foreach($_GET as $key => $v)
 
 	.loginLogo2 {
 		display: block;
-		max-width: 220px;
-		max-height: 40px;
+		max-width: 253px;
+		max-height: 46px;
 		width: auto;
 		height: auto;
 		object-fit: contain;
@@ -316,8 +319,8 @@ foreach($_GET as $key => $v)
 	}
 	.loginLogo2 {
 	  display: block;
-	  max-width: 340px;   /* limit width */
-	  max-height: 40px;   /* limit height */
+	  max-width: 391px;   /* limit width */
+	  max-height: 46px;   /* limit height */
 	  width: 100%;        /* responsive scaling */
 	  height: auto;       /* preserve aspect ratio */
 	  margin: 0 auto;     /* center horizontally */
@@ -326,8 +329,8 @@ foreach($_GET as $key => $v)
 	}
 	.loginLogo {
 	  display: block;
-	  max-width: 640px;   /* limit width */
-	  max-height: 80px;   /* limit height */
+	  max-width: 760px;   /* limit width */
+	  max-height: 100px;   /* limit height */
 	  width: 100%;        /* responsive scaling */
 	  height: auto;       /* preserve aspect ratio */
 	  margin: 0 auto;     /* center horizontally */
@@ -354,16 +357,18 @@ foreach($_GET as $key => $v)
     <script src="js/sb-admin-2.min.js"></script>
 	<script>
 	var desktopImages = {
-		'Calgary'   : 'images/Calgary_large.jpg',
+										   
 		'Toronto'   : 'images/Toronto_large.jpg',
-		'Vancouver' : 'images/Vancouver_large.jpg'
-		/*'Montreal'  : 'images/Montreal_large.jpg'*/
+		'Vancouver' : 'images/Vancouver_large.jpg',
+		'Calgary'   : 'images/Calgary_large.jpg',
+		'Edmonton'  : 'images/Edmonton_large.jpg'
 	};
 	var mobileImages = {
-		'Calgary'   : 'images/Calgary_small.jpg',
+										   
 		'Toronto'   : 'images/Toronto_small.jpg',
-		'Vancouver' : 'images/Vancouver_small.jpg'
-		/*'Montreal'  : 'images/Montreal_mobile.jpg'*/
+		'Vancouver' : 'images/Vancouver_small.jpg',
+		'Calgary'   : 'images/Calgary_small.jpg',
+		'Edmonton'  : 'images/Edmonton_mobile.jpg'
 	};
 
 	var currentImageSet = desktopImages;

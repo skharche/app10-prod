@@ -62,6 +62,9 @@ function ShowOrbitSpeedIndicator() {
 // While the market orbit is running, "+" doubles the rotation speed and "-"
 // halves it (numpad or top-row, with or without Shift).
 document.addEventListener("keydown", function (e) {
+	var targetTag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+	if (targetTag == "input" || targetTag == "textarea" || (e.target && e.target.isContentEditable))
+		return;
 	if (!window.fixedOrbitInProgress)
 		return;
 	if (e.key === "+" || e.key === "=" || e.key === "Add") {

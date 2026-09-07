@@ -11,15 +11,17 @@
 
 .buildingAutosuggestWrapper {
     position: relative;
-    width: 260px;
+    width: 340px;
     max-width: 100%;
 }
 
+/* Sized to match the City Grid legend badges (.cityGridLegendBadge / .badge):
+   same font-size, padding and border so the search box lines up the same height. */
 .buildingSearchInput {
     width: 100%;
     box-sizing: border-box;
-    padding: 4px 8px;
-    font-size: 0.9em;
+    padding: 0.25em 0.6em;
+    font-size: 1.05em;
     border: 1px solid #ccc;
     border-radius: 4px;
     outline: none;

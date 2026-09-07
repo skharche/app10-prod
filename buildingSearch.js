@@ -104,9 +104,12 @@ function InitiateCityGridBuildingAutoSuggest(options) {
                 '<span>' + escapeHtml(item.address) + '</span>' +
                 '<span class="suggest-sub">'+escapeHtml(item.ssubname || '')+'(' + escapeHtml(item.scityname || '') + ')</span>';
 				*/
+			var subParts = [];
+			if (item.address) subParts.push(escapeHtml(item.address));
+			if (item.scityname) subParts.push(escapeHtml(item.scityname));
 			li.innerHTML =
                 '<span>' + escapeHtml(item.sbuildingname) + '</span>' +
-                '<span class="suggest-sub">' + escapeHtml(item.address || '') + ' (' + escapeHtml(item.scityname || '') + ')</span>';
+                '<span class="suggest-sub">' + subParts.join(', ') + '</span>';
 
             li.addEventListener('mouseenter', () => {
                 activeIndex = idx;
@@ -175,10 +178,32 @@ function InitiateCityGridBuildingAutoSuggest(options) {
     };
 }
 
+// Maps a building class to the visualization that should open for it. Keeps the text-search
+// experience light: an Office hit opens the Office Market vis, not the heavy "All Properties" one.
+function visualizationForBuildingClass(buildingClass) {
+    var cls = (buildingClass || '').toString().toUpperCase();
+    var residential = ['APT', 'MDU', 'SENIOR', 'APARTMENTS', 'CONDOMINIUMS'];
+    if (residential.indexOf(cls) !== -1) return 'Residential';
+    if (cls === 'HOTEL') return 'Hotel';
+    return 'Office';
+}
+
 // Default handler — used if no onSelect override is passed
 function onBuildingSelected(idtbuilding, idtcity, item) {
     console.log('Selected building ID:', idtbuilding, item);
-	$("#cityVis"+idtcity).val("All");
+	$("#cityVis"+idtcity).val(visualizationForBuildingClass(item && item.class));
+
+	// Load the market the building actually belongs to (not just the city's first market), so the
+	// summary table + submarket stats that open match the searched building. Only switch when that
+	// market is one this user can load (present in marketDetailsV2), otherwise leave the default.
+	var buildingMarket = item && item.idtmarket ? parseInt(item.idtmarket) : null;
+	if (buildingMarket && typeof marketDetailsV2 !== 'undefined' && typeof marketDetailsV2[buildingMarket] !== 'undefined') {
+		$("#cityMkt"+idtcity).val(buildingMarket);
+		if (typeof marketDetailsV2[buildingMarket].smarketname !== 'undefined') {
+			$("#cityMktLabel"+idtcity).text(marketDetailsV2[buildingMarket].smarketname);
+		}
+	}
+
 	var cityD = [];
 	lastCityLoaded = idtcity;
 	cityD.idtcity = idtcity;

@@ -333,21 +333,55 @@ viewer.clock.onTick.addEventListener(function(clock) {
 	}
 });
 
-//True when the embedded Tour/3DGS viewer is what the user is looking at - either the fullscreen
-//virtual tour/3DGS modal, or the small live preview under the infobox's Tours sub-tab - so the
-//global WASD/effect-toggle shortcuts below should stay out of its way.
+//True only while the user is actually inside the embedded Tour/3DGS viewer - the fullscreen
+//virtual tour / 3DGS modal is open, the 3DGS preview tile is CSS-expanded to fullscreen, or the
+//small preview iframe under the Tours sub-tab currently holds keyboard focus. Being *left* on the
+//Tours sub-tab after closing that viewer is NOT enough - otherwise the global WASD/effect-toggle
+//shortcuts (W/D overlay etc.) stay dead on the map until another sub-tab is picked.
 function isTourContextActive()
 {
 	if($("#virtualTourModal").css("display") == 'block')
 		return true;
-	if($('.tab-pane[id^="Tour-"].show.active').length > 0)
+	if(document.querySelector(".tourPreviewTileFullscreen"))
+		return true;
+	var ae = document.activeElement;
+	if(window.toursTabSelected && $('.tab-pane[id^="Tour-"].show.active').length > 0
+		&& ae && ae.tagName && ae.tagName.toLowerCase() === "iframe")
 		return true;
 	return false;
 }
 
 document.addEventListener('keydown', (event) => {
-	if(window.toursTabSelected == true)
+	//Every letter/arrow/ctrl shortcut below (FPS toggle, logo toggle, Ctrl+F, Ctrl+S, arrow nav, Escape, ...)
+	//stays out of the way of any text field being typed into - #searchBox and #buildingSearchInput are excluded
+	//from this since they already have their own deliberate keyboard handling throughout this function (Escape
+	//clears search, Ctrl+F focuses it, etc.); any other input/textarea/contentEditable (e.g. the AI Agent
+	//question box - see aiAgent.js) just skips this handler entirely.
+	var isTypingTargetTag = (event.target && event.target.tagName) ? event.target.tagName.toLowerCase() : "";
+	var isTypingElsewhere = (isTypingTargetTag == "input" || isTypingTargetTag == "textarea" || (event.target && event.target.isContentEditable))
+		&& event.target.id != "searchBox" && event.target.id != "buildingSearchInput";
+	if(isTypingElsewhere)
 		return;
+	//Only bail while the user is actually inside the tour/3DGS viewer (Escape still gets through
+	//so it can close the fullscreen modal below).
+	if(isTourContextActive() && event.key !== 'Escape')
+		return;
+	//Market Statistics / Leasing Market Statistics tables own Up/Down while a row is selected (see the
+	//keydown handler in main.js) - without this guard both handlers ran off the same keypress, moving
+	//the stats box selection AND the floor/suite highlight at once.
+	//Exception: in Office Market visualization, if Floors/Floorplans is in progress AND a floor is
+	//already selected, Up/Down should keep moving between floors instead - that drill-down takes
+	//priority over a merely-selected (not actively being navigated) submarket/company row.
+	if(event.key === 'ArrowUp' || event.key === 'ArrowDown')
+	{
+		var floorSelectionInProgress = (typeof effectsArray != "undefined" && (effectsArray[4] == 1 || effectsArray[7] == 1) &&
+			typeof selectedPrimitiveId != "undefined" && selectedPrimitiveId != null &&
+			(String(selectedPrimitiveId).indexOf("floorRow-") === 0 || String(selectedPrimitiveId).indexOf("floorPlanEntity-") === 0));
+		if(!floorSelectionInProgress &&
+			((typeof filterWithListingCompanyActive != "undefined" && filterWithListingCompanyActive == true && listingCompanyFiltered != null && window.aosArrowKeyMode != "suite") ||
+			(typeof window.selectedSubmarketId != "undefined" && window.selectedSubmarketId != null)))
+			return;
+	}
 	console.log(event.key);
 	if($("#buildingSearchInput").is(':focus'))
 	{
@@ -427,7 +461,8 @@ document.addEventListener('keydown', (event) => {
 		}
 		else
 		{
-			if(window.toursTabSelected == false)
+			//Reached only when not inside the tour viewer (see isTourContextActive()), so the
+			//map shortcuts below always apply here - being left on the Tours sub-tab no longer blocks them.
 			switch (event.key) {
 				case 'Escape':
 					//Clear search and its effect.
@@ -533,46 +568,50 @@ document.addEventListener('keydown', (event) => {
 						tempId = selectedPrimitiveId.split("-");
 						nextId = parseInt(tempId[1]) + 1;
 						
-						if(lastSelectedPrimitive != null && floorPrimitives.length > 0)
-						{
-							var t = selectedPrimitiveId.split("-");
-							
-							var attributes = floorPrimitives[parseInt(t[1])-1].getGeometryInstanceAttributes(selectedPrimitiveId);
-							//console.log(attributes.color);
-							if(typeof attributes != "undefined")
-							{
-								attributes.color = [selectedPrimitiveColor[0], selectedPrimitiveColor[1], selectedPrimitiveColor[2], 127];
-								attributes.show = [1];
-							}
-						}
-						
 						lastSelectedPrimitive = null;
 						nextPrimitiveId = null;
 						foundMatch = null;
+						var nextFloorPlanPrimitive = null;
+						var nextFloorPlanPrimitiveId = null;
+						var nextFloorPlanFloorNumber = null;
 						$.each(window.floorPlanPrimitivesIndexes, function (index2, eachFloorPrimitive){
 							if(eachFloorPrimitive.id == selectedPrimitiveId && foundMatch == null)
 							{
 								foundMatch = true;
 								if(typeof window.floorPlanPrimitivesIndexes[index2 + 1] != "undefined")
 								{
-									lastSelectedPrimitive = floorPlanPrimitives[window.floorPlanPrimitivesIndexes[index2+1].primitiveindex];
-									selectedPrimitiveId = window.floorPlanPrimitivesIndexes[index2+1].id;
-									$(".floorNumberDisplay").html(window.floorPlanPrimitivesIndexes[index2 + 1].floorNumber);
+									nextFloorPlanPrimitive = floorPlanPrimitives[window.floorPlanPrimitivesIndexes[index2+1].primitiveindex];
+									nextFloorPlanPrimitiveId = window.floorPlanPrimitivesIndexes[index2+1].id;
+									nextFloorPlanFloorNumber = window.floorPlanPrimitivesIndexes[index2 + 1].floorNumber;
 								}
 							}
 						});
-						if(lastSelectedPrimitive != null)
+						if(nextFloorPlanPrimitive != null)
 						{
-							lastSelectedPrimitive.getGeometryInstanceAttributes(selectedPrimitiveId);
-							attributes = lastSelectedPrimitive.getGeometryInstanceAttributes(selectedPrimitiveId);
+							//Restores this floor's fill color and removes the white outline band before moving off it -
+							//same helper the AOS suite Up/Down navigation below already uses successfully.
+							resetLastSelectedPrimitive();
+
+							lastSelectedPrimitive = nextFloorPlanPrimitive;
+							selectedPrimitive = nextFloorPlanPrimitive;
+							selectedPrimitiveId = nextFloorPlanPrimitiveId;
+							$(".floorNumberDisplay").html(nextFloorPlanFloorNumber);
+
+							attributes = selectedPrimitive.getGeometryInstanceAttributes(selectedPrimitiveId);
 							if(typeof attributes != "undefined")
 							{
 								selectedPrimitiveColor = attributes.color;
 								attributes.color = [255, 0, 0, 255];
 								attributes.show = [1];
 							}
+
+							var newIdParts = selectedPrimitiveId.split("-");
+							if(typeof TempBldgData[newIdParts[1]] != "undefined" && typeof window.suiteHeightValues[newIdParts[3]] != "undefined")
+							{
+								addPolygonOutlineOnTileset(TempBldgData[newIdParts[1]].coords, window.suiteHeightValues[newIdParts[3]][0] - 0.5, window.suiteHeightValues[newIdParts[3]][1], Cesium.Color.WHITE);
+							}
 						}
-						
+
 					}
 						
 						//Check for AOS primitives
@@ -622,7 +661,7 @@ document.addEventListener('keydown', (event) => {
 							prepareAvailableOfficeSpaceInfobox(check[1], check[2], details, allSuitesOnFloor);
 							
 							var coordsTemp = window.availableOfficeSpaceFloorWise[check[1]][details.floor_number][0].coords;
-							addPolygonOutlineOnTileset(coordsTemp, window.suiteHeightValues[check[3]][0] - 0.5, window.suiteHeightValues[check[3]][1], Cesium.Color.WHITE);
+							addPolygonOutlineOnTileset(coordsTemp, window.suiteHeightValues[check[3]][0] - 0.5, window.suiteHeightValues[check[3]][1], Cesium.Color.WHITE, details.dgs_url);
 					
 							var temp = details.splitCoords.split(",");
 							prepareLogoAndSqftLabels(selectedPrimitiveId, parseFloat(temp[1]), parseFloat(temp[0]), (parseFloat(floorAltitude) + parseFloat(cityAltitudeAdjustment[lastCityLoaded])), adminBaseUrl + details.companyimage, details.suite_area);
@@ -761,44 +800,48 @@ document.addEventListener('keydown', (event) => {
 						tempId = selectedPrimitiveId.split("-");
 						nextId = parseInt(tempId[1]) + 1;
 						
-						if(lastSelectedPrimitive != null && floorPrimitives.length > 0)
-						{
-							var t = selectedPrimitiveId.split("-");
-							
-							var attributes = floorPrimitives[parseInt(t[1])-1].getGeometryInstanceAttributes(selectedPrimitiveId);
-							//console.log(attributes.color);
-							if(typeof attributes != "undefined")
-							{
-								attributes.color = [selectedPrimitiveColor[0], selectedPrimitiveColor[1], selectedPrimitiveColor[2], 127];
-								attributes.show = [1];
-							}
-						}
-						
 						lastSelectedPrimitive = null;
 						nextPrimitiveId = null;
 						foundMatch = null;
+						var nextFloorPlanPrimitive = null;
+						var nextFloorPlanPrimitiveId = null;
+						var nextFloorPlanFloorNumber = null;
 						$.each(window.floorPlanPrimitivesIndexes, function (index2, eachFloorPrimitive){
 							if(eachFloorPrimitive.id == selectedPrimitiveId && foundMatch == null)
 							{
 								foundMatch = true;
 								if(typeof window.floorPlanPrimitivesIndexes[index2 - 1] != "undefined")
 								{
-									lastSelectedPrimitive = floorPlanPrimitives[window.floorPlanPrimitivesIndexes[index2 - 1].primitiveindex];
-									selectedPrimitiveId = window.floorPlanPrimitivesIndexes[index2 - 1].id;
-									$(".floorNumberDisplay").html(window.floorPlanPrimitivesIndexes[index2 - 1].floorNumber);
+									nextFloorPlanPrimitive = floorPlanPrimitives[window.floorPlanPrimitivesIndexes[index2 - 1].primitiveindex];
+									nextFloorPlanPrimitiveId = window.floorPlanPrimitivesIndexes[index2 - 1].id;
+									nextFloorPlanFloorNumber = window.floorPlanPrimitivesIndexes[index2 - 1].floorNumber;
 								}
 							}
 						});
-						
-						if(lastSelectedPrimitive != null)
+
+						if(nextFloorPlanPrimitive != null)
 						{
-							lastSelectedPrimitive.getGeometryInstanceAttributes(selectedPrimitiveId);
-							attributes = lastSelectedPrimitive.getGeometryInstanceAttributes(selectedPrimitiveId);
+							//Restores this floor's fill color and removes the white outline band before moving off it -
+							//same helper the AOS suite Up/Down navigation below already uses successfully.
+							resetLastSelectedPrimitive();
+
+							lastSelectedPrimitive = nextFloorPlanPrimitive;
+							selectedPrimitive = nextFloorPlanPrimitive;
+							selectedPrimitiveId = nextFloorPlanPrimitiveId;
+							$(".floorNumberDisplay").html(nextFloorPlanFloorNumber);
+
+							attributes = selectedPrimitive.getGeometryInstanceAttributes(selectedPrimitiveId);
 							if(typeof attributes != "undefined")
 							{
 								selectedPrimitiveColor = attributes.color;
 								attributes.color = [255, 0, 0, 255];
 								attributes.show = [1];
+							}
+
+							var newIdParts = selectedPrimitiveId.split("-");
+							if(typeof TempBldgData[newIdParts[1]] != "undefined" && typeof window.suiteHeightValues[newIdParts[3]] != "undefined")
+							{
+								addPolygonOutlineOnTileset(TempBldgData[newIdParts[1]].coords, window.suiteHeightValues[newIdParts[3]][0] - 0.5, window.suiteHeightValues[newIdParts[3]][1], Cesium.Color.WHITE);
 							}
 						}
 					}
@@ -850,7 +893,7 @@ document.addEventListener('keydown', (event) => {
 							prepareAvailableOfficeSpaceInfobox(check[1], check[2], details, allSuitesOnFloor);
 							
 							var coordsTemp = window.availableOfficeSpaceFloorWise[check[1]][details.floor_number][0].coords;
-							addPolygonOutlineOnTileset(coordsTemp, window.suiteHeightValues[check[3]][0] - 0.5, window.suiteHeightValues[check[3]][1], Cesium.Color.WHITE);
+							addPolygonOutlineOnTileset(coordsTemp, window.suiteHeightValues[check[3]][0] - 0.5, window.suiteHeightValues[check[3]][1], Cesium.Color.WHITE, details.dgs_url);
 							
 							var temp = details.splitCoords.split(",");
 							prepareLogoAndSqftLabels(selectedPrimitiveId, parseFloat(temp[1]), parseFloat(temp[0]), (parseFloat(floorAltitude) + parseFloat(cityAltitudeAdjustment[lastCityLoaded])), adminBaseUrl + details.companyimage, details.suite_area);
@@ -874,38 +917,16 @@ document.addEventListener('keydown', (event) => {
 						
 					break;
 				case 'D':
-				case 'd': // Handle Dark Overlay
-					if(!darkOverlayEffectActive)
-					{
-						setResetSettingFlags("dark-overlay-li", true);
-						createDarkOverlayEffect();
-						return;
-					}
-					else
-					{
-						clearDarkOverlayEffect();
-					}
+				case 'd': // Handle Dark Overlay - radio pair with White, never both/neither
+					applyOverlayMode("dark");
 					break;
 				case 'T':
 				case 't':
 					googleTileset.show = !googleTileset.show;
 					break;
 				case 'W':
-				case 'w':
-					//viewer.entities.getById("FogEffectEntity").show = !viewer.entities.getById("FogEffectEntity").show;
-					//setResetSettingFlags("White Overlay", viewer.scene.debugShowFramesPerSecond);
-					//setResetSettingFlags("Dark Overlay", viewer.scene.debugShowFramesPerSecond);
-					if(!whiteOverlayEffectActive)
-					{
-						setResetSettingFlags("white-overlay-li", true);
-						createWhiteOverlayEffect();
-						return;
-					}
-					else
-					{
-						clearWhiteOverlayEffect();
-					}
-					
+				case 'w': // Handle White Overlay - radio pair with Dark, never both/neither
+					applyOverlayMode("white");
 					break;
 				case 'R':
 				case 'r':

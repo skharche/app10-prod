@@ -265,7 +265,7 @@ function moveToCityGrid() {
 		lastFloorSelectedColor = null;
 		lastBuildingSolidFloorHighlighted = null;
 		clearAllEffects();
-		viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;viewer.entities.removeById("NewFogEffectEntity");
 
 		initiateEffectsArray();
 
@@ -1769,7 +1769,7 @@ window.distortionIndexStep = 5;
 function debugDistortion()
 {
 	window.lastHolesArray = [];
-	viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;viewer.entities.removeById("NewFogEffectEntity");
 	$.each(marketBuildingDetails[lastMarketLoaded], function (index, EachBuilding) {
 		if(index <= distortionIndex && index > 100)
 		{
@@ -1947,7 +1947,7 @@ function highlightAllBuildings_BAK(idtcity, marketId, cameraChange = true, retai
 			updateFogHoles([]);
 		}
 		/*
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		*/
@@ -3592,17 +3592,14 @@ function pushToMap(map, key, value) {
   map.get(key).push(value);
 }
 
-//newOuterPositions (Cartesian3[]) optionally replaces the fog polygon's outer ring too - pass it when the
-//intended boundary changed (e.g. a market boundary now applies) so FogEffectEntity doesn't keep a stale
-//city-wide ring that would then double up with NewFogEffectEntity's "outside market" shading.
-function updateFogHoles(newHoles = [], newOuterPositions = null) {
+function updateFogHoles(newHoles = []) {
   const entity = viewer.entities.getById('FogEffectEntity');
   if (!entity?.polygon) return;
 
   const currentHierarchy = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now());
 
   entity.polygon.hierarchy = new Cesium.PolygonHierarchy(
-    newOuterPositions || currentHierarchy.positions,
+    currentHierarchy.positions,
     newHoles  // empty array = no holes, renders as solid fog polygon
   );
   console.log("Done!!");
@@ -3978,7 +3975,7 @@ function RerenderHtmlOverlay() {
 
 function clearFogAndPrimitives()
 {
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;
 	viewer.entities.removeById("NewFogEffectEntity");
 }
 
@@ -4016,7 +4013,7 @@ function clearPrimitives( clearFog = true, retainMainFog = false, retainAOSData 
 	/*
 	if(!retainMainFog)
 	{
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 	}
 	if(clearFog)
@@ -7316,7 +7313,7 @@ function loadNewBuildingTypeView(type)
 	
 	if(typeof marketBoundaries[lastMarketLoaded] != "undefined")
 	{
-		//viewer.entities.removeById("FogEffectEntity");
+		//viewer.entities.removeById("FogEffectEntity");debugger;
 		//FogEffectEntityPreload
 		loadFogPreloadV2(lastCityLoaded);// !! Important to check...
 	}
@@ -8176,13 +8173,13 @@ function createBuildingAssets(idtbldg)
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
 		
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
 		
-		//viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
+		//viewer.entities.removeById("FogEffectEntity");debugger;viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
 		
@@ -8292,7 +8289,7 @@ function createBuildingAssets(idtbldg)
 			if(typeof TempBldgData[idtbldg] != "undefined")
 				window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 			clearPrimitives(false);
-			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("FogEffectEntity");debugger;
 			viewer.entities.removeById("NewFogEffectEntity");
 			//viewer.entities.removeById("FogEffectEntityPreload");
 			if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
@@ -8509,7 +8506,7 @@ function createIsolateOnDarkEffect(idtbldg)
 		//ShowInfobox(idtbldg);
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
@@ -8957,7 +8954,7 @@ function createIsolateWithWhiteEffect(idtbldg)
 		//ShowInfobox(idtbldg);
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
@@ -9129,7 +9126,7 @@ function createIsolateWithLabelsEffect(idtbldg)
 		//ShowInfobox(idtbldg);
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
@@ -9265,7 +9262,7 @@ async function createIsolateSatelliteEffect(idtbldg)
 		//ShowInfobox(idtbldg);
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
@@ -9888,7 +9885,7 @@ function createSpotlightEffect(idtbldg)
 		if(typeof TempBldgData[idtbldg] != "undefined")
 			window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
@@ -9996,7 +9993,7 @@ function createApp6HighlightEffect(idtbldg)
 		//ShowInfobox(idtbldg);
 		window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		clearPrimitives(false);
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
@@ -10110,7 +10107,7 @@ function re_createFogEffect()
 		var cesOverlay = "CESIUM_3D_TILE";
 		if(effectsArray[6] == 1 || effectsArray[0] == 1 )
 			cesOverlay = "BOTH";
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType."+cesOverlay+", }, }) ");
@@ -10133,7 +10130,7 @@ function createDarkOverlayEffect(foceClear = false)
 		if(!darkOverlayEffectActive)
 		{
 			setResetSettingFlags("dark-overlay-li", true);
-			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("FogEffectEntity");debugger;
 			viewer.entities.removeById("NewFogEffectEntity");
 			//viewer.entities.removeById("FogEffectEntityPreload");
 			if(typeof window.lastHolesString == "undefined")
@@ -10173,7 +10170,7 @@ function createWhiteOverlayEffect(foceClear = false)
 		if(!whiteOverlayEffectActive)
 		{
 			setResetSettingFlags("white-overlay-li", true);
-			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("FogEffectEntity");debugger;
 			viewer.entities.removeById("NewFogEffectEntity");
 			//viewer.entities.removeById("FogEffectEntityPreload");
 			if(typeof window.lastHolesString == "undefined")
@@ -10204,7 +10201,7 @@ function clearDarkOverlayEffect()
 {
 	darkOverlayEffectActive = false;
 	setResetSettingFlags("dark-overlay-li", false);
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;
 	viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
@@ -10218,7 +10215,7 @@ function clearWhiteOverlayEffect()
 {
 	whiteOverlayEffectActive = false;
 	setResetSettingFlags("white-overlay-li", false);
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;
 	viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	
@@ -10234,7 +10231,7 @@ function clearEntireOverlayEffect()
 	darkOverlayEffectActive = false;
 	whiteOverlayEffectActive = false;
 
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;
 	viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 
@@ -10370,7 +10367,7 @@ function createFloorsEffect(idtbldg)
 		}
 		else
 		{
-			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("FogEffectEntity");debugger;
 			viewer.entities.removeById("NewFogEffectEntity");
 			//viewer.entities.removeById("FogEffectEntityPreload");
 			if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
@@ -10510,7 +10507,7 @@ function clearHighlightEffect()
 	}
 	
 	window.lastHolesString = window.backupHolesString;
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;
 	if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
 }
@@ -10583,7 +10580,7 @@ function createFloorplanEffect(idtbldg)
 		if(typeof TempBldgData[idtbldg] != "undefined")
 			window.lastHolesString = ' { positions: Cesium.Cartesian3.fromDegreesArray([ '+TempBldgData[idtbldg].coords+' ]), }, ';
 		//clearPrimitives(false);
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 		viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
@@ -12289,7 +12286,7 @@ function highlightCityFloorplans(idtcity)
 {
 	clearCityFloorplans();
 	
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;
 	viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[idtcity] != "undefined")
@@ -12594,7 +12591,7 @@ window.improvedSuites = [];
 window.improvedSuitesIndexes = [];
 function highlightSydneyArealyticsSuitesWithLeaseType()
 {
-	viewer.entities.removeById("FogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;
 	viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[23] != "undefined")
@@ -13301,7 +13298,7 @@ function showSelectedSuiteDGSCenterBand(details, coords)
 function highlightAvailableOfficeSpace()
 {
 	destroySuiteDGSCenterBands();
-	//viewer.entities.removeById("FogEffectEntity");
+	//viewer.entities.removeById("FogEffectEntity");debugger;
 	//viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	/*
@@ -13560,7 +13557,7 @@ function highlightAvailableOfficeSpace()
 		
 		//Old Code
 		/*
-		viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;viewer.entities.removeById("NewFogEffectEntity");
 		//viewer.entities.removeById("FogEffectEntityPreload");
 		if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
 			eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -13861,20 +13858,16 @@ function handleFogAfterHighlight()
 	//console.log(boundary);
 	if(window.changingVisualization && typeof viewer.entities.getById("FogEffectEntity") != "undefined")
 	{
-		//Also snap the outer ring to the current boundary (market when one exists, else city). Without this
-		//the shortcut kept whatever ring FogEffectEntity was last built with - e.g. a city-wide ring left by
-		//an effect - which then stacked on top of NewFogEffectEntity's outside-market shading, so clearing
-		//that effect left a visibly darker band of fog beyond the market limits.
-		var fogOuterPositions = (typeof boundary == "string" && boundary.replace(/[\[\]\s]/g, "") != "") ? Cesium.Cartesian3.fromDegreesArray(eval(boundary)) : null;
-		updateFogHoles(eval("["+window.lastHolesString+"]"), fogOuterPositions);
+		updateFogHoles(eval("["+window.lastHolesString+"]"));
 	}
 	else
 	{
 		if(typeof viewer.entities.getById("FogEffectEntity") != "undefined")
 		{
-			viewer.entities.removeById("FogEffectEntity");
+			viewer.entities.removeById("FogEffectEntity");debugger;
 		}
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+boundary+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
+		
 	}
 }
 
@@ -13999,7 +13992,7 @@ function handleFogAfterHighlightV2()
 
 	if (viewer.entities.getById("FogEffectEntity") != null)
 	{
-		viewer.entities.removeById("FogEffectEntity");
+		viewer.entities.removeById("FogEffectEntity");debugger;
 	}
 
 	viewer.entities.add({
@@ -14225,7 +14218,7 @@ function highlightCalgaryOfficeMarketSales(yearSelected = "")
 {
 	devSelectedBuilding = "";
 	closeInfobox();
-	//viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
+	//viewer.entities.removeById("FogEffectEntity");debugger;viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	//eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[2]+") }, material: Cesium.Color.WHITE.withAlpha(0.5), classificationType: Cesium.ClassificationType.BOTH, }, }) ");
 	updateURL();
@@ -14410,7 +14403,7 @@ function highlightCalgaryOfficeMarketSales(yearSelected = "")
 	handleFogAfterHighlight();
 	//Old Code
 	/*
-	viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[parseInt(lastCityLoaded)] != "undefined")
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[parseInt(lastCityLoaded)]+"), holes: eval(["+window.lastHolesString+"]) }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");
@@ -14496,7 +14489,7 @@ function initiatePriceSQMRange()
 window.arealyticSuiteHeight = [];
 function highlightSydneyArealyticsSuitesWithPricePerSQM()
 {
-	viewer.entities.removeById("FogEffectEntity");viewer.entities.removeById("NewFogEffectEntity");
+	viewer.entities.removeById("FogEffectEntity");debugger;viewer.entities.removeById("NewFogEffectEntity");
 	//viewer.entities.removeById("FogEffectEntityPreload");
 	if(typeof cityBoundaries[23] != "undefined")
 		eval("viewer.entities.add({ id: 'FogEffectEntity', polygon: { hierarchy: { positions: Cesium.Cartesian3.fromDegreesArray("+cityBoundaries[23]+") }, material: Cesium.Color."+getDarkOverlayColor()+".withAlpha(0.5), classificationType: Cesium.ClassificationType.CESIUM_3D_TILE, }, }) ");

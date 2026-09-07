@@ -23,15 +23,20 @@ function searchBuildings() {
 
     $likeTerm = '%' . $term . '%';
 
-    $sql = "SELECT idtbuilding, sbuildingname, address, tsubmarket.ssubname, tcity.scityname, tcity.idtcity
+    // Only Office, Multifamily/Residential and Hotel classes are searchable for now - Retail is
+    // omitted because loading the Retail visualisation from a text-search hit isn't supported yet.
+    $searchableClasses = "'A','AA','AAA','B','C','APT','MDU','SENIOR','Apartments','Condominiums','HOTEL'";
+
+    $sql = "SELECT idtbuilding, sbuildingname, address, tbuilding.class, tbuilding.idtsubmarket, tsubmarket.idtmarket, tsubmarket.ssubname, tcity.scityname, tcity.idtcity
             FROM tbuilding
 			LEFT JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket
 			LEFT JOIN tcity ON tcity.idtcity = tsubmarket.idtcity
-			
+
             WHERE (sbuildingname LIKE ?
                OR address LIKE ?
                OR idtbuilding LIKE ?)
 			   AND tbuilding.tstatus IN ('Completed', 'Under Construction', 'Proposed')
+			   AND tbuilding.class IN (".$searchableClasses.")
             ORDER BY sbuildingname ASC
             LIMIT 15";
 
@@ -52,6 +57,9 @@ function searchBuildings() {
             'idtbuilding'   => $row['idtbuilding'],
             'sbuildingname' => $row['sbuildingname'],
             'address'      => $row['address'],
+            'class'        => $row['class'],
+            'idtsubmarket' => $row['idtsubmarket'],
+            'idtmarket'    => $row['idtmarket'],
             'scityname' => $row['scityname'],
             'idtcity' => $row['idtcity']
         ];

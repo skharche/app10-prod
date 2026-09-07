@@ -28,6 +28,8 @@
 	});
  
 	document.addEventListener('keydown', function (e) {
+		var targetTag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+		if (targetTag === 'input' || targetTag === 'textarea' || (e.target && e.target.isContentEditable)) return;
 		if (e.key === 'Escape') closeAllMenus(null);
 	});
 })();
@@ -108,6 +110,8 @@ function initEffectsDropdown() {
 	});
  
 	document.addEventListener('keydown', function (e) {
+		var targetTag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+		if (targetTag === 'input' || targetTag === 'textarea' || (e.target && e.target.isContentEditable)) return;
 		if (e.key === 'Escape') closeEffectsMenu();
 	});
 }

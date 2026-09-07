@@ -167,9 +167,46 @@ body {
 	cursor: pointer;
 	user-select: none;
 }
+/* "Submarket" header word - toggles all submarket boundaries on the map (separate from the column sort) */
+.submarketBoundaryToggleWord{
+	text-decoration: underline;
+	cursor: pointer;
+}
+/* "Properties" count in the Leasing Market Statistics table - starts the slow building tour for that company */
+.companyBuildingTourLink{
+	text-decoration: underline;
+	cursor: pointer;
+}
+/* bold while the toggle/tour is ON, normal weight when OFF */
+.submarketBoundaryToggleWord.boundaryToggleOn,
+.companyBuildingTourLink.companyTourOn{
+	font-weight: bold;
+}
 .companySummaryGroupHeader td{
 	font-weight: bold;
 	background-color: #e9e9e9 !important;
+}
+
+/* Investment Sales infobox - one tab per sale record when a building has multiple sales (newest first) */
+.officeSaleTabBar{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-bottom: 6px;
+}
+.officeSaleTab{
+	cursor: pointer;
+	padding: 3px 10px;
+	font-size: 13px;
+	border: 1px solid #ccc;
+	border-radius: 3px 3px 0 0;
+	background-color: #f2f2f2;
+	white-space: nowrap;
+}
+.officeSaleTab.active{
+	background-color: #fff;
+	border-bottom-color: #fff;
+	font-weight: bold;
 }
 
 .minPaddingtable>tbody>tr>td, .minPaddingtable>tbody>tr>th, .minPaddingtable>tfoot>tr>td, .minPaddingtable>tfoot>tr>th, .minPaddingtable>thead>tr>td, .minPaddingtable>thead>tr>th
@@ -188,7 +225,7 @@ body {
 /* Experimental tour/3DGS iframe preview tiles - see buildTourPreviewTile() in main.js. Safe to remove if reverted. */
 .tourLinksRow{
 	display: flex;
-	justify-content: center;
+	justify-content: space-between;
 	align-items: center;
 	gap: 20px;
 	width: 100%;
@@ -244,7 +281,7 @@ body {
 	width: 100%;
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.0);
-	z-index: 99999;
+	z-index: 200000; /* above #viewerController's bottom row buttons (99999), below .logoOverlay (300000) */
 	/* .tourPreviewTile-{id} lives inside .infoboxContainer, which has its own z-index (see rule above),
 	   making it a stacking context. That confines .tourPreviewTileFullscreen's z-index:100000 to compete
 	   only with siblings inside .infoboxContainer - against this backdrop (a direct child of <body>) the
@@ -262,7 +299,7 @@ body {
 	height: 90vh !important;
 	max-width: none !important;
 	margin: 0 auto !important;
-	z-index: 100000 !important;
+	z-index: 200001 !important; /* above #viewerController's bottom row buttons (99999), below .logoOverlay (300000) */
 	background: #fff !important;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 	box-sizing: border-box !important;
@@ -281,10 +318,21 @@ body {
 	left: 2.5%;
 	right: 2.5%;
 	height: 50px;
-	z-index: 100001;
+	z-index: 200002; /* above #viewerController's bottom row buttons (99999), below .logoOverlay (300000) */
 	align-items: center;
 	justify-content: center;
 	background: #fff;
+}
+/* Share/copy-link button in the 3DGS fullscreen chrome bar - top left, opposite the #closeModal "x" */
+.tourPreviewShareButton{
+	position: absolute;
+	top: 8px;
+	left: 20px;
+	white-space: nowrap;
+}
+.tourPreviewShareButton img{
+	vertical-align: middle;
+	margin-right: 4px;
 }
 /*
 .tourPreviewFullscreenChrome .tourPreviewFullscreenTitle{
@@ -711,13 +759,17 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 		z-index: 10;
 	}
 	
+	.customBadgeFontWeight{
+		font-weight: 700;
+	}
+	
 	.customBadge{
 		font-size: 12px !important;
 		min-width: 40px;
 		display: inline-block;
 		padding: 0.3em .3em;
 		font-size: 80%;
-		font-weight: 700;
+		/*font-weight: 700;*/
 		line-height: 1;
 		text-align: center;
 		white-space: nowrap;
@@ -725,7 +777,17 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 		border-radius: .4rem;
 		transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 	}
-	
+
+	/* Class rows in the Summary infobox (Office / Multifamily / All Properties) double as a class filter */
+	.classFilterRow{
+		cursor: pointer;
+	}
+	.classFilterRow.classFilterRowActive{
+		/*font-weight: 700;*/
+		outline: 2px solid #000;
+		outline-offset: -2px;
+	}
+
 	.chevronIconContaier{
 		position: absolute;
 		right: 2%;
@@ -829,16 +891,25 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	}
 	
 	/* Full Screen Modal Styles */
-	.fullScreenModalWindow {
+	.fullScreenModalWindow,
+	.virtualTourModalWindow {
 		display: none; /* Hidden by default */
 		position: fixed;
 		top: 0;
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
-		z-index: 1000;
+		background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background - shared by every fullscreen modal (floorplan/image viewer, virtual tour, my account, request access) so they all look identical */
+		z-index: 200000; /* above #viewerController's bottom row buttons (99999), below .logoOverlay (300000) */
 		overflow: hidden;
+	}
+	/* login.php's #requestAccessModal toggles visibility via classList.add/remove('open') - kept here too so
+	   the rule is identical in both files (index.php's own modals use jQuery .show()/.hide() instead). */
+	.fullScreenModalWindow.open,
+	.virtualTourModalWindow.open {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.fullscreenmodal-content {
@@ -966,7 +1037,7 @@ tr:nth-child(even) {background-color: #f2f2f2;}
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr)); /* 6 equal columns, content can't force one wider */
       gap: 10px;
-      max-width: 1000px;
+      max-width: 1285px; /* wider city boxes - still 6 columns (was 1100px / 1000px) */
       width: 100%;
     }
     .city-wrapper {
@@ -1119,7 +1190,7 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	  text-align: center;
 	  text-shadow: 0 0 4px rgba(255, 255, 255, 0.7); /* subtle glow for contrast */
 	}
-	
+
 	/*.city-box-count-label {*/
 	.city-box-count {
 		font-size: 12px !important;
@@ -1187,7 +1258,7 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	.container {
 	  position: absolute;
 	  top: 10px;
-      max-width: 1000px;
+      max-width: 1300px; /* wider city boxes - still 6 columns (was 1100px / 1000px) */
       width: 100%;
 	  left: 10%;
     }
@@ -1324,7 +1395,7 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	  display: none;
 	  bottom: 5px;
 	  right: 20px;
-	  z-index: 9999; /* ensure it stays above Cesium */
+	  z-index: 300000; /* stays above Cesium, the bottom row buttons, and fullscreen modals */
 	  display: none;
 	}
 
@@ -1775,7 +1846,7 @@ tr:nth-child(even) {background-color: #f2f2f2;}
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 200001; /* above .fullScreenModalWindow (200000), below .logoOverlay (300000) */
 }
 
 .zoom-view img {
@@ -2025,6 +2096,34 @@ tr:nth-child(even) {background-color: #f2f2f2;}
   display: block;
 }
 
+/* Listing Agent name drawn above the company logo (see filterAOSWithListingAgent() in main.js) -
+   white text with a black outline so it stays readable over any map background. */
+.listing-agent-logo-name {
+  max-width: 150px;
+  margin-bottom: 4px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.15;
+  word-wrap: break-word;
+  color: #fff;
+  -webkit-text-stroke: 1px #000;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0    2px 3px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 600px) {
+  .listing-agent-logo-name {
+    max-width: 90px;
+    font-size: 13px;
+  }
+}
+
 @keyframes companyLogoPulse {
   0% { transform: scale(1); }
   50% { transform: scale(0.2); }
@@ -2112,6 +2211,98 @@ tr:nth-child(even) {background-color: #f2f2f2;}
 	text-decoration: underline;
 	color: -webkit-link;
 	cursor: pointer;
+}
+
+.propertyManagerRow{
+	text-decoration: underline;
+	color: -webkit-link;
+	cursor: pointer;
+}
+.highlight-property-manager-name{
+	font-weight: bold;
+}
+
+.agentRow{
+	text-decoration: underline;
+	color: -webkit-link;
+	cursor: pointer;
+}
+.highlight-agent-name{
+	font-weight: bold;
+}
+
+/* AI Agent tab (AOS infobox) - see aiAgent.js */
+.ai-agent-panel{
+	padding: 6px 2px;
+}
+.ai-agent-pills-row{
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	/*margin-bottom: 8px;*/
+}
+.ai-agent-pill{
+	background-color: rgba(78, 115, 223, 0.15);
+	color: #4e73df;
+	border: 1px solid rgba(78, 115, 223, 0.3);
+	border-radius: 999px;
+	padding: 4px 12px;
+	font-size: 14px;
+	cursor: pointer;
+	opacity: 0.9;
+	transition: opacity 0.2s ease, background-color 0.2s ease;
+	margin: 4px 0;
+}
+.ai-agent-pill:hover{
+	opacity: 1;
+	background-color: rgba(78, 115, 223, 0.25);
+}
+.ai-agent-question-row{
+	margin-top: -5px;
+	display: flex;
+	gap: 6px;
+}
+.ai-agent-question-input{
+	flex: 1;
+	min-width: 0;
+	padding: 4px 8px;
+	font-size: 13px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+.ai-agent-ask-btn{
+	flex-shrink: 0;
+}
+.ai-agent-answer{
+	/*margin-top: 10px;*/
+	font-size: 13px;
+	max-height: 250px;
+	overflow-y: auto;
+}
+.ai-agent-loading{
+	color: #888;
+	font-style: italic;
+}
+.ai-agent-answer-text{
+	white-space: normal;
+}
+.ai-agent-cached-note{
+	margin-top: 4px;
+	font-size: 11px;
+	color: #888;
+	font-style: italic;
+}
+.ai-agent-sources{
+	margin-top: 8px;
+	font-size: 12px;
+}
+.ai-agent-sources ul{
+	margin: 4px 0 0 0;
+	padding-left: 18px;
+}
+.ai-agent-limit-message,
+.ai-agent-error-message{
+	color: #b00020;
 }
 
 .floorsToggleLabel{

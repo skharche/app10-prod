@@ -1,0 +1,76 @@
+[17-Apr-2026 13:39:09 America/New_York] PHP Warning:  Undefined array key 1 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 12
+[17-Apr-2026 14:57:43 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 269
+[19-Apr-2026 20:31:23 America/New_York] PHP Warning:  openssl_decrypt(): IV passed is only 15 bytes long, cipher expects an IV of precisely 16 bytes, padding with \0 in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 10
+[19-Apr-2026 20:31:35 America/New_York] PHP Warning:  openssl_decrypt(): IV passed is only 15 bytes long, cipher expects an IV of precisely 16 bytes, padding with \0 in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 10
+[20-Apr-2026 08:35:59 America/New_York] PHP Warning:  openssl_decrypt(): IV passed is only 15 bytes long, cipher expects an IV of precisely 16 bytes, padding with \0 in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 10
+[20-Apr-2026 08:36:32 America/New_York] PHP Warning:  openssl_decrypt(): IV passed is only 15 bytes long, cipher expects an IV of precisely 16 bytes, padding with \0 in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 10
+[20-Apr-2026 08:37:19 America/New_York] PHP Warning:  openssl_decrypt(): IV passed is only 15 bytes long, cipher expects an IV of precisely 16 bytes, padding with \0 in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 10
+[20-Apr-2026 08:47:57 America/New_York] PHP Warning:  Undefined array key 1 in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 9
+[20-Apr-2026 08:48:25 America/New_York] PHP Warning:  Undefined array key 1 in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 9
+[20-Apr-2026 08:49:22 America/New_York] PHP Fatal error:  Uncaught ArgumentCountError: explode() expects at least 2 arguments, 1 given in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php:34
+Stack trace:
+#0 /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php(34): explode()
+#1 {main}
+  thrown in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 34
+[22-Apr-2026 16:19:03 UTC] PHP Parse error:  syntax error, unexpected token "use" in /home/qxf9blb2zufi/public_html/floorplan.city/validate-token.php on line 37
+[22-Apr-2026 16:19:44 UTC] PHP Parse error:  syntax error, unexpected token "use" in /home/qxf9blb2zufi/public_html/floorplan.city/validate-token.php on line 37
+[22-Apr-2026 16:20:08 UTC] PHP Parse error:  syntax error, unexpected token "use" in /home/qxf9blb2zufi/public_html/floorplan.city/validate-token.php on line 37
+[22-Apr-2026 16:20:31 UTC] PHP Parse error:  syntax error, unexpected token "use" in /home/qxf9blb2zufi/public_html/floorplan.city/validate-token.php on line 37
+[22-Apr-2026 16:21:19 UTC] PHP Parse error:  syntax error, unexpected token "use" in /home/qxf9blb2zufi/public_html/floorplan.city/validate-token.php on line 36
+[22-Apr-2026 16:21:20 UTC] PHP Parse error:  syntax error, unexpected token "use" in /home/qxf9blb2zufi/public_html/floorplan.city/validate-token.php on line 36
+[22-Apr-2026 14:36:30 America/New_York] PHP Warning:  Undefined array key "idtuser" in /home/qxf9blb2zufi/public_html/floorplan.city/login.php on line 7
+[22-Apr-2026 14:36:30 America/New_York] PHP Warning:  Undefined array key 1 in /home/qxf9blb2zufi/public_html/floorplan.city/login.php on line 9
+[23-Apr-2026 13:25:57 UTC] PHP Warning:  Undefined variable $resetLink in /home/qxf9blb2zufi/public_html/floorplan.city/request-access.php on line 113
+[23-Apr-2026 13:58:56 UTC] PHP Warning:  Undefined variable $resetLink in /home/qxf9blb2zufi/public_html/floorplan.city/request-access.php on line 113
+[23-Apr-2026 14:56:00 America/New_York] PHP Warning:  Undefined array key "idtuser" in /home/qxf9blb2zufi/public_html/floorplan.city/login.php on line 7
+[23-Apr-2026 14:56:00 America/New_York] PHP Warning:  Undefined array key 1 in /home/qxf9blb2zufi/public_html/floorplan.city/login.php on line 9
+[24-Apr-2026 22:11:13 America/New_York] PHP Warning:  Undefined array key 1 in /home/qxf9blb2zufi/public_html/floorplan.city/view-files.php on line 35
+[10-Jun-2026 10:19:41 America/New_York] PHP Fatal error:  Uncaught mysqli_sql_exception: Connection refused in /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php:57
+Stack trace:
+#0 /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php(57): mysqli->__construct()
+#1 /home/qxf9blb2zufi/public_html/floorplan.city/index.php(13): dbConnection->ConnectPrepare()
+#2 {main}
+  thrown in /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php on line 57
+[10-Jun-2026 10:19:41 America/New_York] PHP Fatal error:  Uncaught mysqli_sql_exception: Connection refused in /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php:57
+Stack trace:
+#0 /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php(57): mysqli->__construct()
+#1 /home/qxf9blb2zufi/public_html/floorplan.city/index.php(13): dbConnection->ConnectPrepare()
+#2 {main}
+  thrown in /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php on line 57
+[10-Jun-2026 10:20:34 America/New_York] PHP Fatal error:  Uncaught mysqli_sql_exception: Connection refused in /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php:57
+Stack trace:
+#0 /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php(57): mysqli->__construct()
+#1 /home/qxf9blb2zufi/public_html/floorplan.city/index.php(13): dbConnection->ConnectPrepare()
+#2 {main}
+  thrown in /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php on line 57
+[10-Jun-2026 10:20:35 America/New_York] PHP Fatal error:  Uncaught mysqli_sql_exception: Connection refused in /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php:57
+Stack trace:
+#0 /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php(57): mysqli->__construct()
+#1 /home/qxf9blb2zufi/public_html/floorplan.city/index.php(13): dbConnection->ConnectPrepare()
+#2 {main}
+  thrown in /home/qxf9blb2zufi/public_html/floorplan.city/classes/connection.php on line 57
+[04-Jul-2026 19:34:03 America/New_York] PHP Warning:  Undefined array key "inputPassword" in /home/qxf9blb2zufi/public_html/floorplan.city/login.php on line 19
+[04-Jul-2026 19:34:03 America/New_York] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'd optimize for Floorplan? It's completely free.
+
+Cheers,
+Danish
+—
+Dani...' at line 1 in /home/qxf9blb2zufi/public_html/floorplan.city/auth.php:32
+Stack trace:
+#0 /home/qxf9blb2zufi/public_html/floorplan.city/auth.php(32): mysqli->query()
+#1 /home/qxf9blb2zufi/public_html/floorplan.city/login.php(29): login()
+#2 {main}
+  thrown in /home/qxf9blb2zufi/public_html/floorplan.city/auth.php on line 32
+[19-Aug-2026 13:38:16 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 13:39:09 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 13:40:06 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 13:40:16 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 13:40:35 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 13:45:13 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 13:55:27 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 13:55:52 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 14:12:43 America/New_York] PHP Warning:  Undefined array key 7 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 18:12:47 America/New_York] PHP Warning:  Undefined array key 8 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[19-Aug-2026 18:15:56 America/New_York] PHP Warning:  Undefined array key 8 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[28-Aug-2026 22:31:09 America/New_York] PHP Warning:  Undefined array key 8 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 279
+[06-Sep-2026 22:13:59 America/New_York] PHP Warning:  Undefined array key 8 in /home/qxf9blb2zufi/public_html/floorplan.city/index.php on line 303

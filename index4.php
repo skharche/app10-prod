@@ -12,10 +12,6 @@ include_once(__DIR__."/classes/connection.php");
 $obj = new dbConnection();
 $conn = $obj->ConnectPrepare();
 
-include_once(__DIR__."/classes/aiAgent.php");
-$aiAgentObj = new aiAgent();
-$aiAgentQuestionsByType = $aiAgentObj->getDefaultQuestionsByType($conn);
-
 // Function to decrypt parameter
 function decryptParam($data) {
     $encryption_key = base64_decode("4587854");
@@ -80,8 +76,7 @@ if(isset($_REQUEST["q"]))
 	exit;
 }
 
-// This is Floorplan City App
-$appId = 8;//$cesiumKeyObject->getAppId("App10");
+$appId = 2;//$cesiumKeyObject->getAppId("App10");
 include_once (__DIR__ . "/classes/cesiumKey.php");
 $cesiumKeyObject = new cesiumKey();
 
@@ -167,7 +162,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
     />
     <script src="dropdown.js"></script>
     <script src="buildingSearch.js"></script>
-	<script src="aiAgent.js"></script>
 	<!--
     <link rel="stylesheet" href="./lib/jquery-ui.css" />
     <script src="./lib/JQuery-1.9.1/jquery-1.9.1-min.js"></script>
@@ -253,21 +247,9 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		if(isset($_REQUEST["lastSuiteId"]))
 			$lastSuiteId = $_REQUEST["lastSuiteId"];
 		
-		$defaultdgsFullScreen = "";
-		if(isset($_REQUEST["dgsFullScreen"]))
-			$defaultdgsFullScreen = $_REQUEST["dgsFullScreen"];
-
-		$defaultFloorplanFullScreen = "";
-		if(isset($_REQUEST["floorplanFullScreen"]))
-			$defaultFloorplanFullScreen = $_REQUEST["floorplanFullScreen"];
-
 		$showLogos = "";
 		if(isset($_REQUEST["showLogos"]))
 			$showLogos = $_REQUEST["showLogos"];
-
-		$statsExpanded = "";
-		if(isset($_REQUEST["statsExpanded"]))
-			$statsExpanded = $_REQUEST["statsExpanded"];
 		
 		$tabYearSelected = "All";
 		if(isset($_REQUEST["year"]))
@@ -288,12 +270,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		$defaultFloorSelected = 0;
 		if(isset($_REQUEST["lastFloor"]) && $_REQUEST["lastFloor"] != 0)
 			$defaultFloorSelected = $_REQUEST["lastFloor"];
-
-		$defaultOverlay = "";
-		if(isset($_REQUEST["overlay"]) && ($_REQUEST["overlay"] == "w" || $_REQUEST["overlay"] == "d"))
-			$defaultOverlay = $_REQUEST["overlay"];
-
-		$defaultSubmarketBoundary = (isset($_REQUEST["submBoundary"]) && $_REQUEST["submBoundary"] == "1") ? 1 : 0;
 		
 		if(isset($_REQUEST["marketId"]))
 		{
@@ -360,30 +336,22 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		var defaultTabYearSelected = "All";
 		var DefaultSuiteIndex = null;
 		var defaultCamera = null;
-		var defaultdgsFullScreen = 0;
-		var defaultFloorplanFullScreen = 0;
 		var defaultEffects = [];
 		var defaultFloorSelected = 0;
 		
 		window.loggedInUserId = '<?php echo $loggedInUserId; ?>';
-		window.aiAgentQuestionsByType = <?php echo json_encode($aiAgentQuestionsByType); ?>;
 		
 		defaultCity = parseInt('<?php echo $city; ?>');
 		defaultMarket = '<?php echo $market; ?>';
 		defaultMarketId = '<?php echo $marketId; ?>';
 		defaultBuilding = '<?php echo $lastBuildingId; ?>';
 		defaultSuiteId = '<?php echo $lastSuiteId; ?>';
-		defaultdgsFullScreen = '<?php echo $defaultdgsFullScreen; ?>';
-		defaultFloorplanFullScreen = '<?php echo $defaultFloorplanFullScreen; ?>';
 		showLogos = '<?php echo $showLogos; ?>';
-		window.statsTableExpanded = ('<?php echo $statsExpanded; ?>' == '1');
 		defaultTabYearSelected = '<?php echo $tabYearSelected; ?>';
 		DefaultSuiteIndex = '<?php echo $lastSuiteIndex; ?>';
 		defaultEffects = '<?php echo $effects; ?>';
 		defaultCamera = '<?php echo $camDetails; ?>';
 		defaultFloorSelected = '<?php echo $defaultFloorSelected; ?>';
-		window.defaultOverlay = '<?php echo $defaultOverlay; ?>';
-		window.defaultSubmarketBoundary = <?php echo $defaultSubmarketBoundary; ?>;
 		//console.log("defaultCity "+defaultCity);
 		//console.log("defaultMarket "+defaultMarket);
 		//console.log("defaultMarketId "+defaultMarketId);
@@ -575,7 +543,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 	<div id="companyLogoContainer"></div>
     <div class="summaryInfoboxContainer">
 		<div class="summaryInfoboxHeaderData">
-			<a href="javascript:defaultToOfficeMarket();" style="padding-top:2px;"><span class="defaultCityName"></span></a>.<a href="javascript:moveToCityGrid();" style="padding-top:2px;">floorplan.city</a>
+			<a href="javascript:defaultToOfficeMarket();" style="padding-top:2px;"><span class="defaultCityName"></span></a>.<a href="javascript:moveToCityGrid();" style="padding-top:2px;">propsee.ai</a>
 			<span class="chevronIconContaier opened" style="cursor:pointer;"><img src="images/Collapse.png" style="margin-bottom: 2px;" width="40px" height="25px" onClick="toggleSummaryInfobox();"/></span>
 		</div>
         <div class="summaryInfoboxCityDetails"></div>
@@ -721,7 +689,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
 	<div id="fullScreenModal" class="fullScreenModalWindow">
 		<div class="fullscreenmodal-content">
 			<span class="fullscreenmodal-title"></span>
-			<button type="button" id="floorplanShareURLButton" class="btn btn-primary tourPreviewShareButton" title="Copy link to this view" style="display:none;" onclick="copyFloorplanFullScreenURL(event);">Share</button>
 			<span id="closeModal" class="close" onClick="closeFullScreenModal();">&times;</span>
 			<br />
 			<div class="row full-screen-columns" style="display: flex;">
@@ -1397,6 +1364,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				// Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
 				onlyUsingWithGoogleGeocoder: true,
 			  });
+			 
 			  viewer.scene.primitives.add(googleTileset);
 				await googleTileset.allTilesLoaded.addEventListener(() => {
 					AllTileLoaded = true;
@@ -1407,6 +1375,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				//maximumScreenSpaceError: 1,
 			  });
 			  viewer.scene.primitives.add(googleTileset);
+			  
 			  setTimeout(function (){showTerrain(), 3000});
 			  
 			  googleTileset.allTilesLoaded.addEventListener(function() {
@@ -1628,13 +1597,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		var myPointString = "";
 		floatingPoint = undefined;
 		handler.setInputAction(function(click) {
-			//Ignore map clicks while the 3DGS CSS-expanded fullscreen preview is open (see expandTourPreviewToFullScreen
-			//in main.js) - the expanded tile only covers the middle of the screen (left/right: 2.5%), so clicking the
-			//narrow strips of Cesium canvas still visible at the sides would otherwise reselect a building/entity
-			//underneath and corrupt the fullscreen view. Only the chrome's own close (X) button should end it.
-			if(typeof window.dgsFullScreenActive != "undefined" && window.dgsFullScreenActive == true)
-				return;
-
+			
 			var feature2 = viewer.scene.pickPosition(click.position);
 			window.earthPosition = viewer.scene.pickPosition(click.position);
 			if (typeof feature2 != "undefined") {
@@ -2475,12 +2438,18 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				{
 					clearSearchAndSettingBox();
 					stopRotateIfInProgress();
-					//lastSelectedPrimitive/lastSelectedPrimitiveId are never assigned anywhere in the codebase, so that
-					//reset was always a no-op - use the same helper the suite/floor Up-Down navigation relies on instead,
-					//which resets selectedPrimitive's fill color back and clears the white outline band via clearPolygonOutline().
-					resetLastSelectedPrimitive();
+					if(lastSelectedPrimitive != null)
+					{
+						var attributes = lastSelectedPrimitive.getGeometryInstanceAttributes(lastSelectedPrimitiveId);
+						////console.log(attributes.color);
+						if(typeof attributes != "undefined")
+						{
+							attributes.color = [selectedPrimitiveColor[0], selectedPrimitiveColor[1], selectedPrimitiveColor[2], 179];
+							attributes.show = [1];
+						}
+					}
 					EnableBottomPanoButton();
-
+					
 					var details = window.floorPlanDetails[check[1]][check[2]];
 					window.lastFloor = check[2];
 					window.lastFloorAltitude = parseInt(heightString);
@@ -2507,9 +2476,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 					if(typeof attributes != "undefined")
 					{
 						selectedPrimitiveColor = attributes.color;
-						//A floorPlanEntity is always red - base Cesium.Color.RED.withAlpha(0.7), solid red on select.
-						//Don't carry the RGB from whatever was selected before (that leaked a non-red tint in).
-						attributes.color = [255, 0, 0, 255];
+						attributes.color = [selectedPrimitiveColor[0], selectedPrimitiveColor[1], selectedPrimitiveColor[2], 255];
 						attributes.show = [1];
 					}
 					if(lastSelectedBuildingType != 'Floorplan')
@@ -2520,7 +2487,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				}
 				else if(typeof check[0] != "undefined" && check[0] == "availableOfficeSpace")
 				{
-					window.aosArrowKeyMode = "suite";//clicking a suite hands Up/Down back to suite navigation, even while a listing company is still filtered
 					clearSearchAndSettingBox();
 					window.buildingPointSelected = lonlatObj;
 					//stopRotateIfInProgress();
@@ -2546,8 +2512,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 					var coooordss = details.coords;
 					if(typeof details.updatedCoords != "undefined")
 						coooordss = details.updatedCoords;
-					addPolygonOutlineOnTileset(coooordss, window.suiteHeightValues[details.idtsuite][0], window.suiteHeightValues[details.idtsuite][1], Cesium.Color.WHITE, details.dgs_url);
-					showSelectedSuiteDGSCenterBand(details, coooordss);
+					addPolygonOutlineOnTileset(coooordss, window.suiteHeightValues[details.idtsuite][0], window.suiteHeightValues[details.idtsuite][1], Cesium.Color.WHITE);
 					allSuitesOnFloor = window.availableOfficeSpaceFloorWise[parseInt(details.idtbuilding)][parseInt(details.floor_number)];
 					window.lastFloor = check[2];
 					window.lastFloor = parseInt(details.floor_number);
@@ -3037,8 +3002,8 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			{
 				if (( typeof pickedObject !== "undefined" && typeof pickedObject.id == "undefined") || typeof pickedObject == "undefined")
 				{
-					if(effectsArray[1] != 1 && effectsArray[2] != 1 && effectsArray[5] != 1 && !anyIsolateEffectActive())
-						closeInfobox(true);
+					if(!effectsArray.includes(1))
+						closeInfobox();
 					//Clear Search an setting box
 					if(typeof FloorViewPauseSlowRotation != "undefined")
 					{
@@ -3064,8 +3029,8 @@ $classColorDetails = $classColorObj->getClassColorArray();
 				}
 				if(typeof pickedObject !== "undefined" && typeof pickedObject.id !== "undefined" && pickedObject.id._id != "starRatingBox" && (pickedObject.id._id == "FogEffectEntity" || pickedObject.id._id == "FogEffectEntityPreload"))
 				{
-					if(effectsArray[1] != 1 && effectsArray[2] != 1 && effectsArray[5] != 1 && !anyIsolateEffectActive())
-						closeInfobox(true);
+					if(!effectsArray.includes(1))
+						closeInfobox();
 					//Clear Search an setting box
 					clearSearchAndSettingBox();
 					if(typeof FloorViewPauseSlowRotation != "undefined")
@@ -3303,11 +3268,11 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			}
 		}
 
-		function addPolygonOutlineOnTileset(coords, baseHeight, topHeight, color, dgsUrl = null) {
+		function addPolygonOutlineOnTileset(coords, baseHeight, topHeight, color) {
 			var footprint = Cesium.Cartesian3.fromDegreesArray(eval("[" + coords + "]"));
 			console.log("IN addPolygonOutlineOnTileset() @"+baseHeight+" <> "+topHeight);
 			// Function to build a polygon band
-			function makeBand(positions, height, bandColor) {
+			function makeBand(positions, height) {
 				return new Cesium.ClassificationPrimitive({
 					geometryInstances: new Cesium.GeometryInstance({
 						geometry: new Cesium.PolygonGeometry({
@@ -3316,7 +3281,7 @@ $classColorDetails = $classColorObj->getClassColorArray();
 							extrudedHeight: height + 0.5  // thin band (0.2m thick)
 						}),
 						attributes: {
-							color: Cesium.ColorGeometryInstanceAttribute.fromColor(bandColor)
+							color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
 						}
 					}),
 					classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
@@ -3324,23 +3289,14 @@ $classColorDetails = $classColorObj->getClassColorArray();
 			}
 
 			// Base band
-			var primitive = makeBand(footprint, baseHeight, color);
+			var primitive = makeBand(footprint, baseHeight);
 			viewer.scene.groundPrimitives.add(primitive);
 			outlinePrimitives.push(primitive);
 
 			// Top band
-			primitive = makeBand(footprint, topHeight, color);
+			primitive = makeBand(footprint, topHeight);
 			viewer.scene.groundPrimitives.add(primitive);
 			outlinePrimitives.push(primitive);
-
-			// Third band marking 3DGS availability - center height, black, semi-transparent. Pushed into the
-			// same outlinePrimitives array as the two bands above, so clearPolygonOutline() removes it too -
-			// it disappears whenever the white selection outline does, no separate cleanup needed.
-			if(dgsUrl != null && dgsUrl != "") {
-				primitive = makeBand(footprint, (baseHeight + topHeight) / 2, Cesium.Color.BLACK.withAlpha(0.2));
-				viewer.scene.groundPrimitives.add(primitive);
-				outlinePrimitives.push(primitive);
-			}
 		}
 		
 		// Clear function
@@ -3615,10 +3571,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
 		}
 		
 		$(document).on("click", "#fullScreenModal", function(e) {
-			// Floorplan/AOS viewer (window.floorplanFullScreenActive, set by openFullScreenImageAOS()) stays open
-			// on an outside click, same as the virtual tour modal (#virtualTourModal never had this handler).
-			if(window.floorplanFullScreenActive)
-				return;
 			// check if clicked inside content
 			if (!$(e.target).closest(".fullscreenmodal-content").length) {
 				// action for outside click
@@ -3650,8 +3602,6 @@ $classColorDetails = $classColorObj->getClassColorArray();
 	<script src="./pointOrbitSpin.js"></script>
 	<script src="./buildingOrbitSpin.js"></script>
 	<script src="./marketOrbit.js"></script>
-	<script src="./marketBoundaryDebug.js"></script>
-	<script src="./aosBuildingTour.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 	<script src="./measurementPanel.js"></script> <!-- Measurement Panel JS -->
 	<script>

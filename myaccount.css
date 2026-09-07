@@ -1,23 +1,27 @@
-/* Modal overlay */
+/* Fullscreen modal overlay - shared by every fullscreen modal (floorplan/image viewer, virtual tour, my account,
+   request access) so they all get the same backdrop. Kept identical to the copy in coordsUpdateStyle.css because
+   login.php loads this file but not that one (index.php loads both). */
+.fullScreenModalWindow,
 .virtualTourModalWindow {
-  display: none; /* toggle to flex when open */
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 1000;
+  display: none; /* Hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
+  z-index: 200000; /* above #viewerController's bottom row buttons (99999), below .logoOverlay (300000) */
+  overflow: hidden;
+}
+/* login.php's #requestAccessModal toggles visibility via classList.add/remove('open') instead of jQuery
+   .show()/.hide() (which the index.php modals use, and which doesn't need this rule) - keep this so that
+   still works. */
+.fullScreenModalWindow.open,
+.virtualTourModalWindow.open {
+  display: flex;
   align-items: center;
   justify-content: center;
 }
-.virtualTourModalWindow.open { display: flex; }
-
-.fullScreenModalWindow {
-  display: none; /* toggle to flex when open */
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-}
-.fullScreenModalWindow.open { display: flex; }
 
 /* Modal card */
 .myAccountModal-content {

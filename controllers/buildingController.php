@@ -66,6 +66,18 @@ class buildingController extends BaseController
 		return $objBuilding->getSubmarketDetails($idtmarket);
 	}
 
+	function getSubmarketBoundariesByCity($idtcity)
+	{
+		$objBuilding = new building();
+		return $objBuilding->getSubmarketBoundariesByCity($idtcity);
+	}
+
+	function getSubmarketBoundary($idtsubmarket)
+	{
+		$objBuilding = new building();
+		return $objBuilding->getSubmarketBoundary($idtsubmarket);
+	}
+
 	function getSubmarketSummary($idtmarket, $buildingType = 'Office')
 	{
 		$objBuilding = new building();
@@ -227,8 +239,18 @@ if (isset($_REQUEST["param"])) {
 			break;
 		case "getSubmarketDetails":
 			$submarketData = $objBuildingController->getSubmarketDetails($_REQUEST["idtmarket"]);
-			
+
 			echo json_encode(array("status" => "success", "data" => $submarketData));
+			break;
+		case "getSubmarketBoundariesByCity":
+			$submarketBoundaryData = $objBuildingController->getSubmarketBoundariesByCity($_REQUEST["idtcity"]);
+
+			echo json_encode(array("status" => "success", "data" => $submarketBoundaryData));
+			break;
+		case "getSubmarketBoundary":
+			$singleSubmarketBoundary = $objBuildingController->getSubmarketBoundary($_REQUEST["idtsubmarket"]);
+
+			echo json_encode(array("status" => "success", "data" => $singleSubmarketBoundary));
 			break;
 		case "getApp10MarketDetails":
 			$data = $objBuildingController->getApp10MarketDetails($_POST["user_id"]);

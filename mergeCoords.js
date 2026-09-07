@@ -622,7 +622,7 @@ window.distortionBuildingStart = 0;
 window.distortionBuildingEnd = 400;
 function createMergedFogEffect(cityBoundary)
 {
-	viewer.entities.removeById('FogEffectEntity');
+	viewer.entities.removeById('FogEffectEntity');debugger;
 	buildingHoles = "";
 	var mergedCoords = mergeIntersectingPolygons(window.lastHolesArray);
 	//mergedCoords = mergeIntersectingPolygons(mergedCoords);
@@ -638,7 +638,7 @@ function createMergedFogEffect(cityBoundary)
 
 function createMergedFogEffectV2( outerCoords) {
 	//debugger;
-	viewer.entities.removeById('FogEffectEntity');
+	viewer.entities.removeById('FogEffectEntity');debugger;
 	
   function toCartesian(coords) {
     const lonLat = [];

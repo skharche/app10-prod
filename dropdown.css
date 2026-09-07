@@ -261,7 +261,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 16px;
+  gap: 12px;
   width: calc(100% - 40px);
   max-width: 340px;
   padding: 20px 22px;
@@ -281,7 +281,7 @@
 }
 
 .custom-confirm-message {
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 500;
   line-height: 1.4;
   color: #1f2530;

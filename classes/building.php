@@ -167,7 +167,7 @@ if(!defined("building"))
 				SELECT SUM(suite_area)
 				FROM tsuite
 				WHERE tsuite.idtbuilding = tbuilding.idtbuilding
-			) AS total_available_office_area, IFNULL(propertyManagerCompany.companyname, '') as propertymanager, IFNULL(developerCompany.companyname, '') as developer
+			) AS total_available_office_area, tbuilding.property_manager AS idtpropertymanager, IFNULL(propertyManagerCompany.companyname, '') as propertymanager_long, IFNULL(propertyManagerCompany.shortcompanyname, '') as propertymanager, IFNULL(developerCompany.companyname, '') as developer_long, IFNULL(developerCompany.shortcompanyname, '') as developer
 			FROM 
 				tbuilding 
 				LEFT JOIN tclass ON tclass.short_name = tbuilding.class COLLATE utf8mb4_unicode_ci
@@ -205,7 +205,7 @@ if(!defined("building"))
 				mysqli_free_result($result);
 			}
 			//print_r($buildingDetails);
-			$q = "SELECT tbuilding.idtbuilding, tbuilding.idtsubmarket, tbuilding.idtcamera, tsubmarket.ssubname, tbuilding.sbuildingname, tbuilding.class as buildingclass, tbuilding.address, tbuilding.yearbuilt, tbuilding.lastreno, tbuilding.altitude, tbuilding.floors, tbuilding.tstatus, tbuilding.conversion, tbuilding.basefloorheight, tbuilding.units, tbuilding.hoteldoors, CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) as grossofficearea, CAST(REPLACE(tbuilding.grossretailarea, ',', '') AS UNSIGNED) as grossretailarea, tfloors.idtfloors, tfloors.name, tfloors.idtcoords, tfloors.floor_height, tbuilding.floorheight as buildingfloorheight, tcoords.coords, thotelclass.star_rating, tcompany.companyname as developer FROM 
+			$q = "SELECT tbuilding.idtbuilding, tbuilding.idtsubmarket, tbuilding.idtcamera, tsubmarket.ssubname, tbuilding.sbuildingname, tbuilding.class as buildingclass, tbuilding.address, tbuilding.yearbuilt, tbuilding.lastreno, tbuilding.altitude, tbuilding.floors, tbuilding.tstatus, tbuilding.conversion, tbuilding.basefloorheight, tbuilding.units, tbuilding.hoteldoors, CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) as grossofficearea, CAST(REPLACE(tbuilding.grossretailarea, ',', '') AS UNSIGNED) as grossretailarea, tfloors.idtfloors, tfloors.name, tfloors.idtcoords, tfloors.floor_height, tbuilding.floorheight as buildingfloorheight, tcoords.coords, thotelclass.star_rating, tcompany.companyname as developer_long, tcompany.shortcompanyname as developer FROM 
 				tbuilding 
 				LEFT JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket
 				JOIN tfloors ON tfloors.idtbuilding = tbuilding.idtbuilding
@@ -615,15 +615,16 @@ if(!defined("building"))
 			$mysqliObj = $conn->Connect();
 			
 			$q = "
-			SELECT 
+			SELECT
 				tbuilding.class , SUM(CAST(REPLACE(tsuite.suite_area, ',', '') AS SIGNED)) as suite_area
-			FROM 
-			tbuilding 
+			FROM
+			tbuilding
 			JOIN tsuite ON tsuite.idtbuilding = tbuilding.idtbuilding
-			WHERE 
+			WHERE
 				idtsubmarket IN (SELECT idtsubmarket FROM tsubmarket WHERE idtmarket = $idtmarket )
 				AND tbuilding.class IN ('A', 'AA', 'AAA', 'B', 'C')
-				AND UPPER(tbuilding.tstatus) = 'COMPLETED'  GROUP BY tbuilding.class
+				AND UPPER(tbuilding.tstatus) = 'COMPLETED'
+				AND tsuite.is_active = 1 AND tsuite.space_type = 'Office'  GROUP BY tbuilding.class
 			";
 			$suiteAreaDetails = array();
 			if($result = mysqli_query($mysqliObj, $q))
@@ -956,6 +957,87 @@ if(!defined("building"))
 			return $submarketDetails;
 		}
 
+		//One submarket's boundary polygon, straight from tsubmarket.submarket_boundary. Used by the
+		//AOS infobox submarket-name dashed-line toggle when the city lookup isn't already loaded.
+		function getSubmarketBoundary()
+		{
+			$idtsubmarket = 0;
+			$args = func_get_args();
+			switch(count($args))
+			{
+				case 0:
+					break;
+				case 1:
+					$idtsubmarket = intval($args[0]);
+					break;
+				default:
+					return $this->status = 'INVALID_ACTION';
+			}
+
+			$conn = new dbConnection();
+			$mysqliObj = $conn->Connect();
+
+			$q = "SELECT idtsubmarket, ssubname, idtmarket, submarket_boundary, boundary_color
+					FROM tsubmarket
+					WHERE idtsubmarket = ".$idtsubmarket."
+					LIMIT 1";
+
+			$row = null;
+			if($result = mysqli_query($mysqliObj, $q))
+			{
+				if($eachRow = mysqli_fetch_assoc($result))
+				{
+					$eachRow["ssubname"] = $this->skipUTFEncode($eachRow["ssubname"]);
+					$row = $eachRow;
+				}
+				mysqli_free_result($result);
+			}
+			return $row;
+		}
+
+		//Every submarket boundary polygon for a city, straight from tsubmarket.submarket_boundary
+		//(joined to tmarket for the idtcity filter). Used by drawSubmarketBoundariesV2() on the client.
+		function getSubmarketBoundariesByCity()
+		{
+			$idtcity = 0;
+			$args = func_get_args();
+			switch(count($args))
+			{
+				case 0:
+					break;
+				case 1:
+					$idtcity = intval($args[0]);
+					break;
+				default:
+					return $this->status = 'INVALID_ACTION';
+			}
+
+			$conn = new dbConnection();
+			$mysqliObj = $conn->Connect();
+
+			$q = "SELECT tsubmarket.idtsubmarket, tsubmarket.ssubname, tsubmarket.idtmarket,
+						tsubmarket.submarket_boundary, tsubmarket.boundary_color
+					FROM tsubmarket
+					JOIN tmarket ON tmarket.idtmarket = tsubmarket.idtmarket
+					WHERE tmarket.idtcity = ".$idtcity."
+						AND tsubmarket.submarket_boundary IS NOT NULL
+						AND tsubmarket.submarket_boundary <> ''
+					ORDER BY tsubmarket.ssubname";
+
+			$submarketBoundaries = array();
+			if($result = mysqli_query($mysqliObj, $q))
+			{
+				while($eachRow = mysqli_fetch_assoc($result))
+				{
+					$eachRow["ssubname"] = $this->skipUTFEncode($eachRow["ssubname"]);
+					$submarketBoundaries[] = $eachRow;
+				}
+				mysqli_free_result($result);
+				unset($row);
+			}
+			return $submarketBoundaries;
+		}
+
 		function getSubmarketSummary()
 		{
 			$idtmarket = 0;
@@ -989,6 +1071,7 @@ if(!defined("building"))
 
 			$q = "SELECT
 					tsubmarket.idtsubmarket, tsubmarket.ssubname,
+					tsubmarket.submarket_boundary, tsubmarket.boundary_color,
 					COUNT(DISTINCT tbuilding.idtbuilding) AS properties,
 					SUM(CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED) + CAST(REPLACE(tbuilding.grossretailarea, ',', '') AS UNSIGNED)) AS sqft,
 					SUM(CAST(REPLACE(tbuilding.grossofficearea, ',', '') AS UNSIGNED)) AS officearea,
@@ -999,7 +1082,7 @@ if(!defined("building"))
 					tsubmarket.idtmarket = ".$idtmarket."
 					AND tbuilding.class IN (".$classFilter.")
 					AND UPPER(tbuilding.tstatus) = 'COMPLETED'
-				GROUP BY tsubmarket.idtsubmarket, tsubmarket.ssubname
+				GROUP BY tsubmarket.idtsubmarket, tsubmarket.ssubname, tsubmarket.submarket_boundary, tsubmarket.boundary_color
 				ORDER BY tsubmarket.ssubname";
 
 			$submarketSummary = array();
@@ -1090,7 +1173,7 @@ if(!defined("building"))
 			}
 
 			$q = "SELECT
-					tsuite.idtcompany, tcompany.companyname,
+					tsuite.idtcompany, tcompany.companyname AS companyname_long, tcompany.shortcompanyname AS companyname,
 					MAX(tcompany.companytype2) AS companytype2,
 					MAX(tcompany.companytype3) AS companytype3,
 					MAX(tcompany.companytype4) AS companytype4,
@@ -1106,7 +1189,7 @@ if(!defined("building"))
 					AND tsuite.space_type = 'Office'
 					AND tsuite.is_active = 1
 					AND tsuite.idtcompany IS NOT NULL
-				GROUP BY tsuite.idtcompany, tcompany.companyname
+				GROUP BY tsuite.idtcompany, tcompany.companyname, tcompany.shortcompanyname
 				ORDER BY suites DESC";
 
 			$brokerages = array();
@@ -1338,14 +1421,17 @@ if(!defined("building"))
 			tfloors.idtfloors, tfloors.idtcoords_auto, tfloors.number, tfloors.floor_height, 
 			tcoords.coords
 			, vendor_company.companyname as vendor_company_name
+			, vendor_company.shortcompanyname as vendor_company_shortname
 			, purchaser_company.companyname as purchaser_company_name
-			, (CASE 
-								WHEN yearbuilt IS NOT NULL AND yearbuilt > 0 
+			, purchaser_company.shortcompanyname as purchaser_company_shortname
+			, (CASE
+								WHEN yearbuilt IS NOT NULL AND yearbuilt > 0
 								THEN YEAR(CURDATE()) - yearbuilt
 								ELSE NULL
 							END) year_difference
-			FROM 
-			`tinvestmentsales` 
+			, tbuilding.yearbuilt AS year_built
+			FROM
+			`tinvestmentsales`
 				LEFT JOIN tbuilding ON tbuilding.idtbuilding = tinvestmentsales.idtbuilding
 				LEFT JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket
 				LEFT JOIN tfloors ON tfloors.idtbuilding = tbuilding.idtbuilding
@@ -1849,6 +1935,28 @@ if(!defined("building"))
 					unset($row);
 				}
 
+				// Per-market property (building) count - same class/status filter as the
+				// citiesAccessible query below, but grouped by market so the city-grid tile
+				// and the loading overlay can both show the selected market's count.
+				$marketBuildingCounts = array();
+				$q = "SELECT tsubmarket.idtmarket, COUNT(tbuilding.idtbuilding) AS cnt
+						FROM tmarket
+						JOIN tsubmarket ON tsubmarket.idtmarket = tmarket.idtmarket
+						JOIN tbuilding ON tbuilding.idtsubmarket = tsubmarket.idtsubmarket
+						WHERE tmarket.idtmarket IN ( ".$markets." )
+						AND tbuilding.class IN (".$this->BuildingClasses.")
+						AND (upper(tbuilding.tstatus) = 'COMPLETED' OR upper(tbuilding.tstatus) IN ( 'PROPOSED', 'UNDER CONSTRUCTION' ) )
+					GROUP BY tsubmarket.idtmarket";
+				if($result = mysqli_query($mysqliObj, $q))
+				{
+					while($eachRow = mysqli_fetch_assoc($result))
+					{
+						$marketBuildingCounts[$eachRow["idtmarket"]] = (int)$eachRow["cnt"];
+					}
+					mysqli_free_result($result);
+					unset($row);
+				}
+
 				$q = "SELECT idtmarket, smarketname, tmarket.idtcamera AS marketcamera, tcity.idtcity, tcity.scityname, tcity.country, tcity.idtcamera as citycamera, tcity.skylineidtcamera, tcity.skylineidtcamera2, tcity.areaunits, tcity.altitudeadjustment, tcity.class_aa_rename, tcity.city_boundary, tcamera.altitude AS skylinealtitude
 					 FROM tmarket
 					JOIN tcity ON tcity.idtcity = tmarket.idtcity
@@ -1872,6 +1980,7 @@ if(!defined("building"))
 					{
 						$eachRow["scityname"] = $this->skipUTFEncode($eachRow["scityname"]);
 						$eachRow["floorplans"] = isset($marketFloorplanCounts[$eachRow["idtmarket"]]) ? $marketFloorplanCounts[$eachRow["idtmarket"]] : 0;
+						$eachRow["propertycount"] = isset($marketBuildingCounts[$eachRow["idtmarket"]]) ? $marketBuildingCounts[$eachRow["idtmarket"]] : 0;
 						if(!isset($tempCities[$eachRow["idtcity"]]))
 							$tempCities[$eachRow["idtcity"]] = array();
 						$tempCities[$eachRow["idtcity"]][] = (int)$eachRow["idtmarket"];
@@ -1953,6 +2062,28 @@ if(!defined("building"))
 				{
 					$eachRow["scityname"] = $this->skipUTFEncode($eachRow["scityname"]);
 					$TEMP[$eachRow["scityname"]] = $eachRow["cnt"];
+				}
+				mysqli_free_result($result);
+				unset($row);
+			}
+
+			$q = "SELECT tcity.scityname, tcity.country, COUNT(tsuite.idtsuite) AS cnt
+					FROM tsuite
+					JOIN tbuilding ON tbuilding.idtbuilding = tsuite.idtbuilding
+					JOIN tsubmarket ON tsubmarket.idtsubmarket = tbuilding.idtsubmarket
+					JOIN tmarket ON tsubmarket.idtmarket = tmarket.idtmarket
+
+					JOIN tcity ON tcity.idtcity = tmarket.idtcity
+					WHERE tsuite.is_active = 1 AND tsuite.space_type = 'Office'
+					GROUP BY scityname ORDER BY tcity.country, cnt DESC ;";
+			//echo $q;
+			$TEMPActiveSpaces = array();
+			if($result = mysqli_query($mysqliObj, $q))
+			{
+				while($eachRow = mysqli_fetch_assoc($result))
+				{
+					$eachRow["scityname"] = $this->skipUTFEncode($eachRow["scityname"]);
+					$TEMPActiveSpaces[$eachRow["scityname"]] = $eachRow["cnt"];
 				}
 				mysqli_free_result($result);
 				unset($row);
@@ -2104,6 +2235,10 @@ if(!defined("building"))
 						$eachRow["floorplans"] = $TEMP[$eachRow["scityname"]];
 					else
 						$eachRow["floorplans"] = 0;
+					if(isset($TEMPActiveSpaces[$eachRow["scityname"]]))
+						$eachRow["activespaces"] = $TEMPActiveSpaces[$eachRow["scityname"]];
+					else
+						$eachRow["activespaces"] = 0;
 					if(isset($vacancyArea[$eachRow["scityname"]]))
 						$eachRow["vacancy"] = $vacancyArea[$eachRow["scityname"]];
 					else
