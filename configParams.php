@@ -2,11 +2,11 @@
 	$config = array();
 	
 	//Database details
-	$config["dbhost"] = "visgrid.com";
+	$config["dbhost"] = "floorplan.city";
 	$config["dbport"] = "3306";
-	$config["dbname"] = "visgrid02";
-	$config["dbuser"] = "visgrid02";
-	$config["dbpassword"] = "visgrid1000!";
+	$config["dbname"] = "floorplan02citydev";
+	$config["dbuser"] = "floorplan_dev";
+	$config["dbpassword"] = "LM0gT(Mi.E*E";
 	
 	$config["gemini_api_key"] = "AQ.Ab8RN6KNvsuwZ6APUpLXU8RMjDJt2AsCgK_rDYSDvO07Wf-HAw";
 	//Claude - see https://console.anthropic.com (Settings > API Keys) - NOT the same as a claude.ai subscription
